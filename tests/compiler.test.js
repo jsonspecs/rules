@@ -54,7 +54,10 @@ describe("compile — duplicate artifact id", () => {
 
 describe("compile — check rule missing level/code/message", () => {
   it("throws CompilationError with all three errors", () => {
-    const bad = makeRule({ level: undefined, code: undefined, message: undefined });
+    const bad = makeRule();
+    delete bad.level;
+    delete bad.code;
+    delete bad.message;
     assert.throws(
       () => engine.compile([bad]),
       (e) => {

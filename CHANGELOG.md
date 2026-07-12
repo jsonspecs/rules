@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file.
 
+## [2.0.0] - 2026-07-12
+
+- Added structured diagnostics, non-throwing validation, opaque prepared artifacts, introspection, deterministic snapshots, and coded runtime errors.
+- Hardened artifact and payload processing against cycles, dangerous keys, prototype-chain reads, conflicting paths, and invalid operator results.
+- Runtime results are transport-safe, always include `control`, never expose stacks, and omit trace by default.
+- Added grouped `any_filled`, full aggregate validation, entrypoint inference, and recursive pipeline/condition cycle analysis.
+
 ## [1.1.0] - 2026-03-29
 
 ### Added

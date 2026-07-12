@@ -22,12 +22,12 @@ function deepGet(obj, path) {
     const contextKey = String(path).slice(CONTEXT_PREFIX.length);
     const ctx = obj.__context;
     if (!ctx || typeof ctx !== "object") return { ok: false, value: undefined };
-    if (!(contextKey in ctx)) return { ok: false, value: undefined };
+    if (!Object.prototype.hasOwnProperty.call(ctx, contextKey)) return { ok: false, value: undefined };
     return { ok: true, value: ctx[contextKey] };
   }
 
   const key = String(path);
-  if (!(key in obj)) return { ok: false, value: undefined };
+  if (!Object.prototype.hasOwnProperty.call(obj, key)) return { ok: false, value: undefined };
   return { ok: true, value: obj[key] };
 }
 
@@ -90,13 +90,29 @@ function stepKind(step) {
 
 function makeTrace(traceArr, scope) {
   return function trace(message, data) {
+    const details = Object.assign({}, data || {});
     traceArr.push({
       kind: "TRACE",
-      message,
-      data: Object.assign({ scope }, data || {}),
-      ts: new Date().toISOString(),
+      step: traceStep(message),
+      artifactId: scope || null,
+      outcome: details.result || details.status || null,
+      at: new Date().toISOString(),
+      details,
     });
   };
+}
+
+function traceStep(message) {
+  const value = String(message);
+  if (value.includes("missing required context")) return "context.required";
+  if (value.includes("exec rule")) return "rule.start";
+  if (value.includes("rule result")) return "rule.finish";
+  if (value.includes("wildcard aggregate")) return "predicate.aggregate";
+  if (value.includes("condition")) return "condition.evaluate";
+  if (value.includes("strict")) return "pipeline.strict";
+  if (value.includes("ABORT")) return "pipeline.abort";
+  if (value.includes("STOP")) return "pipeline.finish";
+  return "pipeline.step";
 }
 
 function isLibraryRef(ref) {

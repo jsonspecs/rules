@@ -238,22 +238,20 @@ describe("runner — matches_regex", () => {
 // ── trace toggle ───────────────────────────────────────────────────────────
 
 describe("runner — trace option", () => {
-  it("includes trace by default", () => {
+  it("omits trace by default", () => {
     const r = rule("library.r", "not_empty", "x", "ERROR", "X");
     const p = pipeline("p", [{ rule: "library.r" }]);
     const compiled = compile([r, p]);
     const result = engine.runPipeline(compiled, "p", { x: "v" });
-    assert.ok(Array.isArray(result.trace));
-    assert.ok(result.trace.length > 0);
+    assert.equal(Object.hasOwn(result, "trace"), false);
   });
 
-  it("returns empty trace when trace:false", () => {
+  it("omits trace when trace:false", () => {
     const r = rule("library.r", "not_empty", "x", "ERROR", "X");
     const p = pipeline("p", [{ rule: "library.r" }]);
     const compiled = compile([r, p]);
     const result = engine.runPipeline(compiled, "p", { x: "v" }, { trace: false });
-    assert.ok(Array.isArray(result.trace));
-    assert.equal(result.trace.length, 0);
+    assert.equal(Object.hasOwn(result, "trace"), false);
   });
 });
 
@@ -346,7 +344,7 @@ describe("compiler — compiled bundle is detached from source artifacts", () =>
     assert.equal(result.status, "OK");
     assert.equal(result.issues.length, 0);
 
-    const storedRule = compiled.registry.get("library.r");
+    const storedRule = engine.inspect(compiled).getArtifact("library.r");
     assert.equal(storedRule.field, "name");
     assert.equal(storedRule.operator, "not_empty");
     assert.ok(Object.isFrozen(storedRule));

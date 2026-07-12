@@ -15,12 +15,25 @@ class CompilationError extends Error {
   /**
    * @param {string[]} errors — список сообщений об ошибках
    */
-  constructor(errors) {
+  constructor(diagnostics) {
+    const normalized = diagnostics.map((item) => typeof item === 'string' ? { code: 'COMPILATION_ERROR', level: 'error', message: item, phase: 'unknown', artifactId: null, path: null, location: null } : item);
+    const errors = normalized.map((item) => item.message);
     const lines = errors.map((e, i) => `  ${i + 1}. ${e}`).join('\n');
     super(`Compilation failed with ${errors.length} error(s):\n${lines}`);
     this.name = 'CompilationError';
     this.errors = errors; // массив строк — для программного доступа
+    this.diagnostics = normalized;
   }
 }
 
-module.exports = { CompilationError };
+class RuntimeError extends Error {
+  constructor({ code, message, details = null }) {
+    super(message);
+    this.name = 'RuntimeError';
+    this.code = code;
+    this.details = details;
+  }
+  toJSON() { return { code: this.code, message: this.message, details: this.details }; }
+}
+
+module.exports = { CompilationError, RuntimeError };

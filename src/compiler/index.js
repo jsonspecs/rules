@@ -28,6 +28,10 @@ const { validateSchema, validateCodeUniqueness } = require('./validate-schema');
 const { validateRefs } = require('./validate-refs');
 const { validatePipelineDAG } = require('./validate-dag');
 const { buildConditions, buildPipelines } = require('./build-steps');
+const { createHash } = require('node:crypto');
+const { cloneJsonSafe } = require('../safe-json');
+const { createPrepared } = require('../prepared');
+const { fileOf } = require('./context');
 
 function compile(artifacts, options = {}) {
   assert(Array.isArray(artifacts), 'compile: artifacts must be an array');
@@ -41,25 +45,30 @@ function compile(artifacts, options = {}) {
   );
 
   const sources = options.sources instanceof Map ? options.sources : null;
-  const detachedArtifacts = artifacts.map((artifact) => deepFreeze(deepCloneJsonLike(artifact)));
+  let detachedArtifacts;
+  try {
+    detachedArtifacts = artifacts.map((artifact) => deepFreeze(cloneJsonSafe(artifact)));
+  } catch (error) {
+    throw new CompilationError([diagnostic(error.code || 'ARTIFACT_NOT_JSON_SAFE', error.message, 'source_validation', null, error.details && error.details.path)]);
+  }
 
   setContext(sources);
   try {
     // Фаза 1: реестр — fail-fast, остальные фазы зависят от него
     const { registry, dictionaries, errors: regErrors } = buildRegistry(detachedArtifacts);
-    throwIfErrors(regErrors);
+    throwIfErrors(regErrors, 'registry_build');
 
     // Фаза 2: схема артефактов — собираем все ошибки по всем артефактам
     const schemaErrors = validateSchema(detachedArtifacts, dictionaries, operators);
-    throwIfErrors(schemaErrors);
+    throwIfErrors(schemaErrors, 'schema_validation');
 
     // Фаза 3: уникальность кодов
     const codeErrors = validateCodeUniqueness(detachedArtifacts);
-    throwIfErrors(codeErrors);
+    throwIfErrors(codeErrors, 'uniqueness_validation');
 
     // Фаза 4: ссылки и видимость
     const refErrors = validateRefs(detachedArtifacts, registry);
-    throwIfErrors(refErrors);
+    throwIfErrors(refErrors, 'reference_validation');
 
     // Фазы 5–6: компиляция шагов (бросают assert — структура уже проверена)
     const compiledConditions = buildConditions(detachedArtifacts);
@@ -67,23 +76,61 @@ function compile(artifacts, options = {}) {
 
     // Фаза 7: DAG (нет циклов)
     const dagErrors = validatePipelineDAG(registry, compiledPipelines, compiledConditions);
-    throwIfErrors(dagErrors);
+    throwIfErrors(dagErrors, 'dag_validation');
 
-    return Object.freeze({
+    const sourceHash = computeSourceHash(detachedArtifacts);
+    return createPrepared({
       registry,
       dictionaries,
       sources,
-      operators,
+      operators: freezeOperatorPack(operators),
       pipelines:  compiledPipelines,
       conditions: compiledConditions,
-    });
+      artifacts: detachedArtifacts,
+    }, { kind: 'prepared-jsonspecs', artifactType: 'jsonspecs', version: '1', sourceHash, diagnostics: Object.freeze([]) });
   } finally {
     clearContext();
   }
 }
 
-function throwIfErrors(errors) {
-  if (errors && errors.length > 0) throw new CompilationError(errors);
+function throwIfErrors(errors, phase) {
+  if (errors && errors.length > 0) throw new CompilationError(errors.map((message) => { const artifactId = artifactIdFromMessage(message); const file = artifactId ? fileOf(artifactId) : null; return diagnostic(codeFromMessage(message), message, phase, artifactId, null, file === '<unknown source>' ? null : file); }));
+}
+
+function artifactIdFromMessage(message) {
+  const text = String(message);
+  const duplicate = text.match(/Duplicate artifact id:\s*([^\s]+)/); if (duplicate) return duplicate[1];
+  const scoped = text.match(/(?:Artifact|Rule|Check rule|Predicate rule|Pipeline|Condition)\s+([^\s(]+)/); return scoped ? scoped[1] : null;
+}
+
+function diagnostic(code, message, phase, artifactId = null, path = null, location = null, details = null) {
+  return { code, level: 'error', message, phase, artifactId, path: path || null, location: location || null, details };
+}
+
+function codeFromMessage(message) {
+  const text = String(message);
+  if (/Duplicate artifact id/.test(text)) return 'DUPLICATE_ARTIFACT_ID';
+  if (/must have non-empty id/.test(text)) return 'ARTIFACT_ID_REQUIRED';
+  if (/must have description/.test(text)) return 'DESCRIPTION_REQUIRED';
+  if (/unknown operator/.test(text)) return 'UNKNOWN_OPERATOR';
+  if (/dictionary not found/.test(text)) return 'DICTIONARY_NOT_FOUND';
+  if (/cycle detected/i.test(text)) return 'PIPELINE_CYCLE';
+  if (/references missing|Missing artifact referenced/.test(text)) return 'ARTIFACT_REF_NOT_FOUND';
+  if (/must be rule\(role=predicate\)/.test(text)) return 'WHEN_RULE_MUST_BE_PREDICATE';
+  if (/Duplicate check code/.test(text)) return 'DUPLICATE_CHECK_CODE';
+  return 'SCHEMA_VALIDATION_ERROR';
+}
+
+function stableStringify(value) {
+  if (Array.isArray(value)) return `[${value.map(stableStringify).join(',')}]`;
+  if (value && typeof value === 'object') return `{${Object.keys(value).sort().map((key) => `${JSON.stringify(key)}:${stableStringify(value[key])}`).join(',')}}`;
+  return JSON.stringify(value);
+}
+
+function computeSourceHash(artifacts) { return createHash('sha256').update(stableStringify(artifacts)).digest('hex'); }
+
+function freezeOperatorPack(operators) {
+  return Object.freeze({ check: Object.freeze({ ...operators.check }), predicate: Object.freeze({ ...operators.predicate }), meta: operators.meta ? Object.freeze({ ...operators.meta }) : undefined });
 }
 
 /**
@@ -119,18 +166,6 @@ function buildRegistry(artifacts) {
   return { registry, dictionaries, errors };
 }
 
-function deepCloneJsonLike(value) {
-  if (Array.isArray(value)) return value.map((item) => deepCloneJsonLike(item));
-  if (value && typeof value === 'object') {
-    const out = {};
-    for (const [key, inner] of Object.entries(value)) {
-      out[key] = deepCloneJsonLike(inner);
-    }
-    return out;
-  }
-  return value;
-}
-
 function deepFreeze(value) {
   if (!value || typeof value !== 'object' || Object.isFrozen(value)) return value;
 
@@ -143,4 +178,4 @@ function deepFreeze(value) {
   return value;
 }
 
-module.exports = { compile };
+module.exports = { compile, computeSourceHash, stableStringify };

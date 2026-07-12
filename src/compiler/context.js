@@ -25,6 +25,7 @@ function clearContext() {
 function fileOf(id) {
   if (!_sources || !id) return "<unknown source>";
   const meta = _sources.get(id);
+  if (typeof meta === "string") return meta;
   return meta && meta.file ? meta.file : "<unknown source>";
 }
 

@@ -5,8 +5,10 @@ const {
   toComparable,
   isWildcardField,
   expandWildcardKeys,
-  flattenPayload,
 } = require("./utils");
+const { flattenPayloadSafe, normalizeTransportSafe, hasOwn } = require("./safe-json");
+const { getPreparedState } = require("./prepared");
+const { RuntimeError } = require("./compiler/compilation-error");
 
 function compareCount(op, left, right) {
   switch (op) {
@@ -103,57 +105,39 @@ function checkRequiredContext(pipeline, ctxBase, issues, trace, stepId = null) {
 }
 
 function runPipeline(compiled, pipelineId, payload, options) {
-  const { registry, dictionaries, operators, pipelines, conditions } = compiled;
-  assert(
-    operators && operators.check && operators.predicate,
-    "runPipeline: compiled.operators is missing (compile must be called with operators)",
-  );
-  assert(
-    pipelines instanceof Map,
-    "runPipeline: compiled.pipelines is missing (compile-time steps required)",
-  );
-  assert(
-    conditions instanceof Map,
-    "runPipeline: compiled.conditions is missing (compile-time steps required)",
-  );
-
-  const traceEnabled = !options || options.trace !== false;
+  let inputContext = null;
+  if (pipelineId && typeof pipelineId === "object") {
+    const input = pipelineId;
+    options = payload || {};
+    pipelineId = input.pipelineId;
+    payload = input.payload;
+    inputContext = input.context || null;
+  }
+  options = options || {};
+  const traceMode = options.trace === true ? "basic" : (options.trace || false);
+  const traceEnabled = traceMode === "basic" || traceMode === "verbose";
   const trace = [];
   const issues = [];
-  // When traceEnabled=false, replace the shared trace array with a throwaway array
-  // so that all internal makeTrace() calls write nowhere observable.
   const traceTarget = traceEnabled ? trace : [];
   const traceFn = makeTrace(traceTarget, `pipeline:${pipelineId}`);
 
-  // Normalize payload to flat-map before processing.
-  // Accepts both nested JSON ({ a: { b: 1 } }) and already-flat payloads ({ "a.b": 1 }).
-  // flattenPayload is idempotent: flat input passes through unchanged.
-  // This is the single point where the engine adapts to ordinary JSON from callers.
-  const flat = flattenPayload(payload || {});
-
-  // Merge context into payload under the reserved __context key so that
-  // deepGet can resolve "$context.*" field references from rules/predicates.
-  // __context is excluded from payloadKeys so wildcard expansion never touches it.
-  const context = (payload && payload.__context) || {};
-  const enrichedPayload = Object.assign({}, flat, { __context: context });
-  const payloadKeys = Object.keys(flat).filter((k) => k !== "__context");
-  const wildcardCache = new Map(); // pattern -> resolved keys
-
-  const ctxBase = {
-    payload: enrichedPayload,
-    payloadKeys,
-    wildcardCache,
-    getDictionary: (id) => dictionaries.get(id) || null,
-    get: (path) => deepGet(enrichedPayload, path),
-    has: (path) => deepGet(enrichedPayload, path).ok,
-  };
-
   try {
+    const state = getPreparedState(compiled);
+    if (!state) throw new RuntimeError({ code: "INVALID_COMPILED_ARTIFACT", message: "runPipeline expects an artifact produced by compile()" });
+    const { registry, dictionaries, operators, pipelines, conditions } = state;
+    if (!pipelineId) {
+      const entrypoints = [...registry.values()].filter((item) => item.type === "pipeline" && item.entrypoint === true);
+      if (entrypoints.length !== 1) throw new RuntimeError({ code: "PIPELINE_ID_REQUIRED", message: "pipelineId is required unless exactly one entrypoint exists", details: { entrypointCount: entrypoints.length } });
+      pipelineId = entrypoints[0].id;
+    }
+    const flat = flattenPayloadSafe(payload || {});
+    const context = inputContext || (payload && hasOwn(payload, "__context") ? payload.__context : {}) || {};
+    const enrichedPayload = Object.assign(Object.create(null), flat, { __context: context });
+    const payloadKeys = Object.keys(flat);
+    const wildcardCache = new Map();
+    const ctxBase = { payload: enrichedPayload, payloadKeys, wildcardCache, getDictionary: (id) => dictionaries.get(id) || null, get: (path) => deepGet(enrichedPayload, path), has: (path) => deepGet(enrichedPayload, path).ok };
     const pipeline = registry.get(pipelineId);
-    assert(
-      pipeline && pipeline.type === "pipeline",
-      `runPipeline: ${pipelineId} is not a pipeline`,
-    );
+    if (!pipeline || pipeline.type !== "pipeline") throw new RuntimeError({ code: "PIPELINE_NOT_FOUND", message: `Pipeline not found: ${pipelineId}`, details: { pipelineId, availablePipelines: [...pipelines.keys()] } });
 
     const compiledPipe = pipelines.get(pipelineId);
     assert(
@@ -163,8 +147,8 @@ function runPipeline(compiled, pipelineId, payload, options) {
 
     const pipelineArtifact = registry.get(pipelineId);
   assert(pipelineArtifact && pipelineArtifact.type === "pipeline", `Missing pipeline ${pipelineId}`);
-  if (checkRequiredContext(pipelineArtifact, ctxBase, issues, trace)) {
-    return { status: "EXCEPTION", control: "STOP", issues, trace };
+  if (checkRequiredContext(pipelineArtifact, ctxBase, issues, traceTarget)) {
+    return finishResult({ status: "EXCEPTION", control: "STOP", issues }, traceMode, trace, options);
   }
 
   const control = execSteps(
@@ -181,7 +165,7 @@ function runPipeline(compiled, pipelineId, payload, options) {
     );
 
     if (applyStrictBoundary(pipelineArtifact, issues, 0, null, traceFn)) {
-      return { status: "EXCEPTION", control: "STOP", issues, trace };
+      return finishResult({ status: "EXCEPTION", control: "STOP", issues }, traceMode, trace, options);
     }
 
     if (control === "STOP")
@@ -203,19 +187,34 @@ function runPipeline(compiled, pipelineId, payload, options) {
 
     const ctrl = hasException || hasErrors ? "STOP" : "CONTINUE";
 
-    return { status, control: ctrl, issues, trace };
+    return finishResult({ status, control: ctrl, issues }, traceMode, trace, options);
   } catch (e) {
     traceFn("pipeline ABORT (runtime exception)", {
       pipelineId,
       error: String(e && e.message ? e.message : e),
     });
-    return {
+    return finishResult({
       status: "ABORT",
+      control: "STOP",
       issues,
-      trace,
-      error: { message: e.message, stack: e.stack },
-    };
+      error: { code: e && e.code ? e.code : "CUSTOM_OPERATOR_ERROR", message: e && e.message ? e.message : String(e), details: e && e.details ? e.details : null },
+    }, traceMode, trace, options);
   }
+}
+
+function finishResult(result, traceMode, trace, options) {
+  if (traceMode) result.trace = trace.map((entry) => ({ ...entry, details: sanitizeTraceDetails(entry.details, traceMode, options && options.traceRedactor) }));
+  return normalizeTransportSafe(result);
+}
+
+function sanitizeTraceDetails(details, mode, redactor) {
+  const sensitive = new Set(["actual", "value", "pickedValue", "matchedSample", "failedSample", "meta"]);
+  const output = {};
+  for (const [key, value] of Object.entries(details || {})) {
+    if (mode === "basic" && sensitive.has(key)) continue;
+    output[key] = mode === "verbose" && sensitive.has(key) && typeof redactor === "function" ? redactor(value, mode) : value;
+  }
+  return output;
 }
 
 function execSteps(
@@ -386,7 +385,8 @@ function execSteps(
 
 function evalPredicate(operators, rule, ctxBase, trace, scope) {
   const t = makeTrace(trace, `${scope}:pred:${rule.id}`);
-  const op = operators.predicate[rule.operator];
+  const rawOp = operators.predicate[rule.operator];
+  const op = (...args) => validateOperatorResult("predicate", rule, rawOp(...args));
   try {
     const ctx = Object.assign({}, ctxBase, { trace: (m, d) => t(m, d) });
 
@@ -512,9 +512,30 @@ function evalPredicate(operators, rule, ctxBase, trace, scope) {
 
 function evalCheck(operators, rule, ctxBase, trace, scope) {
   const t = makeTrace(trace, `${scope}:check:${rule.id}`);
-  const op = operators.check[rule.operator];
+  const rawOp = operators.check[rule.operator];
+  const op = (...args) => validateOperatorResult("check", rule, rawOp(...args));
   try {
     const ctx = Object.assign({}, ctxBase, { trace: (m, d) => t(m, d) });
+
+    if (rule.operator === "any_filled" && Array.isArray(rule.fields) && rule.fields.every(isWildcardField)) {
+      const concrete = expandWildcardKeys(rule.fields[0], ctx.payloadKeys || []);
+      if (concrete.length === 0) {
+        const behavior = onEmptyBehavior(rule, "PASS");
+        if (behavior === "ERROR") throw new RuntimeError({ code: "WILDCARD_EMPTY", message: `Wildcard fields matched no groups: ${rule.fields[0]}` });
+        return behavior === "FAIL" ? { status: "FAIL", field: rule.fields[0], meta: { reason: "WILDCARD_EMPTY" } } : { status: "OK" };
+      }
+      const failures = [];
+      for (const matched of concrete) {
+        const indexes = [...matched.matchAll(/\[(\d+)\]/g)].map((item) => item[1]);
+        let index = 0;
+        const fields = rule.fields.map((field) => field.replace(/\[\*\]/g, () => `[${indexes[index++ % indexes.length]}]`));
+        index = 0;
+        const result = op(Object.assign({}, rule, { fields }), ctx);
+        if (result.status === "EXCEPTION") return result;
+        if (result.status === "FAIL") failures.push({ status: "FAIL", field: fields[0], actual: result.actual, meta: { fields, pattern: rule.fields } });
+      }
+      return failures.length ? { status: "FAIL", failures } : { status: "OK" };
+    }
 
     // Wildcard / aggregation for check-rules
     if (isWildcardField(rule.field)) {
@@ -736,8 +757,11 @@ function evalCheck(operators, rule, ctxBase, trace, scope) {
         // Run operator against a synthetic payload key.
         const aggKey = "__agg__";
         const pickedValue = deepGet(ctx.payload, picked.key).value;
+        const syntheticPayload = Object.assign(Object.create(null), { [aggKey]: pickedValue });
         const syntheticCtx = Object.assign({}, ctx, {
-          payload: { [aggKey]: pickedValue },
+          payload: syntheticPayload,
+          get: (path) => deepGet(syntheticPayload, path),
+          has: (path) => deepGet(syntheticPayload, path).ok,
         });
         const rr = op(
           Object.assign({}, rule, { field: aggKey, _patternField: rule.field }),
@@ -780,6 +804,18 @@ function evalCheck(operators, rule, ctxBase, trace, scope) {
   } catch (e) {
     return { status: "EXCEPTION", error: e };
   }
+}
+
+function validateOperatorResult(role, rule, result) {
+  const allowed = role === "check" ? new Set(["OK", "FAIL", "EXCEPTION"]) : new Set(["TRUE", "FALSE", "UNDEFINED", "EXCEPTION"]);
+  if (!result || typeof result !== "object" || !allowed.has(result.status)) {
+    throw new RuntimeError({
+      code: "OPERATOR_CONTRACT_VIOLATION",
+      message: `Operator ${rule.operator} returned an invalid ${role} result`,
+      details: { operator: rule.operator, ruleId: rule.id, returned: normalizeTransportSafe(result) },
+    });
+  }
+  return result;
 }
 
 function evalCondition(

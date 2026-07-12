@@ -12,6 +12,7 @@
 
 const { isObject, normalizeWhenExpr, stepKind } = require('../utils');
 const { where } = require('./context');
+const { assertSafePath } = require('../safe-json');
 
 const LEVELS = new Set(['WARNING', 'ERROR', 'EXCEPTION']);
 
@@ -37,10 +38,23 @@ function validateSchema(artifacts, dictionaries, operators) {
     } else if (a.type === 'rule') {
       errors.push(...validateRuleSchema(a, dictionaries, operators));
     } else if (a.type === 'dictionary') {
-      // структура словаря проверяется при загрузке
+      errors.push(...validateDictionarySchema(a));
     } else {
       errors.push(`Unknown artifact type: ${a.type} (id=${a.id}, source=${where(a)})`);
     }
+  }
+  return errors;
+}
+
+function validateDictionarySchema(a) {
+  const errors = [];
+  if (!Array.isArray(a.entries)) return [`Dictionary ${where(a)}: entries must be an array`];
+  const seen = new Set();
+  for (let index = 0; index < a.entries.length; index++) {
+    const entry = a.entries[index];
+    const value = isObject(entry) ? (Object.hasOwn(entry, 'code') ? entry.code : entry.value) : entry;
+    if (value === undefined) errors.push(`Dictionary ${where(a)}: entry ${index} must contain code or value`);
+    else { const key = JSON.stringify(value); if (seen.has(key)) errors.push(`Dictionary ${where(a)}: duplicate entry ${key}`); seen.add(key); }
   }
   return errors;
 }
@@ -154,10 +168,24 @@ function validatePredicateRuleSchema(a, operators) {
 
 function validateOperatorParams(a, dictionaries) {
   const errors = [];
+  for (const [name, path] of [['field', a.field], ['value_field', a.value_field]]) {
+    try { assertSafePath(path); } catch (error) { errors.push(`Rule ${where(a)}: ${name} ${error.message}`); }
+  }
   if (a.operator === 'any_filled') {
     const fields = Array.isArray(a.fields) ? a.fields : (Array.isArray(a.paths) ? a.paths : null);
     if (!Array.isArray(fields) || fields.length === 0) {
       errors.push(`Rule ${where(a)}: any_filled requires fields[]`);
+    } else {
+      for (const field of fields) {
+        try { assertSafePath(field); } catch (error) { errors.push(`Rule ${where(a)}: fields ${error.message}`); }
+      }
+      const wildcard = fields.map((field) => typeof field === 'string' && field.includes('[*]'));
+      if (wildcard.some(Boolean) && !wildcard.every(Boolean)) errors.push(`Rule ${where(a)}: any_filled must not mix wildcard and non-wildcard fields`);
+      if (wildcard.every(Boolean)) {
+        const bases = new Set(fields.map((field) => field.slice(0, field.lastIndexOf('[*]') + 3)));
+        if (bases.size !== 1) errors.push(`Rule ${where(a)}: any_filled wildcard fields must share one base pattern`);
+        if (a.aggregate && !new Set(['EACH', 'ALL']).has(a.aggregate.mode)) errors.push(`Rule ${where(a)}: any_filled wildcard aggregate.mode must be EACH|ALL`);
+      }
     }
   }
   if (a.operator === 'in_dictionary') {
@@ -220,8 +248,14 @@ function validateOptionalAggregate(a) {
   if (a.aggregate.onEmpty !== undefined) {
     if (typeof a.aggregate.onEmpty !== 'string' || a.aggregate.onEmpty.length === 0) {
       errors.push(`Rule ${where(a)}: aggregate.onEmpty must be non-empty string`);
+    } else {
+      const allowed = a.role === 'check' ? new Set(['PASS', 'FAIL', 'ERROR']) : new Set(['TRUE', 'FALSE', 'UNDEFINED', 'ERROR']);
+      if (!allowed.has(a.aggregate.onEmpty)) errors.push(`Rule ${where(a)}: aggregate.onEmpty "${a.aggregate.onEmpty}" is invalid. Allowed: ${[...allowed].join(', ')}`);
     }
   }
+  if (a.aggregate.op !== undefined && !new Set(['=', '==', '!=', '>', '>=', '<', '<=']).has(a.aggregate.op)) errors.push(`Rule ${where(a)}: aggregate.op is invalid`);
+  if (a.aggregate.value !== undefined && (typeof a.aggregate.value !== 'number' || !Number.isFinite(a.aggregate.value))) errors.push(`Rule ${where(a)}: aggregate.value must be a finite number`);
+  if (a.aggregate.summaryIssue !== undefined && typeof a.aggregate.summaryIssue !== 'boolean') errors.push(`Rule ${where(a)}: aggregate.summaryIssue must be boolean`);
   return errors;
 }
 

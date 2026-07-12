@@ -584,3 +584,12 @@ before stopping. Errors from different phases are not mixed.
 
 After stopping on `EXCEPTION`, remaining pipeline steps are not executed.
 Already-accumulated issues are preserved in the response.
+# Public runtime contract (v2)
+
+`validate(artifacts, options)` returns `{ok, diagnostics}` and does not throw for invalid source. Every diagnostic has stable `code`, `level`, `message`, `phase`, `artifactId`, `path`, and `location` fields. `compile()` returns an opaque `prepared-jsonspecs` artifact; runtime internals are available only through `inspect()`.
+
+`runPipeline(prepared, {pipelineId?, payload, context?}, options)` accepts only a prepared artifact. If `pipelineId` is omitted, exactly one pipeline must be marked `entrypoint`. Runtime results always include `status`, `control`, and `issues`. ABORT includes `{code,message,details}`, never a stack. Trace is disabled by default and enabled with `basic` or `verbose`.
+
+Custom check operators return `OK|FAIL|EXCEPTION`; predicate operators return `TRUE|FALSE|UNDEFINED|EXCEPTION`. `ctx.get(path)` returns `{ok,value}` where `ok` is a boolean property. Any other operator result aborts with `OPERATOR_CONTRACT_VIOLATION`.
+
+Normative snapshots have `format: "jsonspecs-snapshot"`, `formatVersion: 1`, canonical `sourceHash`, `engine.minVersion`, `artifacts`, and optional project `meta`. They are consumed only through `compileSnapshot()`.

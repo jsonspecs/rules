@@ -249,7 +249,7 @@ const compiled = engine.compile(artifacts, { sources });
 
 ```js
 const snapshot = JSON.parse(fs.readFileSync("snapshot.json", "utf8"));
-const compiled = engine.compile(snapshot.artifacts);
+const compiled = engine.compileSnapshot(snapshot);
 ```
 
 **Inline** (tests define artifacts as plain JS objects):
