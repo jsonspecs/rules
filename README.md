@@ -5,431 +5,358 @@
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 [![Node 20+](https://img.shields.io/badge/Node-20%2B-green)](https://nodejs.org/)
 
-Declarative validation rules engine for Node.js.
+Declarative validation engine for JSON rules and deterministic validation pipelines.
 
-Rules are JSON files. The engine compiles them, runs them against any payload, and returns structured results with `ERROR`, `WARNING`, and `EXCEPTION` levels, full issue list, and execution trace. Zero external dependencies.
+Rules are plain JSON artifacts. JSONSpecs validates and prepares them once, runs a named pipeline against a JSON payload, and returns a transport-safe result with stable statuses, issues, diagnostics, optional trace, and ruleset provenance. The package has no runtime dependencies.
 
-```
+```bash
 npm install jsonspecs
 ```
 
-Both CommonJS (`require("jsonspecs")`) and ESM (`import { createEngine } from "jsonspecs"`) consumers are supported and verified from the packed npm artifact.
-
-## How it works
-
-Rules are individual JSON files. A pipeline composes them into a scenario. The engine compiles them once and runs against any payload.
-
-**Step 1 write atomic rules** (one file per rule):
-
-`rules/library/person/first_name_required.json`
-
-```json
-{
-  "id": "library.person.first_name_required",
-  "type": "rule",
-  "description": "First name must be filled",
-  "role": "check",
-  "operator": "not_empty",
-  "level": "ERROR",
-  "code": "PERSON.FIRST_NAME.REQUIRED",
-  "message": "First name is required",
-  "field": "person.firstName"
-}
-```
-
-`rules/library/person/email_format.json`
-
-```json
-{
-  "id": "library.person.email_format",
-  "type": "rule",
-  "description": "Email must contain @",
-  "role": "check",
-  "operator": "contains",
-  "level": "WARNING",
-  "code": "PERSON.EMAIL.FORMAT",
-  "message": "Email address looks invalid",
-  "field": "person.email",
-  "value": "@"
-}
-```
-
-`rules/library/person/doc_not_expired.json`
-
-```json
-{
-  "id": "library.person.doc_not_expired",
-  "type": "rule",
-  "description": "Document must not be expired",
-  "role": "check",
-  "operator": "field_greater_or_equal_than_field",
-  "level": "EXCEPTION",
-  "code": "PERSON.DOC.EXPIRED",
-  "message": "Document has expired",
-  "field": "person.document.expireDate",
-  "value_field": "$context.currentDate"
-}
-```
-
-**Step 2 compose rules into a pipeline:**
-
-`rules/pipelines/registration/pipeline.json`
-
-```json
-{
-  "id": "registration.pipeline",
-  "type": "pipeline",
-  "description": "Person registration validation",
-  "entrypoint": true,
-  "strict": false,
-  "required_context": ["currentDate"],
-  "flow": [
-    { "rule": "library.person.first_name_required" },
-    { "rule": "library.person.email_format" },
-    { "rule": "library.person.doc_not_expired" }
-  ]
-}
-```
-
-**Step 3 compile and run:**
+Both CommonJS and ESM consumers are supported:
 
 ```js
 const { createEngine, Operators } = require("jsonspecs");
+```
+
+```js
+import { createEngine, Operators } from "jsonspecs";
+```
+
+## Concepts
+
+| Artifact | Purpose |
+| --- | --- |
+| `rule` | Atomic check or predicate backed by one operator. |
+| `condition` | Predicate guard plus steps that run only when the guard is true. |
+| `pipeline` | Ordered scenario composed from rules, conditions, and sub-pipelines. |
+| `dictionary` | Static value list used by `in_dictionary`. |
+
+The usual production flow is:
+
+1. author JSON artifacts;
+2. validate them and fix diagnostics;
+3. prepare or build a deterministic snapshot;
+4. evaluate the prepared artifact with `{ pipelineId, payload, context }`.
+
+`jsonspecs` is loader-agnostic. Filesystem loading, project manifests, Studio UI, and snapshot builds are provided by [`jsonspecs-cli`](https://www.npmjs.com/package/jsonspecs-cli), not by the core engine.
+
+## Quick start
+
+```js
+const { createEngine, Operators, formatDiagnostics } = require("jsonspecs");
 
 const artifacts = [
-  require("./rules/library/person/first_name_required.json"),
-  require("./rules/library/person/email_format.json"),
-  require("./rules/library/person/doc_not_expired.json"),
-  require("./rules/pipelines/registration/pipeline.json"),
+  {
+    id: "library.person.first_name_required",
+    type: "rule",
+    description: "First name must be filled",
+    role: "check",
+    operator: "not_empty",
+    level: "ERROR",
+    code: "PERSON.FIRST_NAME.REQUIRED",
+    message: "First name is required",
+    field: "person.firstName",
+  },
+  {
+    id: "registration.pipeline",
+    type: "pipeline",
+    description: "Person registration validation",
+    entrypoint: true,
+    strict: false,
+    required_context: ["currentDate"],
+    flow: [{ rule: "library.person.first_name_required" }],
+  },
 ];
 
 const engine = createEngine({ operators: Operators });
-const compiled = engine.compile(artifacts);
 
-const result = engine.runPipeline(compiled, "registration.pipeline", {
-  person: {
-    firstName: "Ivan",
-    email: "ivan@example.com",
-    document: { expireDate: "2028-01-01" },
+const validation = engine.validate(artifacts);
+if (!validation.ok) {
+  throw new Error(formatDiagnostics(validation.diagnostics));
+}
+
+const prepared = engine.compile(artifacts);
+
+const result = engine.runPipeline(prepared, {
+  pipelineId: "registration.pipeline",
+  payload: {
+    person: { firstName: "Ivan" },
   },
-  __context: { currentDate: "2026-03-27" },
+  context: {
+    currentDate: "2026-03-27",
+  },
 });
 
-// { status: "OK", control: "CONTINUE", issues: [] }
+// {
+//   status: "OK",
+//   control: "CONTINUE",
+//   issues: [],
+//   ruleset: { sourceHash: "..." }
+// }
 ```
 
-The engine is loader-agnostic artifacts can come from the filesystem, a snapshot file, a database, or inline objects in tests. See [Loading artifacts](#loading-artifacts).
+If exactly one pipeline has `entrypoint: true`, `pipelineId` may be omitted. The older signature `runPipeline(prepared, pipelineId, payload, options)` remains available for compatibility, but new code should use the object input form.
 
-## API
+## Public API
 
-### `createEngine({ operators })`
+Everything exported from the package root is the supported public surface. Files under `src/**` are internal.
 
-Creates an engine instance bound to an operator pack.
+| Export | Description |
+| --- | --- |
+| `createEngine({ operators })` | Creates an engine bound to an operator pack. |
+| `Operators` | Built-in check and predicate operators. |
+| `validate(artifacts, options?)` | Non-throwing source validation using the built-in operators unless `options.operators` is provided. |
+| `compileSnapshot(snapshot, options?)` | Validates snapshot integrity and prepares it for runtime. |
+| `inspect(prepared)` | Read-only introspection over a prepared artifact. |
+| `computeSourceHash(artifacts)` | Canonical SHA-256 over artifacts. |
+| `formatDiagnostics(diagnostics)` | Compact human-readable diagnostics formatter. |
+| `formatRuntimeError(error)` | Compact runtime error formatter. |
+| `deepGet(payload, path)` | Backward-compatible field lookup helper. New operators should prefer `ctx.get()`. |
+| `CompilationError` / `RuntimeError` | Typed errors for compile-time and internal runtime failures. |
+
+### `engine.validate(artifacts, options?)`
+
+Returns `{ ok, diagnostics }` and never throws for ordinary source errors.
+
+Diagnostics are structured:
 
 ```js
-const { createEngine, Operators } = require("jsonspecs");
-const engine = createEngine({ operators: Operators });
+{
+  code: "ARTIFACT_REF_NOT_FOUND",
+  level: "error",
+  message: "Reference not found: library.person.email",
+  phase: "reference_validation",
+  artifactId: "registration.pipeline",
+  path: "flow[1].rule",
+  location: "/rules/registration.pipeline.json"
+}
 ```
 
-`Operators` is the built-in pack covering all standard checks and predicates. You can extend it with your own operators see [Custom operators](#custom-operators).
+Compiler phases are intentionally phase-fail-fast: a failed phase returns all diagnostics from that phase and later dependent phases are not executed.
 
 ### `engine.compile(artifacts, options?)`
 
-Compiles an array of artifact objects into an optimized runtime structure. Throws `CompilationError` with a full error list if any artifact is invalid.
+Returns an opaque prepared artifact:
 
 ```js
-const compiled = engine.compile(artifacts, { sources });
+{
+  kind: "prepared-jsonspecs",
+  artifactType: "jsonspecs",
+  version: "1",
+  sourceHash: "...",
+  diagnostics: []
+}
 ```
 
-Compile-time checks: schema validation, reference integrity, DAG cycle detection, operator existence, and `code` uniqueness across all rules. `sources` is an optional `Map<artifactId, sourceFile | {file,line?,column?}>` used to populate the structured diagnostic `location` field; it is populated automatically by `loadArtifactsFromDir`.
+Runtime internals are stored outside the public object. Use `inspect(prepared)` instead of reading private compiler structures.
 
-### `engine.runPipeline(compiled, pipelineId, payload)`
+`options.sources` may be a `Map<artifactId, string | { file, line?, column? }>` and is used to populate diagnostic locations.
 
-Runs a named pipeline against a payload.
+### `engine.compileSnapshot(snapshot, options?)`
+
+Snapshots are deterministic production artifacts:
 
 ```js
-const result = engine.runPipeline(compiled, "registration.pipeline", {
-  person: { firstName: "Иван" },
-  __context: { currentDate: "2026-03-27" },
+{
+  "format": "jsonspecs-snapshot",
+  "formatVersion": 1,
+  "sourceHash": "...",
+  "engine": { "minVersion": "2.1.1" },
+  "artifacts": [],
+  "meta": {
+    "projectId": "checkout-rules",
+    "projectTitle": "Checkout rules",
+    "description": "Checkout validation",
+    "rulesetVersion": "1.0.0"
+  }
+}
+```
+
+`compileSnapshot()` verifies snapshot shape, SemVer engine compatibility, and `sourceHash`. Runtime results created from a snapshot carry `ruleset.sourceHash`, `ruleset.projectId`, and `ruleset.rulesetVersion`.
+
+### `engine.runPipeline(prepared, input, options?)`
+
+```js
+const result = engine.runPipeline(prepared, {
+  pipelineId: "registration.pipeline",
+  payload: { person: { firstName: "" } },
+  context: { currentDate: "2026-03-27" },
+}, {
+  trace: "basic",
 });
 ```
 
-The payload can be a nested JSON object or a pre-flattened dot-notation map both work. Pass runtime context under the reserved `__context` key. Rules access it via `$context.fieldName`.
+`input.payload` must be a JSON object. It may be nested or already flattened with dot-notation keys. `input.context` is exposed to rules as `$context.*`.
 
-**Result shape:**
+Runtime result:
 
 ```js
 {
   status: "OK" | "OK_WITH_WARNINGS" | "ERROR" | "EXCEPTION" | "ABORT",
   control: "CONTINUE" | "STOP",
-  issues: [ ... ],  // see below
-  trace: [ ... ],   // execution trace, always present (pass { trace: false } to suppress)
-  // only present when status === "ABORT":
-  error: { message: string, stack?: string }
+  issues: [],
+  ruleset: {
+    sourceHash: "...",
+    projectId: "checkout-rules",
+    rulesetVersion: "1.0.0"
+  },
+  trace: [] // present only when trace is enabled
 }
 ```
 
-Each issue:
+Issue shape:
 
 ```js
 {
   kind: "ISSUE",
-  level: "ERROR" | "WARNING" | "EXCEPTION",
+  level: "ERROR",
   code: "PERSON.FIRST_NAME.REQUIRED",
   message: "First name is required",
   field: "person.firstName",
-  ruleId: "library.person.name_required",
-  actual: "",       // value that caused the failure
-  expected: ...     // rule's expected value or dictionary ref, if applicable
+  ruleId: "library.person.first_name_required",
+  pipelineId: "registration.pipeline",
+  stepId: "optional-step-id",
+  expected: "...",
+  actual: "",
+  meta: {}
 }
 ```
 
-> **`ABORT`** is returned when an unexpected engine fault occurs (bug in a custom operator, corrupt compiled object, etc.). It is not a validation result — it means the engine itself failed. `issues[]` contains whatever was accumulated before the fault.
-
-### `ctx.get(path)` / `ctx.has(path)`
-
-For new custom operators, prefer the runtime context helpers:
+`ABORT` is not a validation result. It means the runtime boundary caught a payload, operator, trace redactor, or engine fault. It always returns `control: "STOP"` and a transport-safe error:
 
 ```js
-module.exports = function myOperator(rule, ctx) {
-  const got = ctx.get(rule.field);
-  if (!got.ok) return { status: "FAIL" };
-  return { status: got.value ? "OK" : "FAIL", actual: got.value };
-};
-```
-
-`ctx.has(path)` returns a boolean when you only need presence/absence.
-
-### `deepGet(payload, field)`
-
-Utility exported for advanced/custom operators and backward compatibility. New operators should prefer ctx.get(). Looks up a dot-notation field path in the flat payload map, with support for `$context.*` fields.
-
-```js
-const { deepGet } = require("jsonspecs");
-
-// Returns { ok: true, value: "Иван" }
-deepGet(ctx.payload, "person.firstName");
-
-// Returns { ok: true, value: "2026-03-27" }
-deepGet(ctx.payload, "$context.currentDate");
-
-// Returns { ok: false, value: undefined } field absent
-deepGet(ctx.payload, "person.unknownField");
-```
-
-### `CompilationError`
-
-Thrown by `engine.compile()` when artifacts are invalid. Contains a full list of all errors found, not just the first one.
-
-```js
-const { CompilationError } = require("jsonspecs");
-
-try {
-  engine.compile(artifacts);
-} catch (err) {
-  if (err instanceof CompilationError) {
-    console.error("Compilation failed:");
-    err.errors.forEach((msg, i) => console.error(`  ${i + 1}. ${msg}`));
+{
+  status: "ABORT",
+  control: "STOP",
+  issues: [],
+  error: {
+    code: "DANGEROUS_PAYLOAD_KEY",
+    message: "Dangerous key at __proto__",
+    details: { "path": "__proto__" }
   }
 }
 ```
 
-## Loading artifacts
+Stacks are not exposed in runtime results.
 
-The engine is loader-agnostic. You decide how to bring artifacts into memory.
+### `inspect(prepared)`
 
-**From the filesystem** (development scan a directory of `.json` files):
-
-```js
-// loader-fs is part of your server project, not this package
-const { loadArtifactsFromDir } = require("./lib/loader-fs");
-const { artifacts, sources } = loadArtifactsFromDir("./rules");
-const compiled = engine.compile(artifacts, { sources });
-```
-
-**From a snapshot** (production single pre-built JSON file):
+Use introspection to build UIs, docs, debug views, or APIs:
 
 ```js
-const snapshot = JSON.parse(fs.readFileSync("snapshot.json", "utf8"));
-const compiled = engine.compileSnapshot(snapshot);
+const view = engine.inspect(prepared);
+
+view.listEntrypoints();
+view.listArtifacts({ type: "rule" });
+view.getArtifact("library.person.first_name_required");
+view.getPipelineSteps("registration.pipeline");
+view.getConditionModel("library.person.has_document");
+view.listDictionaries();
+view.stats();
 ```
 
-**Inline** (tests define artifacts as plain JS objects):
+## Trace
+
+Trace is disabled by default and absent from the result unless enabled.
+
+| Option | Behaviour |
+| --- | --- |
+| `false` / omitted | No `trace` field. |
+| `true` / `"basic"` | Structural trace without raw payload values. |
+| `"verbose"` | Trace may include detailed values after `traceRedactor` is applied. |
+
+Every trace entry has one shape:
 
 ```js
-const artifacts = [
-  {
-    id: "library.t.name",
-    type: "rule",
-    description: "Name must be filled",
-    role: "check",
-    operator: "not_empty",
-    level: "ERROR",
-    code: "NAME.REQUIRED",
-    message: "Name is required",
-    field: "person.name",
-  },
-  {
-    id: "test.pipeline",
-    type: "pipeline",
-    description: "Test",
-    entrypoint: true,
-    strict: false,
-    flow: [{ rule: "library.t.name" }],
-  },
-];
-
-const compiled = engine.compile(artifacts);
-const result = engine.runPipeline(compiled, "test.pipeline", {
-  person: { name: "" },
-});
-// result.status === "ERROR"
-// result.issues[0].code === "NAME.REQUIRED"
+{
+  kind: "TRACE",
+  artifactType: "jsonspecs",
+  artifactId: "registration.pipeline",
+  step: "pipeline.start",
+  outcome: "start",
+  at: "2026-07-12T10:00:00.000Z",
+  details: {}
+}
 ```
+
+## Safety guarantees
+
+The engine treats artifacts and payloads as untrusted JSON:
+
+- dangerous keys `__proto__`, `prototype`, and `constructor` are rejected;
+- prototype-chain reads are avoided;
+- cyclic artifacts and payloads are rejected;
+- unsupported JSON values are rejected or normalized at the runtime boundary;
+- prepared artifacts are opaque and immutable from the public API;
+- runtime results are safe to `JSON.stringify()` and round-trip through JSON.
 
 ## JSON Schema
 
-The package exports JSON Schema 2020-12 documents for editor integration and
-structural validation:
+The package exports JSON Schema 2020-12 documents:
 
 ```js
 const artifactSchema = require("jsonspecs/schema");
 const snapshotSchema = require("jsonspecs/schema/snapshot");
 ```
 
-JSON Schema covers artifact and snapshot structure. Cross-artifact references,
-visibility, uniqueness, custom operator semantics, and pipeline cycles remain
-the responsibility of `validate()`.
+JSON Schema covers structural validation. Cross-artifact references, operator existence, visibility, uniqueness, aggregate semantics, and pipeline cycles are validated by `validate()` / `compile()`.
 
-## Artifact types
+## Artifact rules
 
-| Type         | Purpose                                                            |
-| ------------ | ------------------------------------------------------------------ |
-| `rule`       | Atomic check or predicate one operator, one field, one outcome     |
-| `condition`  | Conditional block: `when` predicate guard + `steps` to run if true |
-| `pipeline`   | Ordered sequence of steps: rules, conditions, sub-pipelines        |
-| `dictionary` | Named list of allowed values, used by `in_dictionary` operator     |
+Artifact IDs control visibility:
 
-## Scoping rules
+- `library.*` artifacts are globally visible;
+- pipeline-local artifacts are visible through their dotted scope;
+- pipelines can call other pipelines by full id;
+- dictionaries are globally addressable by id.
 
-Artifact IDs control visibility between pipelines.
+Result levels:
 
-**`library.*` prefix** globally visible from any pipeline or condition:
+| Level | Meaning | Pipeline behaviour |
+| --- | --- | --- |
+| `WARNING` | Soft issue. | Accumulated; does not stop execution. |
+| `ERROR` | Validation failure. | Accumulated; final `control` is `STOP`. |
+| `EXCEPTION` | Hard block. | Stops execution immediately. |
 
-```
-library.person.email_format    ← usable anywhere
-library.payment.card_required  ← usable anywhere
-```
-
-**Pipeline-local** visible within a pipeline when IDs share the same dotted prefix:
-
-```
-Pipeline:   internal.checkout.blocks.payment
-Visible:    internal.checkout.blocks.payment.card_expiry_check
-```
-
-The compiler validates all references and reports every unresolvable one at compile time.
-
-## Result levels
-
-| Level       | Meaning                       | Pipeline behaviour                          |
-| ----------- | ----------------------------- | ------------------------------------------- |
-| `ERROR`     | Validation failure            | Accumulated, does **not** stop the pipeline |
-| `WARNING`   | Soft check, data quality hint | Accumulated, does **not** stop the pipeline |
-| `EXCEPTION` | Hard block, cannot proceed    | Immediately **stops** the pipeline          |
-
-| `status`             | Meaning                                                           |
-| -------------------- | ----------------------------------------------------------------- |
-| `"OK"`               | No issues at all                                                  |
-| `"OK_WITH_WARNINGS"` | Passed, but has soft `WARNING`-level issues worth surfacing       |
-| `"ERROR"`            | One or more `ERROR`-level issues                                  |
-| `"EXCEPTION"`        | Pipeline was stopped by an `EXCEPTION`-level rule                 |
-| `"ABORT"`            | Engine fault (unexpected runtime error). Not a validation result. |
-
-## Public API
-
-The following exports are **stable** and covered by semantic versioning:
-
-| Export                    | Description                                       |
-| ------------------------- | ------------------------------------------------- |
-| `createEngine(options)`   | Creates an engine instance                        |
-| `Operators`               | Built-in operator pack                            |
-| `CompilationError`        | Thrown by `engine.compile()` on invalid artifacts |
-| `ctx.get(path)` / `ctx.has(path)` | Preferred field access contract for new custom operators |
-| `deepGet(payload, field)` | Backward-compatible field lookup helper for custom operators |
-
-Everything under `src/**` is **internal** and may change between minor versions. Do not import from `src/` directly.
+Built-in operators and custom operator authoring are documented in [OPERATORS.md](./OPERATORS.md). The normative artifact format is documented in [SPEC.md](./SPEC.md), and public compatibility rules are documented in [COMPATIBILITY.md](./COMPATIBILITY.md).
 
 ## Custom operators
 
-See the full guide in [OPERATORS.md](./OPERATORS.md).
-
-Quick example adding a custom check operator:
+Custom operators receive `(rule, ctx)`. New operators should use the stable context helpers:
 
 ```js
-const { createEngine, Operators } = require("jsonspecs");
+function amount_gt_zero(rule, ctx) {
+  const got = ctx.get(rule.field);
+  if (!got.ok) return { status: "FAIL", actual: undefined };
 
-const myOperators = {
-  check: {
-    ...Operators.check,
-
-    // Custom check: value must match one of allowed patterns (not just exact strings)
-    matches_any_pattern(rule, ctx) {
-      const got = ctx.get(rule.field);
-      if (!got.ok || got.value == null) return { status: "FAIL" };
-      const patterns = Array.isArray(rule.value) ? rule.value : [rule.value];
-      const matched = patterns.some((p) =>
-        new RegExp(p).test(String(got.value)),
-      );
-      return { status: matched ? "OK" : "FAIL", actual: got.value };
-    },
-  },
-  predicate: {
-    ...Operators.predicate,
-  },
-};
-
-const engine = createEngine({ operators: myOperators });
-```
-
-Then use it in a rule artifact:
-
-```json
-{
-  "id": "library.address.postal_code",
-  "type": "rule",
-  "description": "Postal code must match RU or international format",
-  "role": "check",
-  "operator": "matches_any_pattern",
-  "level": "ERROR",
-  "code": "ADDR.POSTAL.FORMAT",
-  "message": "Postal code format is invalid",
-  "field": "address.postalCode",
-  "value": ["^\\d{6}$", "^[A-Z]{1,2}\\d{1,2}[A-Z]?\\s?\\d[A-Z]{2}$"]
+  const value = Number(got.value);
+  return {
+    status: Number.isFinite(value) && value > 0 ? "OK" : "FAIL",
+    actual: got.value,
+  };
 }
 ```
 
-## Built-in operators
+Register custom operators by extending the built-in pack:
 
-Full reference with examples: [OPERATORS.md](./OPERATORS.md).
+```js
+const engine = createEngine({
+  operators: {
+    check: { ...Operators.check, amount_gt_zero },
+    predicate: { ...Operators.predicate },
+  },
+});
+```
 
-| Operator                            | Type              | Description                                        |
-| ----------------------------------- | ----------------- | -------------------------------------------------- |
-| `not_empty`                         | check + predicate | Field is present and non-empty                     |
-| `is_empty`                          | check + predicate | Field is absent or empty                           |
-| `equals`                            | check + predicate | Field equals `value`                               |
-| `not_equals`                        | check + predicate | Field does not equal `value`                       |
-| `matches_regex`                     | check + predicate | Field matches regex in `value`                     |
-| `length_equals`                     | check             | String or array length equals `value`              |
-| `length_max`                        | check             | String or array length ≤ `value`                   |
-| `contains`                          | check + predicate | String contains substring `value`                  |
-| `greater_than`                      | check + predicate | Field > `value`                                    |
-| `less_than`                         | check + predicate | Field < `value`                                    |
-| `in_dictionary`                     | check + predicate | Value exists in named dictionary                   |
-| `any_filled`                        | check             | At least one field from `fields` list is non-empty |
-| `field_equals_field`                | check + predicate | `field` == `value_field`                           |
-| `field_not_equals_field`            | check + predicate | `field` != `value_field`                           |
-| `field_less_than_field`             | check + predicate | `field` < `value_field`                            |
-| `field_greater_than_field`          | check + predicate | `field` > `value_field`                            |
-| `field_less_or_equal_than_field`    | check + predicate | `field` ≤ `value_field`                            |
-| `field_greater_or_equal_than_field` | check + predicate | `field` ≥ `value_field`                            |
+## Tests
+
+```bash
+npm test
+npm run test:smoke
+npm run test:pack
+```
+
+`test:pack` installs the packed package into clean CommonJS and ESM consumers and verifies the published artifact shape.
+
+Current coverage and recommended additions are tracked in [TESTING.md](./TESTING.md).

@@ -83,3 +83,31 @@
 передавать явно через фазы компиляции, если компилятор станет
 реентерантным, асинхронным или будет вызываться в одном процессе с независимыми
 наборами `sources`. Сейчас фазы синхронны, а `finally` гарантирует очистку контекста.
+
+## 5. Более точный каталог schema diagnostics
+
+Сейчас межартефактные фазы уже имеют специфичные коды (`DUPLICATE_ARTIFACT_ID`,
+`ARTIFACT_REF_NOT_FOUND`, `PIPELINE_CYCLE`, `DUPLICATE_CHECK_CODE`,
+`UNKNOWN_OPERATOR`), но большая часть schema validation намеренно схлопнута в
+`SCHEMA_VALIDATION_ERROR`.
+
+Первый кандидат на выделение — dangerous path segment:
+
+- `field: "__proto__.x"`;
+- `value_field: "$context.constructor.x"`;
+- `fields[]` / `paths[]` в `any_filled`.
+
+Compile-time проверка уже есть, но diagnostic code пока общий. Для симметрии с
+runtime-кодами payload safety стоит вернуть отдельный `DANGEROUS_PATH_SEGMENT`.
+
+## 6. Trace limits для HTTP-adapters
+
+Core trace остаётся управляемым через `trace: false | "basic" | "verbose"` и
+`traceRedactor`, но публичные HTTP-adapters должны иметь собственный потолок:
+
+- максимум trace entries;
+- максимум serialized response size;
+- явный marker, что trace был усечён.
+
+Это не обязанность core API, но важно для сервисов, которые дают `basic` trace
+наружу.

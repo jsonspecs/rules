@@ -1,7 +1,7 @@
 {
   "name": "jsonspecs",
-  "version": "2.1.0",
-  "description": "Composable validation pipelines powered by JSON rules",
+  "version": "2.1.1",
+  "description": "Declarative JSON rules engine for validation pipelines",
   "type": "commonjs",
   "main": "index.js",
   "types": "./index.d.ts",
@@ -25,8 +25,12 @@
     "schema/*.json",
     "scripts/pack-smoke.js",
     "README.md",
+    "README_RU.md",
     "OPERATORS.md",
+    "OPERATORS_RU.md",
     "SPEC.md",
+    "SPEC_RU.md",
+    "TESTING.md",
     "COMPATIBILITY.md",
     "LICENSE",
     "CHANGELOG.md"

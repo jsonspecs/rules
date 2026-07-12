@@ -3,6 +3,13 @@
 const test = require("node:test");
 const assert = require("node:assert/strict");
 const { compileSnapshot, computeSourceHash, CompilationError } = require("..");
+const packageJson = require("../package.json");
+
+const [, major, minor, patch] = packageJson.version.match(/^(\d+)\.(\d+)\.(\d+)/);
+const currentVersion = `${major}.${minor}.${patch}`;
+const nextPatchVersion = `${major}.${minor}.${Number(patch) + 1}`;
+const nextMinorVersion = `${major}.${Number(minor) + 1}.0`;
+const nextMajorVersion = `${Number(major) + 1}.0.0`;
 
 function snapshot(minVersion) {
   const artifacts = [];
@@ -23,16 +30,16 @@ function incompatible(error) {
 }
 
 test("snapshot compatibility compares major, minor and patch", () => {
-  assert.equal(compileSnapshot(snapshot("2.1.0")).kind, "prepared-jsonspecs");
-  assert.throws(() => compileSnapshot(snapshot("2.1.1")), incompatible);
-  assert.throws(() => compileSnapshot(snapshot("2.2.0")), incompatible);
-  assert.throws(() => compileSnapshot(snapshot("3.0.0")), incompatible);
+  assert.equal(compileSnapshot(snapshot(currentVersion)).kind, "prepared-jsonspecs");
+  assert.throws(() => compileSnapshot(snapshot(nextPatchVersion)), incompatible);
+  assert.throws(() => compileSnapshot(snapshot(nextMinorVersion)), incompatible);
+  assert.throws(() => compileSnapshot(snapshot(nextMajorVersion)), incompatible);
 });
 
 test("snapshot compatibility follows SemVer prerelease and build precedence", () => {
-  assert.equal(compileSnapshot(snapshot("2.1.0-rc.1")).kind, "prepared-jsonspecs");
-  assert.equal(compileSnapshot(snapshot("2.1.0+snapshot.7")).kind, "prepared-jsonspecs");
-  assert.throws(() => compileSnapshot(snapshot("2.1.1-alpha.1")), incompatible);
+  assert.equal(compileSnapshot(snapshot(`${currentVersion}-rc.1`)).kind, "prepared-jsonspecs");
+  assert.equal(compileSnapshot(snapshot(`${currentVersion}+snapshot.7`)).kind, "prepared-jsonspecs");
+  assert.throws(() => compileSnapshot(snapshot(`${nextPatchVersion}-alpha.1`)), incompatible);
 });
 
 test("snapshot minVersion must be a complete valid semantic version", () => {

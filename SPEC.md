@@ -353,7 +353,7 @@ Describes an ordered sequence of steps — the primary validation scenario.
 | `flow`             | array    | **yes**                            | non-empty array of steps | Steps executed in order                                                                                |
 | `message`          | string   | required when `strict: true`       | non-empty                | Message for the summary EXCEPTION issued on strict escalation                                          |
 | `strictCode`       | string   | optional, only with `strict: true` | non-empty                | Code for the summary EXCEPTION. Default: `"STRICT_PIPELINE_FAILED"`                                    |
-| `required_context` | string[] | optional                           | array of context keys    | Context keys that must be present in `__context`. Missing keys cause an EXCEPTION before any steps run |
+| `required_context` | string[] | optional                           | array of context keys    | Context keys that must be present in runtime input `context` or legacy payload `__context`. Missing keys cause an EXCEPTION before any steps run |
 
 ### The `entrypoint` field
 

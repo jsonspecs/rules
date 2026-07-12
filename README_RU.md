@@ -5,383 +5,358 @@
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 [![Node 20+](https://img.shields.io/badge/Node-20%2B-green)](https://nodejs.org/)
 
-Декларативный движок валидационных правил. Правила описываются в JSON-файлах. Движок компилирует их, запускает на payload любой глубины вложенности и возвращает структурированный результат с уровнями `ERROR`, `WARNING` и `EXCEPTION`, полным списком issue и execution trace. Без внешних зависимостей.
+Декларативный движок валидации для JSON-правил и детерминированных validation pipelines.
 
-```
+Правила описываются обычными JSON-артефактами. JSONSpecs валидирует и подготавливает их один раз, запускает именованный pipeline на JSON payload и возвращает transport-safe результат со стабильными статусами, issues, diagnostics, опциональным trace и provenance набора правил. У пакета нет runtime-зависимостей.
+
+```bash
 npm install jsonspecs
 ```
 
-## Как это работает
-
-Правила (rules) хранятся как отдельные JSON-файлы. Сценарий проверки (pipeline) собирает их в детерменированный поток выполнения. Движок компилирует их один раз, после чего может запускать на любом payload.
-
-**Шаг 1: написать атомарные правила** (один файл на одно правило, одно правило на проверку одного поля):
-
-`rules/library/person/first_name_required.json`
-
-```json
-{
-  "id": "library.person.first_name_required",
-  "type": "rule",
-  "description": "Имя должно быть заполнено",
-  "role": "check",
-  "operator": "not_empty",
-  "level": "ERROR",
-  "code": "PERSON.FIRST_NAME.REQUIRED",
-  "message": "Необходимо указать имя",
-  "field": "person.firstName"
-}
-```
-
-`rules/library/person/email_format.json`
-
-```json
-{
-  "id": "library.person.email_format",
-  "type": "rule",
-  "description": "Email должен содержать @",
-  "role": "check",
-  "operator": "contains",
-  "level": "WARNING",
-  "code": "PERSON.EMAIL.FORMAT",
-  "message": "Адрес электронной почты выглядит некорректным",
-  "field": "person.email",
-  "value": "@"
-}
-```
-
-`rules/library/person/doc_not_expired.json`
-
-```json
-{
-  "id": "library.person.doc_not_expired",
-  "type": "rule",
-  "description": "Документ не должен быть просрочен",
-  "role": "check",
-  "operator": "field_greater_or_equal_than_field",
-  "level": "EXCEPTION",
-  "code": "PERSON.DOC.EXPIRED",
-  "message": "Срок действия документа истёк",
-  "field": "person.document.expireDate",
-  "value_field": "$context.currentDate"
-}
-```
-
-**Шаг 2: собрать правила в сценарий:**
-
-`rules/pipelines/registration/pipeline.json`
-
-```json
-{
-  "id": "registration.pipeline",
-  "type": "pipeline",
-  "description": "Валидация регистрации физлица",
-  "entrypoint": true,
-  "strict": false,
-  "required_context": ["currentDate"],
-  "flow": [
-    { "rule": "library.person.first_name_required" },
-    { "rule": "library.person.email_format" },
-    { "rule": "library.person.doc_not_expired" }
-  ]
-}
-```
-
-**Шаг 3: скомпилировать и запустить:**
+Поддерживаются CommonJS и ESM:
 
 ```js
 const { createEngine, Operators } = require("jsonspecs");
-
-const artifacts = [
-  require("./rules/library/person/first_name_required.json"),
-  require("./rules/library/person/email_format.json"),
-  require("./rules/library/person/doc_not_expired.json"),
-  require("./rules/pipelines/registration/pipeline.json"),
-];
-
-const engine = createEngine({ operators: Operators });
-const compiled = engine.compile(artifacts);
-
-const result = engine.runPipeline(compiled, "registration.pipeline", {
-  person: {
-    firstName: "Ivan",
-    email: "ivan@example.com",
-    document: { expireDate: "2028-01-01" },
-  },
-  __context: { currentDate: "2026-03-27" },
-});
-
-// { status: "OK", control: "CONTINUE", issues: [] }
 ```
 
-Движок не привязан к конкретному загрузчику артефактов и потому они могут поступать откуда угодно: из файловой системы, snapshot-файла, базы данных или быть встроенными объектами прямо в тестах. См. [Загрузка артефактов](#загрузка-артефактов).
-
-## API
-
-### `createEngine({ operators })`
-
-Создаёт экземпляр движка, привязанный к набору операторов.
-
 ```js
-const { createEngine, Operators } = require("jsonspecs");
-const engine = createEngine({ operators: Operators });
+import { createEngine, Operators } from "jsonspecs";
 ```
 
-`Operators` встроенный набор, покрывающий все стандартные checks и predicates. Вы можете расширить его собственными операторами, см. [Пользовательские операторы](#пользовательские-операторы).
+## Базовые понятия
 
-### `engine.compile(artifacts, options?)`
+| Артефакт | Назначение |
+| --- | --- |
+| `rule` | Атомарная проверка или predicate на одном операторе. |
+| `condition` | Predicate-условие и шаги, которые выполняются только при истинном условии. |
+| `pipeline` | Упорядоченный сценарий из правил, условий и вложенных pipeline. |
+| `dictionary` | Статический список значений для `in_dictionary`. |
 
-Компилирует массив артефактов в оптимизированную runtime-структуру. Если какой-либо артефакт некорректен, выбрасывает `CompilationError` с полным списком ошибок.
+Обычный production-flow:
 
-```js
-const compiled = engine.compile(artifacts);
-```
+1. описать JSON-артефакты;
+2. провалидировать и исправить diagnostics;
+3. подготовить artifact или собрать детерминированный snapshot;
+4. выполнить prepared artifact с `{ pipelineId, payload, context }`.
 
-Проверки на этапе компиляции: валидация схемы, целостность ссылок, обнаружение циклов в DAG, наличие операторов и уникальность `code` среди всех правил. `sources` необязательный `Map<artifactId, sourceFile | {file,line?,column?}>`, используемый для заполнения структурного поля `location` в диагностике; автоматически заполняется `loadArtifactsFromDir`.
+`jsonspecs` не привязан к загрузчику. Чтение файлов, project manifest, Studio UI и сборка snapshot находятся в [`jsonspecs-cli`](https://www.npmjs.com/package/jsonspecs-cli), а не в ядре.
 
-### `engine.runPipeline(compiled, pipelineId, payload)`
-
-Запускает именованный pipeline на указанном payload.
-
-```js
-const result = engine.runPipeline(compiled, "registration.pipeline", {
-  person: { firstName: "Иван" },
-  __context: { currentDate: "2026-03-27" },
-});
-```
-
-Payload может быть как вложенным JSON-объектом, так и заранее преобразованным flat-map в dot-notation поддерживаются оба варианта. Runtime-контекст передаётся под зарезервированным ключом `__context`. Правила получают доступ к нему через `$context.fieldName`.
-
-**Структура результата:**
+## Быстрый старт
 
 ```js
-{
-  status: "OK" | "OK_WITH_WARNINGS" | "ERROR" | "EXCEPTION",
-  control: "CONTINUE" | "STOP",
-  issues: [
-    {
-      kind: "ISSUE",
-      level: "ERROR" | "WARNING" | "EXCEPTION",
-      code: "PERSON.FIRST_NAME.REQUIRED",
-      message: "Необходимо указать имя",
-      field: "person.firstName",
-      ruleId: "library.person.name_required",
-      actual: "",       // значение, на котором произошёл провал
-      expected: ...     // ожидаемое значение правила или ссылка на словарь, если применимо
-    }
-  ]
-}
-```
+const { createEngine, Operators, formatDiagnostics } = require("jsonspecs");
 
-### `ctx.get(path)` / `ctx.has(path)`
-
-Для новых пользовательских операторов предпочтительно использовать helper’ы runtime-контекста:
-
-```js
-module.exports = function myOperator(rule, ctx) {
-  const got = ctx.get(rule.field);
-  if (!got.ok) return { status: "FAIL" };
-  return { status: got.value ? "OK" : "FAIL", actual: got.value };
-};
-```
-
-`ctx.has(path)` возвращает boolean, когда нужна только проверка наличия поля.
-
-### `deepGet(payload, field)`
-
-Вспомогательная функция, экспортируемая для использования в сложных пользовательских операторах и для обратной совместимости. В новых операторах рекомендуется использовать ctx.get(). Ищет поле по dot-notation path в flat payload map, с поддержкой полей вида `$context.*`.
-
-```js
-const { deepGet } = require("jsonspecs");
-
-// Возвращает { ok: true, value: "Иван" }
-deepGet(ctx.payload, "person.firstName");
-
-// Возвращает { ok: true, value: "2026-03-27" }
-deepGet(ctx.payload, "$context.currentDate");
-
-// Возвращает { ok: false, value: undefined } поле отсутствует
-deepGet(ctx.payload, "person.unknownField");
-```
-
-### `CompilationError`
-
-Выбрасывается из `engine.compile()`, если артефакты некорректны. Содержит полный список всех найденных ошибок, а не только первую.
-
-```js
-const { CompilationError } = require("jsonspecs");
-
-try {
-  engine.compile(artifacts);
-} catch (err) {
-  if (err instanceof CompilationError) {
-    console.error("Compilation failed:");
-    err.errors.forEach((msg, i) => console.error(`  ${i + 1}. ${msg}`));
-  }
-}
-```
-
-## Загрузка артефактов
-
-Движок не привязан к конкретному загрузчику. Вы сами решаете, как загрузить артефакты в память.
-
-**Из файловой системы** (разработка: сканирование директории с `.json`-файлами):
-
-```js
-// loader-fs является частью вашего серверного проекта, а не этого пакета
-const { loadArtifactsFromDir } = require("./lib/loader-fs");
-const { artifacts, sources } = loadArtifactsFromDir("./rules");
-const compiled = engine.compile(artifacts, { sources });
-```
-
-**Из snapshot** (production: один заранее собранный JSON-файл):
-
-```js
-const snapshot = JSON.parse(fs.readFileSync("snapshot.json", "utf8"));
-const compiled = engine.compileSnapshot(snapshot);
-```
-
-**Inline** (тесты: артефакты задаются как обычные JS-объекты):
-
-```js
 const artifacts = [
   {
-    id: "library.t.name",
+    id: "library.person.first_name_required",
     type: "rule",
     description: "Имя должно быть заполнено",
     role: "check",
     operator: "not_empty",
     level: "ERROR",
-    code: "NAME.REQUIRED",
+    code: "PERSON.FIRST_NAME.REQUIRED",
     message: "Необходимо указать имя",
-    field: "person.name",
+    field: "person.firstName",
   },
   {
-    id: "test.pipeline",
+    id: "registration.pipeline",
     type: "pipeline",
-    description: "Тест",
+    description: "Валидация регистрации",
     entrypoint: true,
     strict: false,
-    flow: [{ rule: "library.t.name" }],
+    required_context: ["currentDate"],
+    flow: [{ rule: "library.person.first_name_required" }],
   },
 ];
 
-const compiled = engine.compile(artifacts);
-const result = engine.runPipeline(compiled, "test.pipeline", {
-  person: { name: "" },
+const engine = createEngine({ operators: Operators });
+
+const validation = engine.validate(artifacts);
+if (!validation.ok) {
+  throw new Error(formatDiagnostics(validation.diagnostics));
+}
+
+const prepared = engine.compile(artifacts);
+
+const result = engine.runPipeline(prepared, {
+  pipelineId: "registration.pipeline",
+  payload: {
+    person: { firstName: "Ivan" },
+  },
+  context: {
+    currentDate: "2026-03-27",
+  },
 });
-// result.status === "ERROR"
-// result.issues[0].code === "NAME.REQUIRED"
+
+// {
+//   status: "OK",
+//   control: "CONTINUE",
+//   issues: [],
+//   ruleset: { sourceHash: "..." }
+// }
 ```
 
-## Типы артефактов
+Если ровно один pipeline помечен `entrypoint: true`, `pipelineId` можно не передавать. Старая сигнатура `runPipeline(prepared, pipelineId, payload, options)` сохранена для совместимости, но новый код должен использовать объектный input.
 
-| Type         | Назначение                                                                                  |
-| ------------ | ------------------------------------------------------------------------------------------- |
-| `rule`       | Атомарная проверка или предикат: один оператор, одно поле, один результат                   |
-| `condition`  | Условный блок: predicate-guard в `when` + `steps`, которые выполняются при истинном условии |
-| `pipeline`   | Упорядоченная последовательность шагов: правила, conditions, подпайплайны                   |
-| `dictionary` | Именованный список допустимых значений, используемый оператором `in_dictionary`             |
+## Публичный API
 
-## Правила области видимости
+Поддерживаемая поверхность — только exports из корня пакета. Всё внутри `src/**` считается внутренней реализацией.
 
-Идентификаторы артефактов управляют видимостью между pipeline.
+| Export | Назначение |
+| --- | --- |
+| `createEngine({ operators })` | Создаёт engine с переданным набором операторов. |
+| `Operators` | Встроенные check- и predicate-операторы. |
+| `validate(artifacts, options?)` | Non-throwing валидация исходников со встроенными операторами, если не передан `options.operators`. |
+| `compileSnapshot(snapshot, options?)` | Проверяет целостность snapshot и подготавливает его к runtime. |
+| `inspect(prepared)` | Read-only introspection по prepared artifact. |
+| `computeSourceHash(artifacts)` | Канонический SHA-256 по артефактам. |
+| `formatDiagnostics(diagnostics)` | Короткий человекочитаемый формат diagnostics. |
+| `formatRuntimeError(error)` | Короткий формат runtime error. |
+| `deepGet(payload, path)` | Helper для обратной совместимости. Новые операторы должны использовать `ctx.get()`. |
+| `CompilationError` / `RuntimeError` | Типизированные ошибки compile-time и внутреннего runtime. |
 
-**Префикс `library.*`** глобальная видимость из любого pipeline или condition:
+### `engine.validate(artifacts, options?)`
 
-```
-library.person.email_format    ← можно использовать в любом сценарии
-library.payment.card_required  ← можно использовать в любом сценарии
-```
+Возвращает `{ ok, diagnostics }` и не бросает исключения на обычных ошибках исходников.
 
-**Pipeline-local** видимость внутри pipeline, если идентификаторы разделяют общий dotted prefix:
-
-```
-Pipeline:   internal.checkout.blocks.payment
-Visible:    internal.checkout.blocks.payment.card_expiry_check
-```
-
-Компилятор валидирует все ссылки и на этапе компиляции сообщает о каждой неразрешимой.
-
-## Уровни результата
-
-| Level       | Значение                                      | Поведение pipeline                           |
-| ----------- | --------------------------------------------- | -------------------------------------------- |
-| `ERROR`     | Ошибка валидации                              | Накапливается, **не** останавливает pipeline |
-| `WARNING`   | Мягкая проверка, подсказка по качеству данных | Накапливается, **не** останавливает pipeline |
-| `EXCEPTION` | Жёсткая блокировка, продолжать нельзя         | Немедленно **останавливает** pipeline        |
-
-| `status`             | Значение                                                                         |
-| -------------------- | -------------------------------------------------------------------------------- |
-| `"OK"`               | Вообще нет issue                                                                 |
-| `"OK_WITH_WARNINGS"` | Проверка пройдена, но есть мягкие issue уровня `WARNING`, которые стоит показать |
-| `"ERROR"`            | Есть одна или более issue уровня `ERROR`                                         |
-| `"EXCEPTION"`        | Pipeline был остановлен правилом уровня `EXCEPTION`                              |
-
-## Пользовательские операторы
-
-См. полный справочник в [OPERATORS.md](./OPERATORS_RU.md).
-
-Короткий пример добавления собственного check-оператора:
+Диагностики структурированы:
 
 ```js
-const { createEngine, Operators } = require("jsonspecs");
-
-// кастомный оператор
-const is_apple = (rule, ctx) => {
-  const got = ctx.get(rule.field);
-  if (!got.ok) return { status: "FAIL" };
-  return {
-    status: got.value === "apple" ? "OK" : "FAIL",
-    actual: got.value,
-  };
-};
-
-const operators = {
-  check: { ...Operators.check, is_apple },
-  predicate: { ...Operators.predicate },
-};
-
-const engine = createEngine({ operators });
-```
-
-Затем оператор используется в артефакте правила:
-
-```json
 {
-  "id": "library.fruit.must_be_apple",
-  "type": "rule",
-  "description": "Field must equal apple",
-  "role": "check",
-  "operator": "is_apple",
-  "level": "ERROR",
-  "code": "FRUIT.NOT_APPLE",
-  "message": "Only apples are accepted here",
-  "field": "order.fruit"
+  code: "ARTIFACT_REF_NOT_FOUND",
+  level: "error",
+  message: "Reference not found: library.person.email",
+  phase: "reference_validation",
+  artifactId: "registration.pipeline",
+  path: "flow[1].rule",
+  location: "/rules/registration.pipeline.json"
 }
 ```
 
-## Встроенные операторы
+Фазы компилятора намеренно phase-fail-fast: неуспешная фаза возвращает все свои diagnostics, а следующие зависимые фазы не запускаются.
 
-Полный справочник с примерами: [OPERATORS.md](./OPERATORS_RU.md).
+### `engine.compile(artifacts, options?)`
 
-| Operator                            | Type              | Description                                    |
-| ----------------------------------- | ----------------- | ---------------------------------------------- |
-| `not_empty`                         | check + predicate | Поле присутствует и не пустое                  |
-| `is_empty`                          | check + predicate | Поле отсутствует или пустое                    |
-| `equals`                            | check + predicate | Значение поля равно `value`                    |
-| `not_equals`                        | check + predicate | Значение поля не равно `value`                 |
-| `matches_regex`                     | check + predicate | Значение поля соответствует regex из `value`   |
-| `length_equals`                     | check             | Длина строки или массива равна `value`         |
-| `length_max`                        | check             | Длина строки или массива ≤ `value`             |
-| `contains`                          | check + predicate | Строка содержит подстроку `value`              |
-| `greater_than`                      | check + predicate | Значение поля > `value`                        |
-| `less_than`                         | check + predicate | Значение поля < `value`                        |
-| `in_dictionary`                     | check + predicate | Значение присутствует в именованном словаре    |
-| `any_filled`                        | check             | Хотя бы одно поле из списка `fields` не пустое |
-| `field_equals_field`                | check + predicate | `field` == `value_field`                       |
-| `field_not_equals_field`            | check + predicate | `field` != `value_field`                       |
-| `field_less_than_field`             | check + predicate | `field` < `value_field`                        |
-| `field_greater_than_field`          | check + predicate | `field` > `value_field`                        |
-| `field_less_or_equal_than_field`    | check + predicate | `field` ≤ `value_field`                        |
-| `field_greater_or_equal_than_field` | check + predicate | `field` ≥ `value_field`                        |
+Возвращает opaque prepared artifact:
+
+```js
+{
+  kind: "prepared-jsonspecs",
+  artifactType: "jsonspecs",
+  version: "1",
+  sourceHash: "...",
+  diagnostics: []
+}
+```
+
+Runtime internals не раскрываются через публичный объект. Для UI, debug и tooling используйте `inspect(prepared)`.
+
+`options.sources` может быть `Map<artifactId, string | { file, line?, column? }>` и используется для заполнения `location` в diagnostics.
+
+### `engine.compileSnapshot(snapshot, options?)`
+
+Snapshot — детерминированный production artifact:
+
+```js
+{
+  "format": "jsonspecs-snapshot",
+  "formatVersion": 1,
+  "sourceHash": "...",
+  "engine": { "minVersion": "2.1.1" },
+  "artifacts": [],
+  "meta": {
+    "projectId": "checkout-rules",
+    "projectTitle": "Checkout rules",
+    "description": "Checkout validation",
+    "rulesetVersion": "1.0.0"
+  }
+}
+```
+
+`compileSnapshot()` проверяет форму snapshot, SemVer-совместимость движка и `sourceHash`. Runtime result из snapshot содержит `ruleset.sourceHash`, `ruleset.projectId` и `ruleset.rulesetVersion`.
+
+### `engine.runPipeline(prepared, input, options?)`
+
+```js
+const result = engine.runPipeline(prepared, {
+  pipelineId: "registration.pipeline",
+  payload: { person: { firstName: "" } },
+  context: { currentDate: "2026-03-27" },
+}, {
+  trace: "basic",
+});
+```
+
+`input.payload` должен быть JSON object. Он может быть вложенным или уже flattened через dot-notation. `input.context` доступен правилам как `$context.*`.
+
+Runtime result:
+
+```js
+{
+  status: "OK" | "OK_WITH_WARNINGS" | "ERROR" | "EXCEPTION" | "ABORT",
+  control: "CONTINUE" | "STOP",
+  issues: [],
+  ruleset: {
+    sourceHash: "...",
+    projectId: "checkout-rules",
+    rulesetVersion: "1.0.0"
+  },
+  trace: [] // только если trace включён
+}
+```
+
+Issue:
+
+```js
+{
+  kind: "ISSUE",
+  level: "ERROR",
+  code: "PERSON.FIRST_NAME.REQUIRED",
+  message: "Необходимо указать имя",
+  field: "person.firstName",
+  ruleId: "library.person.first_name_required",
+  pipelineId: "registration.pipeline",
+  stepId: "optional-step-id",
+  expected: "...",
+  actual: "",
+  meta: {}
+}
+```
+
+`ABORT` — не validation result. Это означает, что runtime boundary поймал проблему payload, custom operator, trace redactor или внутренний сбой движка. В таком результате всегда `control: "STOP"` и transport-safe error:
+
+```js
+{
+  status: "ABORT",
+  control: "STOP",
+  issues: [],
+  error: {
+    code: "DANGEROUS_PAYLOAD_KEY",
+    message: "Dangerous key at __proto__",
+    details: { "path": "__proto__" }
+  }
+}
+```
+
+Stack trace в runtime result не раскрывается.
+
+### `inspect(prepared)`
+
+Introspection API для UI, документации, debug и HTTP API:
+
+```js
+const view = engine.inspect(prepared);
+
+view.listEntrypoints();
+view.listArtifacts({ type: "rule" });
+view.getArtifact("library.person.first_name_required");
+view.getPipelineSteps("registration.pipeline");
+view.getConditionModel("library.person.has_document");
+view.listDictionaries();
+view.stats();
+```
+
+## Trace
+
+Trace по умолчанию выключен и отсутствует в result.
+
+| Опция | Поведение |
+| --- | --- |
+| `false` / не передано | Поля `trace` нет. |
+| `true` / `"basic"` | Структурный trace без raw payload values. |
+| `"verbose"` | Trace может содержать подробные значения после применения `traceRedactor`. |
+
+Все trace events имеют одну форму:
+
+```js
+{
+  kind: "TRACE",
+  artifactType: "jsonspecs",
+  artifactId: "registration.pipeline",
+  step: "pipeline.start",
+  outcome: "start",
+  at: "2026-07-12T10:00:00.000Z",
+  details: {}
+}
+```
+
+## Safety guarantees
+
+Движок рассматривает artifacts и payload как недоверенный JSON:
+
+- опасные ключи `__proto__`, `prototype`, `constructor` отклоняются;
+- чтение через prototype chain не используется;
+- циклические artifacts и payload отклоняются;
+- неподдерживаемые JSON-значения отклоняются или нормализуются на runtime boundary;
+- prepared artifacts opaque и immutable с точки зрения публичного API;
+- runtime results можно безопасно `JSON.stringify()` и прогонять через JSON round-trip.
+
+## JSON Schema
+
+Пакет экспортирует JSON Schema 2020-12:
+
+```js
+const artifactSchema = require("jsonspecs/schema");
+const snapshotSchema = require("jsonspecs/schema/snapshot");
+```
+
+JSON Schema покрывает структурную валидацию. Ссылки между артефактами, наличие операторов, visibility, уникальность, aggregate semantics и циклы pipeline проверяются через `validate()` / `compile()`.
+
+## Правила артефактов
+
+Идентификаторы управляют visibility:
+
+- `library.*` видны глобально;
+- pipeline-local артефакты видны через dotted scope;
+- pipeline могут вызывать другие pipeline по полному id;
+- dictionaries глобально адресуются по id.
+
+Уровни результата:
+
+| Level | Значение | Поведение pipeline |
+| --- | --- | --- |
+| `WARNING` | Мягкое замечание. | Накапливается, выполнение не останавливает. |
+| `ERROR` | Ошибка валидации. | Накапливается, итоговый `control` — `STOP`. |
+| `EXCEPTION` | Жёсткая блокировка. | Немедленно останавливает выполнение. |
+
+Встроенные операторы и пользовательские операторы описаны в [OPERATORS_RU.md](./OPERATORS_RU.md). Нормативный формат артефактов описан в [SPEC_RU.md](./SPEC_RU.md), правила совместимости публичного API — в [COMPATIBILITY.md](./COMPATIBILITY.md).
+
+## Пользовательские операторы
+
+Custom operators получают `(rule, ctx)`. Новые операторы должны использовать стабильные helpers из context:
+
+```js
+function amount_gt_zero(rule, ctx) {
+  const got = ctx.get(rule.field);
+  if (!got.ok) return { status: "FAIL", actual: undefined };
+
+  const value = Number(got.value);
+  return {
+    status: Number.isFinite(value) && value > 0 ? "OK" : "FAIL",
+    actual: got.value,
+  };
+}
+```
+
+Регистрация:
+
+```js
+const engine = createEngine({
+  operators: {
+    check: { ...Operators.check, amount_gt_zero },
+    predicate: { ...Operators.predicate },
+  },
+});
+```
+
+## Тесты
+
+```bash
+npm test
+npm run test:smoke
+npm run test:pack
+```
+
+`test:pack` устанавливает собранный пакет в чистые CommonJS и ESM consumers и проверяет форму публикуемого артефакта.
+
+Текущее покрытие и рекомендуемые доработки тестов зафиксированы в [TESTING.md](./TESTING.md).

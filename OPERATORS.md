@@ -2,7 +2,7 @@
 
 [На русском языке](./OPERATORS_RU.md).
 
-Full reference for all built-in operators in `json-specs`, plus a guide for writing your own.
+Full reference for all built-in operators in `jsonspecs`, plus a guide for writing your own.
 
 ## Built-in operators
 
@@ -91,7 +91,7 @@ Field must not equal the given `value`.
 
 ### `matches_regex`
 
-Field must match the given regular expression.
+Field must match the given regular expression. Optional `flags` are passed to `RegExp` and validated at compile time together with the pattern.
 
 ```json
 {
@@ -104,7 +104,8 @@ Field must match the given regular expression.
   "code": "PERSON.LAST_NAME.FORMAT",
   "message": "Last name must contain only Cyrillic letters",
   "field": "person.lastName",
-  "value": "^[A-za-z\\-]+$"
+  "value": "^[A-Za-z\\-]+$",
+  "flags": "i"
 }
 ```
 
@@ -259,6 +260,26 @@ At least one field from the `fields` list must be non-empty.
 }
 ```
 
+`any_filled` also supports grouped wildcard fields. When all fields share the same
+wildcard base, the runtime evaluates the requirement per materialized group:
+
+```json
+{
+  "id": "library.items.tin_or_reason",
+  "type": "rule",
+  "description": "Each item must have TIN or absence reason",
+  "role": "check",
+  "operator": "any_filled",
+  "level": "ERROR",
+  "code": "ITEM.TIN_OR_REASON",
+  "message": "Provide TIN or absence reason for every item",
+  "fields": ["items[*].tin", "items[*].absenceReason"]
+}
+```
+
+For nested arrays the grouping follows the full wildcard path, for example
+`accounts[*].transactions[*].amount` is grouped per materialized transaction.
+
 ### `field_equals_field`
 
 Two fields must have equal values. Both `field` and `value_field` support `$context.*`.
@@ -401,10 +422,8 @@ const myOperators = {
       if (!got.ok || !got.value) return { status: "FAIL", actual: null };
 
       const fieldDate = new Date(got.value);
-      const today = new Date(
-        ctx.payload.__context?.currentDate ??
-          new Date().toISOString().slice(0, 10),
-      );
+      const contextDate = ctx.get("$context.currentDate");
+      const today = new Date(contextDate.ok ? contextDate.value : new Date().toISOString().slice(0, 10));
 
       if (isNaN(fieldDate.getTime()))
         return { status: "FAIL", actual: got.value };
@@ -444,12 +463,11 @@ If you want to use your operator as a `when` condition guard as well, add it to 
 
 ```js
 function dateNotInPastImpl(rule, ctx) {
-  const got = deepGet(ctx.payload, rule.field);
+  const got = ctx.get(rule.field);
   if (!got.ok || !got.value) return null; // null = absent
   const fieldDate = new Date(got.value);
-  const today = new Date(
-    ctx.payload.__context?.currentDate ?? new Date().toISOString().slice(0, 10),
-  );
+  const contextDate = ctx.get("$context.currentDate");
+  const today = new Date(contextDate.ok ? contextDate.value : new Date().toISOString().slice(0, 10));
   if (isNaN(fieldDate.getTime())) return false;
   return fieldDate >= today;
 }
@@ -481,7 +499,7 @@ For operators that take a parameter, read it from `rule.value` (scalar) or `rule
 ```js
 // Operator: field must equal one of several allowed values
 function in_list(rule, ctx) {
-  const got = deepGet(ctx.payload, rule.field);
+  const got = ctx.get(rule.field);
   if (!got.ok) return { status: "FAIL" };
   const allowed = Array.isArray(rule.value) ? rule.value : [rule.value];
   return {

@@ -87,7 +87,7 @@
 
 ### `matches_regex`
 
-Значение поля должно соответствовать заданному регулярному выражению.
+Значение поля должно соответствовать заданному регулярному выражению. Необязательное поле `flags` передаётся в `RegExp` и валидируется на этапе компиляции вместе с паттерном.
 
 ```json
 {
@@ -100,7 +100,8 @@
   "code": "PERSON.LAST_NAME.FORMAT",
   "message": "Фамилия должна содержать только кириллические буквы",
   "field": "person.lastName",
-  "value": "^[A-za-z\\-]+$"
+  "value": "^[A-Za-z\\-]+$",
+  "flags": "i"
 }
 ```
 
@@ -255,6 +256,24 @@
 }
 ```
 
+`any_filled` поддерживает grouped wildcard fields. Если все поля имеют общий wildcard base, runtime проверяет требование отдельно для каждой материализованной группы:
+
+```json
+{
+  "id": "library.items.tin_or_reason",
+  "type": "rule",
+  "description": "Для каждой позиции нужен ИНН или причина отсутствия",
+  "role": "check",
+  "operator": "any_filled",
+  "level": "ERROR",
+  "code": "ITEM.TIN_OR_REASON",
+  "message": "Укажите ИНН или причину отсутствия для каждой позиции",
+  "fields": ["items[*].tin", "items[*].absenceReason"]
+}
+```
+
+Для вложенных массивов группировка идёт по полному wildcard path, например `accounts[*].transactions[*].amount` группируется по каждой материализованной транзакции.
+
 ### `field_equals_field`
 
 Значения двух полей должны совпадать. И `field`, и `value_field` поддерживают `$context.*`.
@@ -397,10 +416,8 @@ const myOperators = {
       if (!got.ok || !got.value) return { status: "FAIL", actual: null };
 
       const fieldDate = new Date(got.value);
-      const today = new Date(
-        ctx.payload.__context?.currentDate ??
-          new Date().toISOString().slice(0, 10),
-      );
+      const contextDate = ctx.get("$context.currentDate");
+      const today = new Date(contextDate.ok ? contextDate.value : new Date().toISOString().slice(0, 10));
 
       if (isNaN(fieldDate.getTime()))
         return { status: "FAIL", actual: got.value };
@@ -440,12 +457,11 @@ const engine = createEngine({ operators: myOperators });
 
 ```js
 function dateNotInPastImpl(rule, ctx) {
-  const got = deepGet(ctx.payload, rule.field);
+  const got = ctx.get(rule.field);
   if (!got.ok || !got.value) return null; // null = поле отсутствует
   const fieldDate = new Date(got.value);
-  const today = new Date(
-    ctx.payload.__context?.currentDate ?? new Date().toISOString().slice(0, 10),
-  );
+  const contextDate = ctx.get("$context.currentDate");
+  const today = new Date(contextDate.ok ? contextDate.value : new Date().toISOString().slice(0, 10));
   if (isNaN(fieldDate.getTime())) return false;
   return fieldDate >= today;
 }
@@ -477,7 +493,7 @@ const myOperators = {
 ```js
 // Оператор: поле должно быть равно одному из разрешённых значений
 function in_list(rule, ctx) {
-  const got = deepGet(ctx.payload, rule.field);
+  const got = ctx.get(rule.field);
   if (!got.ok) return { status: "FAIL" };
   const allowed = Array.isArray(rule.value) ? rule.value : [rule.value];
   return {

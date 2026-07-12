@@ -367,7 +367,7 @@ Scope для pipeline это его собственный `id`. Scope для co
 
 ### Поле `required_context`
 
-Массив обязательных ключей runtime-контекста. Если хотя бы один ключ не передан в `__context`, движок завершает выполнение с `EXCEPTION` до исполнения шагов pipeline:
+Массив обязательных ключей runtime-контекста. Если хотя бы один ключ не передан в публичном input `context` или legacy payload `__context`, движок завершает выполнение с `EXCEPTION` до исполнения шагов pipeline:
 
 ```json
 "required_context": ["merchantId", "currentDate"]
@@ -574,12 +574,16 @@ Pipeline cycle detected: pipeline_A -> pipeline_B -> pipeline_A
 
 После остановки по `EXCEPTION` оставшиеся шаги pipeline не выполняются. Уже накопленные issues сохраняются в ответе.
 
-### Опция `trace`
+## Публичный runtime-контракт (v2)
 
-По умолчанию движок пишет полный trace выполнения. Для отключения сбора трейса (в целях производительности) передайте `{ trace: false }` четвёртым аргументом в `runPipeline`:
+`validate(artifacts, options)` возвращает `{ok, diagnostics}` и не бросает исключения для обычных ошибок исходников. Каждая diagnostic имеет стабильные поля `code`, `level`, `message`, `phase`, `artifactId`, `path` и `location`. Фазы компилятора формируют эти поля напрямую, а не выводят их из текста сообщения. `path` указывает на проблемное свойство относительно артефакта, а `location` равно `file`, `file:line` или `file:line:column`, если значение передано через `options.sources`; иначе `location` равно `null`. `compile()` возвращает opaque artifact `prepared-jsonspecs`; runtime internals доступны только через `inspect()`.
 
-```js
-engine.runPipeline(compiled, pipelineId, payload, { trace: false });
-```
+`runPipeline(prepared, {pipelineId?, payload, context?}, options)` принимает prepared artifact. Если `pipelineId` не передан, ровно один pipeline должен быть помечен `entrypoint`. Runtime result для валидного prepared artifact всегда содержит `status`, `control`, `issues` и `ruleset`. `ruleset.sourceHash` идентифицирует скомпилированные artifacts; snapshot-сборки дополнительно передают опциональные `rulesetVersion` и `projectId`. `ABORT` содержит `{code,message,details}` и никогда не раскрывает stack. Trace выключен по умолчанию и включается через `basic` или `verbose`.
 
-При `trace: false` массив `trace` в ответе будет пустым.
+Исключение из `traceRedactor` изолируется и возвращается как `ABORT` с кодом `TRACE_REDACTOR_ERROR`; оно не выходит наружу из `runPipeline`. Неожиданные сбои движка используют нейтральный fallback code `RUNTIME_ABORT`.
+
+Trace entries имеют единый структурный контракт: `{kind:"TRACE",artifactType:"jsonspecs",artifactId,step,at,outcome,details?}`. Нормативный enum `step`: `pipeline.start`, `pipeline.finish`, `pipeline.abort`, `pipeline.strict`, `rule.start`, `rule.finish`, `condition.evaluate`, `predicate.aggregate`, `check.aggregate`, `context.required`, `operator.trace`. Basic mode удаляет runtime values; verbose details проходят через `traceRedactor`, если он передан.
+
+Пользовательские check-операторы возвращают `OK|FAIL|EXCEPTION`; predicate-операторы возвращают `TRUE|FALSE|UNDEFINED|EXCEPTION`. `ctx.get(path)` возвращает `{ok,value}`, где `ok` — булево поле. Любая другая форма результата оператора завершает runtime с `OPERATOR_CONTRACT_VIOLATION`.
+
+Нормативные snapshots имеют `format: "jsonspecs-snapshot"`, `formatVersion: 1`, canonical `sourceHash`, `engine.minVersion`, `artifacts` и опциональную project `meta`. `engine.minVersion` должен быть полной SemVer 2.0.0 версией; совместимость проверяется по SemVer precedence с учётом major, minor, patch и prerelease identifiers. Snapshot используется только через `compileSnapshot()`.
