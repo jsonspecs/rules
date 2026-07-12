@@ -32,4 +32,11 @@ jobs:
           node -e 'if (!/^(0|[1-9]\d*)\.(0|[1-9]\d*)\.(0|[1-9]\d*)(?:-[0-9A-Za-z.-]+)?$/.test(process.argv[1])) process.exit(1)' "$VERSION"
           test "$(npm view "$PACKAGE_NAME@$VERSION" version)" = "$VERSION"
           npm dist-tag add "$PACKAGE_NAME@$VERSION" latest
-          test "$(npm view "$PACKAGE_NAME@latest" version)" = "$VERSION"
+          for attempt in {1..12}; do
+            if test "$(npm view "$PACKAGE_NAME@latest" version --prefer-online)" = "$VERSION"; then
+              exit 0
+            fi
+            sleep 5
+          done
+          echo "npm latest dist-tag did not converge to $VERSION" >&2
+          exit 1
