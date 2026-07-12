@@ -8,6 +8,11 @@ All notable changes to this project will be documented in this file.
 - Hardened artifact and payload processing against cycles, dangerous keys, prototype-chain reads, conflicting paths, and invalid operator results.
 - Runtime results are transport-safe, always include `control`, never expose stacks, and omit trace by default.
 - Added grouped `any_filled`, full aggregate validation, entrypoint inference, and recursive pipeline/condition cycle analysis.
+- Compiler phases now emit diagnostic codes, artifact ids, property paths, and source locations directly instead of deriving them from message text.
+- Snapshot compatibility now validates complete SemVer 2.0.0 versions and compares major, minor, patch, and prerelease precedence.
+- Fixed wildcard `any_filled` group discovery for groups whose listed fields are all absent, including nested groups and `ALL` summaries.
+- Unified every trace event under the structural contract, balanced predicate boundaries, and contained throwing trace redactors.
+- Added verified CommonJS and ESM packed-consumer smoke tests.
 
 ## [1.1.0] - 2026-03-29
 

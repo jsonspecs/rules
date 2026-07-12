@@ -88,31 +88,18 @@ function stepKind(step) {
   return present[0];
 }
 
-function makeTrace(traceArr, scope) {
-  return function trace(message, data) {
-    const details = Object.assign({}, data || {});
+function makeTrace(traceArr, artifactId = null) {
+  return function trace(step, outcome = null, details, eventArtifactId = artifactId) {
     traceArr.push({
       kind: "TRACE",
-      step: traceStep(message),
-      artifactId: scope || null,
-      outcome: details.result || details.status || null,
+      artifactType: "jsonspecs",
+      step,
+      artifactId: eventArtifactId || null,
+      outcome,
       at: new Date().toISOString(),
-      details,
+      ...(details === undefined ? {} : { details }),
     });
   };
-}
-
-function traceStep(message) {
-  const value = String(message);
-  if (value.includes("missing required context")) return "context.required";
-  if (value.includes("exec rule")) return "rule.start";
-  if (value.includes("rule result")) return "rule.finish";
-  if (value.includes("wildcard aggregate")) return "predicate.aggregate";
-  if (value.includes("condition")) return "condition.evaluate";
-  if (value.includes("strict")) return "pipeline.strict";
-  if (value.includes("ABORT")) return "pipeline.abort";
-  if (value.includes("STOP")) return "pipeline.finish";
-  return "pipeline.step";
 }
 
 function isLibraryRef(ref) {
@@ -160,6 +147,10 @@ function wildcardPatternToRegex(pattern) {
 }
 
 function expandWildcardKeys(pattern, payloadKeys) {
+  return expandWildcardMatches(pattern, payloadKeys).map((item) => item.key);
+}
+
+function expandWildcardMatches(pattern, payloadKeys) {
   const re = wildcardPatternToRegex(pattern);
   const matches = [];
   for (const k of payloadKeys) {
@@ -179,7 +170,54 @@ function expandWildcardKeys(pattern, payloadKeys) {
     }
     return a.key < b.key ? -1 : a.key > b.key ? 1 : 0;
   });
-  return matches.map((x) => x.key);
+  return matches;
+}
+
+function materializeWildcardPattern(pattern, indexes) {
+  let position = 0;
+  return String(pattern).replace(/\[\*\]/g, () => {
+    if (position >= indexes.length) throw new Error(`Not enough wildcard indexes for pattern: ${pattern}`);
+    return `[${indexes[position++]}]`;
+  });
+}
+
+function wildcardGroupBasePattern(fields) {
+  if (!Array.isArray(fields) || fields.length === 0) return null;
+  let base = null;
+  let wildcardCount = null;
+  for (const field of fields) {
+    if (!isWildcardField(field)) return null;
+    const count = String(field).split("[*]").length - 1;
+    const last = String(field).lastIndexOf("[*]");
+    const current = String(field).slice(0, last + 3);
+    if (base === null) { base = current; wildcardCount = count; }
+    else if (current !== base || count !== wildcardCount) return null;
+  }
+  return base;
+}
+
+function expandWildcardGroups(basePattern, payloadKeys) {
+  const regex = wildcardPatternToRegex(basePattern);
+  const groups = new Map();
+  for (const key of payloadKeys) {
+    const segments = String(key).split(".");
+    for (let length = segments.length; length >= 1; length--) {
+      const candidate = segments.slice(0, length).join(".");
+      const match = regex.exec(candidate);
+      if (!match) continue;
+      const indexes = match.slice(1).map(Number);
+      const groupKey = indexes.join(":");
+      if (!groups.has(groupKey)) groups.set(groupKey, { key: candidate, indexes });
+      break;
+    }
+  }
+  return [...groups.values()].sort((a, b) => {
+    for (let index = 0; index < Math.max(a.indexes.length, b.indexes.length); index++) {
+      const diff = (a.indexes[index] || 0) - (b.indexes[index] || 0);
+      if (diff !== 0) return diff;
+    }
+    return a.key.localeCompare(b.key);
+  });
 }
 
 module.exports = {
@@ -194,7 +232,11 @@ module.exports = {
   isLibraryRef,
   scopeKeyFor,
   isWildcardField,
+  expandWildcardMatches,
   expandWildcardKeys,
+  materializeWildcardPattern,
+  wildcardGroupBasePattern,
+  expandWildcardGroups,
   flattenPayload,
 };
 

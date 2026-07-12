@@ -8,14 +8,18 @@
   "exports": {
     ".": {
       "types": "./index.d.ts",
-      "require": "./index.js"
+      "import": "./index.mjs",
+      "require": "./index.js",
+      "default": "./index.js"
     },
     "./package.json": "./package.json"
   },
   "files": [
     "index.js",
+    "index.mjs",
     "index.d.ts",
     "src/**/*.js",
+    "scripts/pack-smoke.js",
     "README.md",
     "OPERATORS.md",
     "SPEC.md",
@@ -26,7 +30,8 @@
   "scripts": {
     "test": "node --test tests/*.test.js",
     "test:smoke": "node examples/basic/run.js",
-    "prepublishOnly": "npm test"
+    "test:pack": "node scripts/pack-smoke.js",
+    "prepublishOnly": "npm test && npm run test:pack"
   },
   "keywords": [
     "validation",
@@ -40,7 +45,7 @@
   "license": "MIT",
   "repository": {
     "type": "git",
-    "url": "https://github.com/catindev/jsonspecs"
+    "url": "git+https://github.com/catindev/jsonspecs.git"
   },
   "bugs": {
     "url": "https://github.com/catindev/jsonspecs/issues"

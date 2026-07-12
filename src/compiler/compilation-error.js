@@ -13,10 +13,22 @@
 
 class CompilationError extends Error {
   /**
-   * @param {string[]} errors — список сообщений об ошибках
+   * @param {Array<string | object>} diagnostics — структурные диагностики
    */
   constructor(diagnostics) {
-    const normalized = diagnostics.map((item) => typeof item === 'string' ? { code: 'COMPILATION_ERROR', level: 'error', message: item, phase: 'unknown', artifactId: null, path: null, location: null } : item);
+    const normalized = diagnostics.map((item) => {
+      const value = typeof item === 'string' ? { message: item } : (item || {});
+      return {
+        ...value,
+        code: value.code || 'COMPILATION_ERROR',
+        level: value.level || 'error',
+        message: value.message || String(item),
+        phase: value.phase || 'unknown',
+        artifactId: value.artifactId || null,
+        path: value.path || null,
+        location: value.location || null,
+      };
+    });
     const errors = normalized.map((item) => item.message);
     const lines = errors.map((e, i) => `  ${i + 1}. ${e}`).join('\n');
     super(`Compilation failed with ${errors.length} error(s):\n${lines}`);

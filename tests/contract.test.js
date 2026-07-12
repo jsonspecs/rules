@@ -53,7 +53,21 @@ test('grouped wildcard any_filled evaluates each sibling group', () => {
   const result = engine.runPipeline(engine.compile(artifacts), { payload: { docs: [{ serial: 'A', number: '' }, { serial: '', number: '' }] } });
   assert.equal(result.status, 'ERROR');
   assert.equal(result.issues.length, 1);
-  assert.equal(result.issues[0].field, 'docs[1].serial');
+  assert.equal(result.issues[0].field, 'docs[1]');
+  assert.equal(result.issues[0].meta.reason, 'ANY_FILLED_GROUP_EMPTY');
+});
+
+test('grouped wildcard discovers groups from sibling keys and supports ALL summary', () => {
+  const artifacts = [
+    { id: 'library.group', type: 'rule', description: 'group', role: 'check', operator: 'any_filled', fields: ['docs[*].serial', 'docs[*].number'], aggregate: { mode: 'ALL', onEmpty: 'FAIL', summaryIssue: true }, level: 'ERROR', code: 'DOC.REQUIRED', message: 'doc required' },
+    { id: 'entry.group', type: 'pipeline', description: 'group', strict: false, entrypoint: true, flow: [{ rule: 'library.group' }] },
+  ];
+  const engine = createEngine({ operators: Operators });
+  const result = engine.runPipeline(engine.compile(artifacts), { payload: { docs: [{ type: 'passport' }, { type: 'license' }] } });
+  assert.equal(result.status, 'ERROR');
+  assert.equal(result.issues.length, 1);
+  assert.equal(result.issues[0].field, 'docs[*]');
+  assert.equal(result.issues[0].meta.failedCount, 2);
 });
 
 test('MIN aggregate uses synthetic get/has context', () => {
@@ -76,7 +90,55 @@ test('trace basic redacts values and verbose uses redactor', () => {
   const basic = engine.runPipeline(prepared, { payload: { x: 'secret' } }, { trace: 'basic' });
   assert.equal(basic.trace.some((entry) => Object.hasOwn(entry.details || {}, 'actual')), false);
   const verbose = engine.runPipeline(prepared, { payload: { x: 'secret' } }, { trace: 'verbose', traceRedactor: () => '[redacted]' });
-  assert.equal(verbose.trace.some((entry) => Object.values(entry.details || {}).includes('[redacted]')), true);
+  assert.equal(verbose.trace.some((entry) => entry.details === '[redacted]'), true);
+});
+
+test('throwing trace redactor is contained as coded ABORT', () => {
+  const engine = createEngine({ operators: Operators });
+  const result = engine.runPipeline(engine.compile(source()), { payload: { x: 'secret' } }, { trace: 'verbose', traceRedactor() { throw new Error('redactor boom'); } });
+  assert.equal(result.status, 'ABORT');
+  assert.equal(result.control, 'STOP');
+  assert.equal(result.error.code, 'TRACE_REDACTOR_ERROR');
+  assert.equal(JSON.stringify(result).includes('secret'), false);
+});
+
+test('trace has one structural shape with pipeline boundaries', () => {
+  const engine = createEngine({ operators: Operators });
+  const result = engine.runPipeline(engine.compile(source()), { payload: { x: 'ok' } }, { trace: 'basic' });
+  assert.equal(result.trace[0].step, 'pipeline.start');
+  assert.equal(result.trace.at(-1).step, 'pipeline.finish');
+  for (const entry of result.trace) {
+    assert.deepEqual(Object.keys(entry).filter((key) => ['kind', 'artifactType', 'artifactId', 'step', 'at', 'outcome', 'details'].includes(key)).sort(), Object.keys(entry).sort());
+    assert.equal(typeof entry.step, 'string');
+    assert.notEqual(entry.step, '');
+    assert.equal(entry.artifactType, 'jsonspecs');
+    assert.equal(Object.hasOwn(entry, 'message'), false);
+    assert.equal(Object.hasOwn(entry, 'data'), false);
+    assert.equal(Object.hasOwn(entry, 'ts'), false);
+  }
+});
+
+test('condition predicate trace does not emit legacy event shape', () => {
+  const artifacts = [
+    { id: 'entry.cond.is_set', type: 'rule', description: 'predicate', role: 'predicate', operator: 'not_empty', field: 'x' },
+    { id: 'entry.cond.required', type: 'rule', description: 'required', role: 'check', operator: 'not_empty', field: 'y', level: 'ERROR', code: 'Y', message: 'y' },
+    { id: 'entry.cond.when_set', type: 'condition', description: 'condition', when: 'is_set', steps: [{ rule: 'required' }] },
+    { id: 'entry.cond', type: 'pipeline', description: 'pipeline', strict: false, entrypoint: true, flow: [{ condition: 'when_set' }] },
+  ];
+  const engine = createEngine({ operators: Operators });
+  const trace = engine.runPipeline(engine.compile(artifacts), { payload: { x: 'yes', y: 'yes' } }, { trace: 'basic' }).trace;
+  assert.equal(trace.some((entry) => Object.hasOwn(entry, 'message') || Object.hasOwn(entry, 'data') || Object.hasOwn(entry, 'ts')), false);
+  assert.equal(trace.some((entry) => entry.step === 'condition.evaluate'), true);
+});
+
+test('direct predicate rule emits balanced trace boundaries', () => {
+  const artifacts = [
+    { id: 'entry.pred.is_set', type: 'rule', description: 'predicate', role: 'predicate', operator: 'not_empty', field: 'x' },
+    { id: 'entry.pred', type: 'pipeline', description: 'pipeline', strict: false, entrypoint: true, flow: [{ rule: 'is_set' }] },
+  ];
+  const engine = createEngine({ operators: Operators });
+  const trace = engine.runPipeline(engine.compile(artifacts), { payload: { x: 'yes' } }, { trace: 'basic' }).trace;
+  assert.deepEqual(trace.filter((entry) => entry.artifactId === 'entry.pred.is_set').map((entry) => entry.step), ['rule.start', 'rule.finish']);
 });
 
 test('snapshot hash is verified', () => {

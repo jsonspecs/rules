@@ -2,7 +2,8 @@ export type DiagnosticLevel = "error" | "warning";
 export interface Diagnostic { code: string; level: DiagnosticLevel; message: string; phase: string; artifactId: string | null; pipelineId?: string | null; ruleId?: string | null; path: string | null; location: string | null; details?: Record<string, unknown> | null; }
 export interface Issue { kind: "ISSUE"; level: "WARNING" | "ERROR" | "EXCEPTION"; code: string; message?: string; field?: string | null; ruleId: string; pipelineId?: string; stepId?: string; expected?: unknown; actual?: unknown; meta?: Record<string, unknown>; }
 export type TraceMode = false | "basic" | "verbose";
-export interface TraceEntry { kind: "TRACE"; step: string; artifactId: string | null; outcome: string | null; at: string; details?: Record<string, unknown>; }
+export type TraceStep = "pipeline.start" | "pipeline.finish" | "pipeline.abort" | "pipeline.strict" | "rule.start" | "rule.finish" | "condition.evaluate" | "predicate.aggregate" | "check.aggregate" | "context.required" | "operator.trace";
+export interface TraceEntry { kind: "TRACE"; artifactType: "jsonspecs"; step: TraceStep; artifactId: string | null; outcome: string | null; at: string; details?: unknown; }
 export interface RuntimeErrorShape { code: string; message: string; details: Record<string, unknown> | null; }
 export interface PipelineResult { status: "OK" | "OK_WITH_WARNINGS" | "ERROR" | "EXCEPTION" | "ABORT"; control: "CONTINUE" | "STOP"; issues: Issue[]; trace?: TraceEntry[]; error?: RuntimeErrorShape; }
 export interface OperatorContext { payload: Record<string, unknown>; payloadKeys: string[]; get(path: string): { ok: true; value: unknown } | { ok: false; value: undefined }; has(path: string): boolean; getDictionary(id: string): Record<string, unknown> | null; trace?(message: string, details?: Record<string, unknown>): void; }
@@ -29,3 +30,18 @@ export function formatRuntimeError(error: RuntimeErrorShape): string;
 export function deepGet(obj: Record<string, unknown>, path: string): { ok: true; value: unknown } | { ok: false; value: undefined };
 export class CompilationError extends Error { readonly errors: string[]; readonly diagnostics: Diagnostic[]; constructor(diagnostics: Array<string | Diagnostic>); }
 export class RuntimeError extends Error { readonly code: string; readonly details: Record<string, unknown> | null; constructor(input: RuntimeErrorShape); }
+
+declare const jsonspecs: {
+  createEngine: typeof createEngine;
+  Operators: typeof Operators;
+  validate: typeof validate;
+  compileSnapshot: typeof compileSnapshot;
+  inspect: typeof inspect;
+  computeSourceHash: typeof computeSourceHash;
+  formatDiagnostics: typeof formatDiagnostics;
+  formatRuntimeError: typeof formatRuntimeError;
+  deepGet: typeof deepGet;
+  CompilationError: typeof CompilationError;
+  RuntimeError: typeof RuntimeError;
+};
+export default jsonspecs;

@@ -3,6 +3,7 @@
 const { compile, computeSourceHash } = require("./compiler");
 const { CompilationError } = require("./compiler/compilation-error");
 const { getPreparedState } = require("./prepared");
+const { parseSemver, compareSemver } = require("./semver");
 const packageJson = require("../package.json");
 
 function validate(artifacts, options = {}) {
@@ -31,12 +32,58 @@ function inspect(prepared) {
 }
 
 function compileSnapshot(snapshot, options = {}) {
-  if (!snapshot || snapshot.format !== "jsonspecs-snapshot" || snapshot.formatVersion !== 1 || !Array.isArray(snapshot.artifacts)) throw new CompilationError([{ code: "INVALID_SNAPSHOT", level: "error", message: "Invalid jsonspecs snapshot format", phase: "source_validation", artifactId: null, path: null, location: null }]);
-  const actual = computeSourceHash(snapshot.artifacts);
-  if (snapshot.sourceHash !== actual) throw new CompilationError([{ code: "SNAPSHOT_HASH_MISMATCH", level: "error", message: "Snapshot sourceHash does not match artifacts", phase: "source_validation", artifactId: null, path: "sourceHash", location: null, details: { expected: snapshot.sourceHash, actual } }]);
+  if (
+    !snapshot ||
+    snapshot.format !== "jsonspecs-snapshot" ||
+    snapshot.formatVersion !== 1 ||
+    typeof snapshot.sourceHash !== "string" ||
+    !Array.isArray(snapshot.artifacts)
+  ) {
+    throw snapshotCompilationError("INVALID_SNAPSHOT", "Invalid jsonspecs snapshot format");
+  }
   const minimum = snapshot.engine && snapshot.engine.minVersion;
-  if (minimum && Number(String(minimum).split('.')[0]) > Number(packageJson.version.split('.')[0])) throw new CompilationError([{ code: "SNAPSHOT_ENGINE_INCOMPATIBLE", level: "error", message: `Snapshot requires jsonspecs ${minimum}`, phase: "source_validation", artifactId: null, path: "engine.minVersion", location: null }]);
+  const requiredVersion = parseSemver(minimum);
+  if (!requiredVersion) {
+    throw snapshotCompilationError(
+      "INVALID_SNAPSHOT",
+      "Snapshot engine.minVersion must be a valid semantic version",
+      "engine.minVersion",
+      { value: minimum == null ? null : minimum },
+    );
+  }
+  const actual = computeSourceHash(snapshot.artifacts);
+  if (snapshot.sourceHash !== actual) {
+    throw snapshotCompilationError(
+      "SNAPSHOT_HASH_MISMATCH",
+      "Snapshot sourceHash does not match artifacts",
+      "sourceHash",
+      { expected: snapshot.sourceHash, actual },
+    );
+  }
+  const currentVersion = parseSemver(packageJson.version);
+  if (!currentVersion) throw new Error(`Invalid jsonspecs package version: ${packageJson.version}`);
+  if (compareSemver(requiredVersion, currentVersion) > 0) {
+    throw snapshotCompilationError(
+      "SNAPSHOT_ENGINE_INCOMPATIBLE",
+      `Snapshot requires jsonspecs ${minimum}; current engine is ${packageJson.version}`,
+      "engine.minVersion",
+      { required: minimum, current: packageJson.version },
+    );
+  }
   return compile(snapshot.artifacts, options);
+}
+
+function snapshotCompilationError(code, message, path = null, details = null) {
+  return new CompilationError([{
+    code,
+    level: "error",
+    message,
+    phase: "source_validation",
+    artifactId: null,
+    path,
+    location: null,
+    details,
+  }]);
 }
 
 function formatDiagnostics(diagnostics) { return diagnostics.map((item) => `[${item.code}]${item.location ? ` ${item.location}` : ""} ${item.message}`).join("\n"); }

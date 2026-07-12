@@ -31,7 +31,7 @@ const { buildConditions, buildPipelines } = require('./build-steps');
 const { createHash } = require('node:crypto');
 const { cloneJsonSafe } = require('../safe-json');
 const { createPrepared } = require('../prepared');
-const { fileOf } = require('./context');
+const { diagnostic, artifactDiagnostic } = require('./diagnostic');
 
 function compile(artifacts, options = {}) {
   assert(Array.isArray(artifacts), 'compile: artifacts must be an array');
@@ -45,30 +45,25 @@ function compile(artifacts, options = {}) {
   );
 
   const sources = options.sources instanceof Map ? options.sources : null;
-  let detachedArtifacts;
-  try {
-    detachedArtifacts = artifacts.map((artifact) => deepFreeze(cloneJsonSafe(artifact)));
-  } catch (error) {
-    throw new CompilationError([diagnostic(error.code || 'ARTIFACT_NOT_JSON_SAFE', error.message, 'source_validation', null, error.details && error.details.path)]);
-  }
-
   setContext(sources);
   try {
+    const detachedArtifacts = artifacts.map((artifact, index) => detachArtifact(artifact, index));
+
     // Фаза 1: реестр — fail-fast, остальные фазы зависят от него
     const { registry, dictionaries, errors: regErrors } = buildRegistry(detachedArtifacts);
-    throwIfErrors(regErrors, 'registry_build');
+    throwIfErrors(regErrors);
 
     // Фаза 2: схема артефактов — собираем все ошибки по всем артефактам
     const schemaErrors = validateSchema(detachedArtifacts, dictionaries, operators);
-    throwIfErrors(schemaErrors, 'schema_validation');
+    throwIfErrors(schemaErrors);
 
     // Фаза 3: уникальность кодов
     const codeErrors = validateCodeUniqueness(detachedArtifacts);
-    throwIfErrors(codeErrors, 'uniqueness_validation');
+    throwIfErrors(codeErrors);
 
     // Фаза 4: ссылки и видимость
     const refErrors = validateRefs(detachedArtifacts, registry);
-    throwIfErrors(refErrors, 'reference_validation');
+    throwIfErrors(refErrors);
 
     // Фазы 5–6: компиляция шагов (бросают assert — структура уже проверена)
     const compiledConditions = buildConditions(detachedArtifacts);
@@ -76,7 +71,7 @@ function compile(artifacts, options = {}) {
 
     // Фаза 7: DAG (нет циклов)
     const dagErrors = validatePipelineDAG(registry, compiledPipelines, compiledConditions);
-    throwIfErrors(dagErrors, 'dag_validation');
+    throwIfErrors(dagErrors);
 
     const sourceHash = computeSourceHash(detachedArtifacts);
     return createPrepared({
@@ -93,32 +88,41 @@ function compile(artifacts, options = {}) {
   }
 }
 
-function throwIfErrors(errors, phase) {
-  if (errors && errors.length > 0) throw new CompilationError(errors.map((message) => { const artifactId = artifactIdFromMessage(message); const file = artifactId ? fileOf(artifactId) : null; return diagnostic(codeFromMessage(message), message, phase, artifactId, null, file === '<unknown source>' ? null : file); }));
+function detachArtifact(artifact, index) {
+  try {
+    return deepFreeze(cloneJsonSafe(artifact));
+  } catch (error) {
+    const rawPath = error && error.details && error.details.path;
+    const path = rawPath === '$'
+      ? `[${index}]`
+      : typeof rawPath === 'string' && rawPath.startsWith('$.')
+        ? rawPath.slice(2)
+        : rawPath || `[${index}]`;
+    throw new CompilationError([diagnostic({
+      code: error.code || 'ARTIFACT_NOT_JSON_SAFE',
+      message: error.message,
+      phase: 'source_validation',
+      artifactId: safeArtifactId(artifact),
+      path,
+      details: error.details || null,
+    })]);
+  }
 }
 
-function artifactIdFromMessage(message) {
-  const text = String(message);
-  const duplicate = text.match(/Duplicate artifact id:\s*([^\s]+)/); if (duplicate) return duplicate[1];
-  const scoped = text.match(/(?:Artifact|Rule|Check rule|Predicate rule|Pipeline|Condition)\s+([^\s(]+)/); return scoped ? scoped[1] : null;
+function safeArtifactId(artifact) {
+  if (!artifact || typeof artifact !== 'object') return null;
+  try {
+    const descriptor = Object.getOwnPropertyDescriptor(artifact, 'id');
+    return descriptor && Object.prototype.hasOwnProperty.call(descriptor, 'value') && typeof descriptor.value === 'string'
+      ? descriptor.value
+      : null;
+  } catch (_) {
+    return null;
+  }
 }
 
-function diagnostic(code, message, phase, artifactId = null, path = null, location = null, details = null) {
-  return { code, level: 'error', message, phase, artifactId, path: path || null, location: location || null, details };
-}
-
-function codeFromMessage(message) {
-  const text = String(message);
-  if (/Duplicate artifact id/.test(text)) return 'DUPLICATE_ARTIFACT_ID';
-  if (/must have non-empty id/.test(text)) return 'ARTIFACT_ID_REQUIRED';
-  if (/must have description/.test(text)) return 'DESCRIPTION_REQUIRED';
-  if (/unknown operator/.test(text)) return 'UNKNOWN_OPERATOR';
-  if (/dictionary not found/.test(text)) return 'DICTIONARY_NOT_FOUND';
-  if (/cycle detected/i.test(text)) return 'PIPELINE_CYCLE';
-  if (/references missing|Missing artifact referenced/.test(text)) return 'ARTIFACT_REF_NOT_FOUND';
-  if (/must be rule\(role=predicate\)/.test(text)) return 'WHEN_RULE_MUST_BE_PREDICATE';
-  if (/Duplicate check code/.test(text)) return 'DUPLICATE_CHECK_CODE';
-  return 'SCHEMA_VALIDATION_ERROR';
+function throwIfErrors(errors) {
+  if (errors && errors.length > 0) throw new CompilationError(errors);
 }
 
 function stableStringify(value) {
@@ -142,21 +146,42 @@ function buildRegistry(artifacts) {
   const dictionaries = new Map();
   const errors      = [];
 
-  for (const a of artifacts) {
+  for (let index = 0; index < artifacts.length; index++) {
+    const a = artifacts[index];
     if (!a || typeof a.id !== 'string' || a.id.length === 0) {
-      errors.push('Artifact must have non-empty id');
+      errors.push(diagnostic({
+        code: 'ARTIFACT_ID_REQUIRED',
+        message: 'Artifact must have non-empty id',
+        phase: 'registry_build',
+        path: `[${index}].id`,
+      }));
       continue;
     }
     if (typeof a.type !== 'string') {
-      errors.push(`Artifact ${a.id} must have type`);
+      errors.push(artifactDiagnostic(a, {
+        code: 'SCHEMA_VALIDATION_ERROR',
+        message: `Artifact ${a.id} must have type`,
+        phase: 'registry_build',
+        path: 'type',
+      }));
       continue;
     }
     if (typeof a.description !== 'string') {
-      errors.push(`Artifact ${a.id} must have description`);
+      errors.push(artifactDiagnostic(a, {
+        code: 'DESCRIPTION_REQUIRED',
+        message: `Artifact ${a.id} must have description`,
+        phase: 'registry_build',
+        path: 'description',
+      }));
       continue;
     }
     if (registry.has(a.id)) {
-      errors.push(`Duplicate artifact id: ${a.id}`);
+      errors.push(artifactDiagnostic(a, {
+        code: 'DUPLICATE_ARTIFACT_ID',
+        message: `Duplicate artifact id: ${a.id}`,
+        phase: 'registry_build',
+        path: 'id',
+      }));
       continue;
     }
     registry.set(a.id, a);
