@@ -3,7 +3,7 @@
 [![CI](https://github.com/catindev/jsonspecs/actions/workflows/ci.yml/badge.svg)](https://github.com/catindev/jsonspecs/actions)
 [![npm](https://img.shields.io/npm/v/jsonspecs)](https://www.npmjs.com/package/jsonspecs)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
-[![Node 18+](https://img.shields.io/badge/Node-18%2B-green)](https://nodejs.org/)
+[![Node 20+](https://img.shields.io/badge/Node-20%2B-green)](https://nodejs.org/)
 
 Declarative validation rules engine for Node.js.
 
@@ -12,6 +12,8 @@ Rules are JSON files. The engine compiles them, runs them against any payload, a
 ```
 npm install jsonspecs
 ```
+
+Both CommonJS (`require("jsonspecs")`) and ESM (`import { createEngine } from "jsonspecs"`) consumers are supported and verified from the packed npm artifact.
 
 ## How it works
 
@@ -139,7 +141,7 @@ Compiles an array of artifact objects into an optimized runtime structure. Throw
 const compiled = engine.compile(artifacts, { sources });
 ```
 
-Compile-time checks: schema validation, reference integrity, DAG cycle detection, operator existence, and `code` uniqueness across all rules. `sources` is an optional `Map<artifactId, sourceFile>` used to show file paths in error messages, populated automatically by `loadArtifactsFromDir`.
+Compile-time checks: schema validation, reference integrity, DAG cycle detection, operator existence, and `code` uniqueness across all rules. `sources` is an optional `Map<artifactId, sourceFile | {file,line?,column?}>` used to populate the structured diagnostic `location` field; it is populated automatically by `loadArtifactsFromDir`.
 
 ### `engine.runPipeline(compiled, pipelineId, payload)`
 
@@ -249,7 +251,7 @@ const compiled = engine.compile(artifacts, { sources });
 
 ```js
 const snapshot = JSON.parse(fs.readFileSync("snapshot.json", "utf8"));
-const compiled = engine.compile(snapshot.artifacts);
+const compiled = engine.compileSnapshot(snapshot);
 ```
 
 **Inline** (tests define artifacts as plain JS objects):

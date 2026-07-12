@@ -1,77 +1,42 @@
-/**
- * compiler/validate-dag.js
- *
- * Фаза 7 валидации: проверяет что граф вызовов пайплайнов — DAG (нет циклов).
- * Возвращает string[] ошибок вместо бросания исключений.
- */
-
 'use strict';
 
-function validatePipelineDAG(registry, compiledPipelines, compiledConditions) {
-  const pipelines = [];
-  for (const a of registry.values()) {
-    if (a.type === 'pipeline') pipelines.push(a);
-  }
-  const adj = buildAdjacencyMap(pipelines, compiledPipelines, compiledConditions, registry);
-  return detectCycles(pipelines, adj);
-}
+const { artifactDiagnostic } = require('./diagnostic');
 
-function buildAdjacencyMap(pipelines, compiledPipelines, compiledConditions, registry) {
-  const adj = new Map();
-  for (const p of pipelines) {
-    const compiled = compiledPipelines.get(p.id);
-    const steps    = compiled ? compiled.steps : [];
-    const called   = collectCalledPipelines(steps, compiledConditions);
-    adj.set(p.id, called.filter(x => registry.get(x)?.type === 'pipeline'));
-  }
-  return adj;
-}
-
-function collectCalledPipelines(steps, compiledConditions) {
-  const called = [];
-  for (const s of steps) {
-    if (s.kind === 'pipeline') {
-      called.push(s.pipelineId);
-    }
-    if (s.kind === 'condition') {
-      const condCompiled = compiledConditions.get(s.conditionId);
-      if (condCompiled) {
-        for (const st of condCompiled.steps) {
-          if (st.kind === 'pipeline') called.push(st.pipelineId);
-        }
-      }
-    }
-  }
-  return called;
-}
-
-function detectCycles(pipelines, adj) {
-  const errors   = [];
+function validatePipelineDAG(registry, pipelines, conditions) {
+  const adjacency = new Map();
+  for (const [id, model] of pipelines) adjacency.set(id, dependencies(model.steps));
+  for (const [id, model] of conditions) adjacency.set(id, dependencies(model.steps));
+  const errors = [];
+  const reportedCycles = new Set();
   const visiting = new Set();
-  const visited  = new Set();
-
-  function dfs(node, stack) {
-    if (visiting.has(node)) {
-      const idx   = stack.indexOf(node);
-      const cycle = idx >= 0 ? stack.slice(idx).concat([node]) : stack.concat([node]);
-      errors.push(`Pipeline cycle detected: ${cycle.join(' -> ')}`);
+  const visited = new Set();
+  function visit(id, stack) {
+    if (visiting.has(id)) {
+      const start = stack.indexOf(id);
+      const cycle = stack.slice(start).concat(id);
+      const key = cycle.join('\u0000');
+      if (!reportedCycles.has(key)) {
+        reportedCycles.add(key);
+        const artifact = registry.get(id);
+        errors.push(artifactDiagnostic(artifact, {
+          code: 'PIPELINE_CYCLE',
+          message: `Pipeline cycle detected: ${cycle.join(' -> ')}`,
+          phase: 'dag_validation',
+          path: artifact && artifact.type === 'condition' ? 'steps' : 'flow',
+          details: { cycle },
+        }));
+      }
       return;
     }
-    if (visited.has(node)) return;
-    visiting.add(node);
-    stack.push(node);
-    for (const next of adj.get(node) || []) {
-      dfs(next, stack);
-    }
-    stack.pop();
-    visiting.delete(node);
-    visited.add(node);
+    if (visited.has(id)) return;
+    visiting.add(id); stack.push(id);
+    for (const next of adjacency.get(id) || []) if (registry.has(next)) visit(next, stack);
+    stack.pop(); visiting.delete(id); visited.add(id);
   }
-
-  for (const p of pipelines) {
-    dfs(p.id, []);
-  }
+  for (const id of adjacency.keys()) visit(id, []);
   return errors;
 }
+
+function dependencies(steps) { return (steps || []).flatMap((step) => step.kind === 'pipeline' ? [step.pipelineId] : step.kind === 'condition' ? [step.conditionId] : []); }
 
 module.exports = { validatePipelineDAG };

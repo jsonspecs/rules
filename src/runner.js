@@ -5,8 +5,13 @@ const {
   toComparable,
   isWildcardField,
   expandWildcardKeys,
-  flattenPayload,
+  materializeWildcardPattern,
+  wildcardGroupBasePattern,
+  expandWildcardGroups,
 } = require("./utils");
+const { flattenPayloadSafe, normalizeTransportSafe, hasOwn } = require("./safe-json");
+const { getPreparedState } = require("./prepared");
+const { RuntimeError } = require("./compiler/compilation-error");
 
 function compareCount(op, left, right) {
   switch (op) {
@@ -33,15 +38,6 @@ function onEmptyBehavior(rule, defaultBehavior) {
   return ae || defaultBehavior;
 }
 
-function resolveRuleFields(rule, payloadKeys, traceFn) {
-  if (!isWildcardField(rule.field))
-    return { pattern: rule.field, keys: [rule.field] };
-  const keys = expandWildcardKeys(rule.field, payloadKeys);
-  traceFn("wildcard expanded", { pattern: rule.field, matched: keys.length });
-  return { pattern: rule.field, keys };
-}
-
-
 function applyStrictBoundary(pipeline, issues, issuesStart, stepId, traceFn) {
   if (!pipeline || pipeline.strict !== true) return false;
 
@@ -63,10 +59,10 @@ function applyStrictBoundary(pipeline, issues, issuesStart, stepId, traceFn) {
     pipelineId: pipeline.id,
     stepId: stepId || undefined,
   });
-  traceFn("STOP by strict pipeline boundary", {
+  traceFn("pipeline.strict", "stop", {
     pipelineId: pipeline.id,
     code,
-  });
+  }, pipeline.id);
   return true;
 }
 
@@ -83,8 +79,8 @@ function checkRequiredContext(pipeline, ctxBase, issues, trace, stepId = null) {
 
   if (missing.length === 0) return false;
 
-  const t = makeTrace(trace, `pipeline:${pipeline.id}:context`);
-  t("missing required context", { pipelineId: pipeline.id, missing });
+  const t = makeTrace(trace, pipeline.id);
+  t("context.required", "missing_context", { pipelineId: pipeline.id, missing, stepId });
 
   for (const key of missing) {
     issues.push({
@@ -103,57 +99,40 @@ function checkRequiredContext(pipeline, ctxBase, issues, trace, stepId = null) {
 }
 
 function runPipeline(compiled, pipelineId, payload, options) {
-  const { registry, dictionaries, operators, pipelines, conditions } = compiled;
-  assert(
-    operators && operators.check && operators.predicate,
-    "runPipeline: compiled.operators is missing (compile must be called with operators)",
-  );
-  assert(
-    pipelines instanceof Map,
-    "runPipeline: compiled.pipelines is missing (compile-time steps required)",
-  );
-  assert(
-    conditions instanceof Map,
-    "runPipeline: compiled.conditions is missing (compile-time steps required)",
-  );
-
-  const traceEnabled = !options || options.trace !== false;
+  let inputContext = null;
+  if (pipelineId && typeof pipelineId === "object") {
+    const input = pipelineId;
+    options = payload || {};
+    pipelineId = input.pipelineId;
+    payload = input.payload;
+    inputContext = input.context || null;
+  }
+  options = options || {};
+  const traceMode = options.trace === true ? "basic" : (options.trace || false);
+  const traceEnabled = traceMode === "basic" || traceMode === "verbose";
   const trace = [];
   const issues = [];
-  // When traceEnabled=false, replace the shared trace array with a throwaway array
-  // so that all internal makeTrace() calls write nowhere observable.
   const traceTarget = traceEnabled ? trace : [];
   const traceFn = makeTrace(traceTarget, `pipeline:${pipelineId}`);
 
-  // Normalize payload to flat-map before processing.
-  // Accepts both nested JSON ({ a: { b: 1 } }) and already-flat payloads ({ "a.b": 1 }).
-  // flattenPayload is idempotent: flat input passes through unchanged.
-  // This is the single point where the engine adapts to ordinary JSON from callers.
-  const flat = flattenPayload(payload || {});
-
-  // Merge context into payload under the reserved __context key so that
-  // deepGet can resolve "$context.*" field references from rules/predicates.
-  // __context is excluded from payloadKeys so wildcard expansion never touches it.
-  const context = (payload && payload.__context) || {};
-  const enrichedPayload = Object.assign({}, flat, { __context: context });
-  const payloadKeys = Object.keys(flat).filter((k) => k !== "__context");
-  const wildcardCache = new Map(); // pattern -> resolved keys
-
-  const ctxBase = {
-    payload: enrichedPayload,
-    payloadKeys,
-    wildcardCache,
-    getDictionary: (id) => dictionaries.get(id) || null,
-    get: (path) => deepGet(enrichedPayload, path),
-    has: (path) => deepGet(enrichedPayload, path).ok,
-  };
-
   try {
+    const state = getPreparedState(compiled);
+    if (!state) throw new RuntimeError({ code: "INVALID_COMPILED_ARTIFACT", message: "runPipeline expects an artifact produced by compile()" });
+    const { registry, dictionaries, operators, pipelines, conditions } = state;
+    if (!pipelineId) {
+      const entrypoints = [...registry.values()].filter((item) => item.type === "pipeline" && item.entrypoint === true);
+      if (entrypoints.length !== 1) throw new RuntimeError({ code: "PIPELINE_ID_REQUIRED", message: "pipelineId is required unless exactly one entrypoint exists", details: { entrypointCount: entrypoints.length } });
+      pipelineId = entrypoints[0].id;
+    }
+    const flat = flattenPayloadSafe(payload || {});
+    const context = inputContext || (payload && hasOwn(payload, "__context") ? payload.__context : {}) || {};
+    const enrichedPayload = Object.assign(Object.create(null), flat, { __context: context });
+    const payloadKeys = Object.keys(flat);
+    const wildcardCache = new Map();
+    const ctxBase = { payload: enrichedPayload, payloadKeys, wildcardCache, getDictionary: (id) => dictionaries.get(id) || null, get: (path) => deepGet(enrichedPayload, path), has: (path) => deepGet(enrichedPayload, path).ok };
     const pipeline = registry.get(pipelineId);
-    assert(
-      pipeline && pipeline.type === "pipeline",
-      `runPipeline: ${pipelineId} is not a pipeline`,
-    );
+    if (!pipeline || pipeline.type !== "pipeline") throw new RuntimeError({ code: "PIPELINE_NOT_FOUND", message: `Pipeline not found: ${pipelineId}`, details: { pipelineId, availablePipelines: [...pipelines.keys()] } });
+    traceFn("pipeline.start", "start", { traceMode }, pipelineId);
 
     const compiledPipe = pipelines.get(pipelineId);
     assert(
@@ -163,8 +142,9 @@ function runPipeline(compiled, pipelineId, payload, options) {
 
     const pipelineArtifact = registry.get(pipelineId);
   assert(pipelineArtifact && pipelineArtifact.type === "pipeline", `Missing pipeline ${pipelineId}`);
-  if (checkRequiredContext(pipelineArtifact, ctxBase, issues, trace)) {
-    return { status: "EXCEPTION", control: "STOP", issues, trace };
+  if (checkRequiredContext(pipelineArtifact, ctxBase, issues, traceTarget)) {
+    traceFn("pipeline.finish", "exception", { issueCount: issues.length }, pipelineId);
+    return finishResult({ status: "EXCEPTION", control: "STOP", issues }, traceMode, trace, options);
   }
 
   const control = execSteps(
@@ -181,11 +161,9 @@ function runPipeline(compiled, pipelineId, payload, options) {
     );
 
     if (applyStrictBoundary(pipelineArtifact, issues, 0, null, traceFn)) {
-      return { status: "EXCEPTION", control: "STOP", issues, trace };
+      traceFn("pipeline.finish", "exception", { issueCount: issues.length }, pipelineId);
+      return finishResult({ status: "EXCEPTION", control: "STOP", issues }, traceMode, trace, options);
     }
-
-    if (control === "STOP")
-      traceFn("pipeline stopped by EXCEPTION", { pipelineId });
 
     const hasException = control === "STOP";
     const hasErrors = issues.some(
@@ -203,19 +181,53 @@ function runPipeline(compiled, pipelineId, payload, options) {
 
     const ctrl = hasException || hasErrors ? "STOP" : "CONTINUE";
 
-    return { status, control: ctrl, issues, trace };
+    traceFn("pipeline.finish", status.toLowerCase(), { issueCount: issues.length }, pipelineId);
+    return finishResult({ status, control: ctrl, issues }, traceMode, trace, options);
   } catch (e) {
-    traceFn("pipeline ABORT (runtime exception)", {
+    traceFn("pipeline.abort", "abort", {
       pipelineId,
       error: String(e && e.message ? e.message : e),
-    });
-    return {
+    }, pipelineId);
+    return finishResult({
       status: "ABORT",
+      control: "STOP",
       issues,
-      trace,
-      error: { message: e.message, stack: e.stack },
-    };
+      error: { code: e && e.code ? e.code : "RUNTIME_ABORT", message: e && e.message ? e.message : String(e), details: e && e.details ? e.details : null },
+    }, traceMode, trace, options);
   }
+}
+
+function finishResult(result, traceMode, trace, options) {
+  try {
+    if (traceMode) result.trace = trace.map((entry) => sanitizeTraceEntry(entry, traceMode, options && options.traceRedactor));
+    return normalizeTransportSafe(result);
+  } catch (error) {
+    const aborted = {
+      status: "ABORT",
+      control: "STOP",
+      issues: Array.isArray(result.issues) ? result.issues : [],
+      error: { code: "TRACE_REDACTOR_ERROR", message: error && error.message ? error.message : String(error), details: null },
+    };
+    if (traceMode) aborted.trace = trace.map((entry) => sanitizeTraceEntry(entry, "basic", null));
+    return normalizeTransportSafe(aborted);
+  }
+}
+
+function sanitizeTraceEntry(entry, mode, redactor) {
+  if (entry.details === undefined) return { ...entry };
+  if (mode === "verbose") return { ...entry, details: typeof redactor === "function" ? redactor(entry.details, mode) : entry.details };
+  if (mode === "basic" && entry.step === "operator.trace") return { ...entry, details: { redacted: true } };
+  return { ...entry, details: sanitizeBasicTraceDetails(entry.details) };
+}
+
+function sanitizeBasicTraceDetails(details) {
+  const sensitive = new Set(["actual", "value", "pickedValue", "matchedSample", "failedSample", "meta", "error"]);
+  const output = {};
+  for (const [key, value] of Object.entries(details || {})) {
+    if (sensitive.has(key)) continue;
+    output[key] = value;
+  }
+  return output;
 }
 
 function execSteps(
@@ -230,7 +242,7 @@ function execSteps(
   trace,
   scope,
 ) {
-  const t = makeTrace(trace, scope);
+  const t = makeTrace(trace, scopePipelineId);
 
   for (const step of steps) {
     const kind = step.kind;
@@ -242,7 +254,7 @@ function execSteps(
       const actualValue = rule.field && deepGet(ctxBase.payload, rule.field).ok
         ? deepGet(ctxBase.payload, rule.field).value
         : undefined;
-      t("exec rule step", {
+      t("rule.start", "start", {
         stepId,
         ruleId: rule.id,
         ref: step.ref,
@@ -253,10 +265,11 @@ function execSteps(
         value: rule.value !== undefined ? String(rule.value) : '',
         actual: actualValue !== undefined ? String(actualValue) : '',
         meta: rule.meta !== undefined ? rule.meta : null,
-      });
+      }, rule.id);
 
       if (rule.role === "predicate") {
         const res = evalPredicate(operators, rule, ctxBase, trace, scope);
+        t("rule.finish", res.status.toLowerCase(), { ruleId: rule.id, status: res.status }, rule.id);
         if (res.status === "EXCEPTION") throw res.error;
         continue;
       }
@@ -265,12 +278,12 @@ function execSteps(
       if (res.status === "EXCEPTION") throw res.error;
 
       // Логируем результат проверки в трейс
-      t("rule result", {
+      t("rule.finish", res.status.toLowerCase(), {
         ruleId: rule.id,
         status: res.status,   // "OK" | "FAIL"
         level: rule.level,
         code: rule.code || '',
-      });
+      }, rule.id);
 
       if (res.status === "FAIL") {
         // evalCheck may return a single failure (non-wildcard or aggregated)
@@ -302,10 +315,10 @@ function execSteps(
         }
 
         if (rule.level === "EXCEPTION") {
-          t("STOP by EXCEPTION-level rule", {
+          t("rule.finish", "stop", {
             ruleId: rule.id,
             code: rule.code,
-          });
+          }, rule.id);
           return "STOP";
         }
       }
@@ -318,12 +331,12 @@ function execSteps(
       const compiledPipe = pipelines.get(p.id);
       assert(compiledPipe, `Missing compiled pipeline ${p.id}`);
 
-      t("exec pipeline step", { stepId, pipelineId: p.id, description: p.description || '' });
+      t("pipeline.start", "start", { stepId, pipelineId: p.id, description: p.description || '' }, p.id);
       const issuesStart = issues.length;
       const nestedPipelineArtifact = registry.get(p.id);
       assert(nestedPipelineArtifact && nestedPipelineArtifact.type === "pipeline", `Missing pipeline ${p.id}`);
       if (checkRequiredContext(nestedPipelineArtifact, ctxBase, issues, trace, stepId)) {
-        t("STOP by missing required context", { pipelineId: p.id, stepId });
+        t("pipeline.finish", "missing_context", { pipelineId: p.id, stepId }, p.id);
         return "STOP";
       }
 
@@ -342,10 +355,15 @@ function execSteps(
 
       // strict pipelines: if they produced at least one ERROR/EXCEPTION issue, raise a boundary EXCEPTION
       if (applyStrictBoundary(p, issues, issuesStart, stepId, t)) {
+        t("pipeline.finish", "exception", { pipelineId: p.id, stepId, issueCount: issues.length - issuesStart }, p.id);
         return "STOP";
       }
 
-      if (control === "STOP") return "STOP";
+      if (control === "STOP") {
+        t("pipeline.finish", "exception", { pipelineId: p.id, stepId, issueCount: issues.length - issuesStart }, p.id);
+        return "STOP";
+      }
+      t("pipeline.finish", "complete", { pipelineId: p.id, stepId, issueCount: issues.length - issuesStart }, p.id);
       continue;
     }
 
@@ -358,12 +376,12 @@ function execSteps(
       const compiledCond = conditions.get(c.id);
       assert(compiledCond, `Missing compiled condition ${c.id}`);
 
-      t("exec condition step", {
+      t("condition.evaluate", "start", {
         stepId,
         conditionId: c.id,
         ref: step.ref,
         description: c.description || '',
-      });
+      }, c.id);
 
       const control = evalCondition(
         registry,
@@ -385,10 +403,11 @@ function execSteps(
 }
 
 function evalPredicate(operators, rule, ctxBase, trace, scope) {
-  const t = makeTrace(trace, `${scope}:pred:${rule.id}`);
-  const op = operators.predicate[rule.operator];
+  const t = makeTrace(trace, rule.id);
+  const rawOp = operators.predicate[rule.operator];
+  const op = (...args) => validateOperatorResult("predicate", rule, rawOp(...args));
   try {
-    const ctx = Object.assign({}, ctxBase, { trace: (m, d) => t(m, d) });
+    const ctx = Object.assign({}, ctxBase, { trace: (message, details) => t("operator.trace", "info", { message, ...(details || {}) }) });
 
     // Wildcard aggregation for predicates
     if (isWildcardField(rule.field)) {
@@ -403,14 +422,14 @@ function evalPredicate(operators, rule, ctxBase, trace, scope) {
 
       if (keys.length === 0) {
         const beh = onEmptyBehavior(rule, "UNDEFINED");
-        t("wildcard predicate matched 0 fields", {
+        t("predicate.aggregate", "empty", {
           pattern: rule.field,
           aggregateMode,
           onEmpty: beh,
         });
 
         if (beh === "TRUE") {
-          t("wildcard aggregate", {
+          t("predicate.aggregate", "true", {
             patternField: rule.field,
             aggregateMode,
             matchedCount: 0,
@@ -420,7 +439,7 @@ function evalPredicate(operators, rule, ctxBase, trace, scope) {
           return { status: "TRUE" };
         }
         if (beh === "FALSE") {
-          t("wildcard aggregate", {
+          t("predicate.aggregate", "false", {
             patternField: rule.field,
             aggregateMode,
             matchedCount: 0,
@@ -439,8 +458,8 @@ function evalPredicate(operators, rule, ctxBase, trace, scope) {
         }
 
         // UNDEFINED -> treat as FALSE (consistent with non-wildcard)
-        t("predicate UNDEFINED treated as FALSE", { ruleId: rule.id });
-        t("wildcard aggregate", {
+        t("predicate.aggregate", "undefined_as_false", { ruleId: rule.id });
+        t("predicate.aggregate", "false", {
           patternField: rule.field,
           aggregateMode,
           matchedCount: 0,
@@ -485,7 +504,7 @@ function evalPredicate(operators, rule, ctxBase, trace, scope) {
         );
       }
 
-      t("wildcard aggregate", {
+      t("predicate.aggregate", finalStatus.toLowerCase(), {
         patternField: rule.field,
         aggregateMode,
         matchedCount: keys.length,
@@ -501,7 +520,7 @@ function evalPredicate(operators, rule, ctxBase, trace, scope) {
 
     const res = op(rule, ctx);
     if (res.status === "UNDEFINED") {
-      t("predicate UNDEFINED treated as FALSE", { ruleId: rule.id });
+      t("rule.finish", "undefined_as_false", { ruleId: rule.id });
       return { status: "FALSE" };
     }
     return res;
@@ -511,10 +530,38 @@ function evalPredicate(operators, rule, ctxBase, trace, scope) {
 }
 
 function evalCheck(operators, rule, ctxBase, trace, scope) {
-  const t = makeTrace(trace, `${scope}:check:${rule.id}`);
-  const op = operators.check[rule.operator];
+  const t = makeTrace(trace, rule.id);
+  const rawOp = operators.check[rule.operator];
+  const op = (...args) => validateOperatorResult("check", rule, rawOp(...args));
   try {
-    const ctx = Object.assign({}, ctxBase, { trace: (m, d) => t(m, d) });
+    const ctx = Object.assign({}, ctxBase, { trace: (message, details) => t("operator.trace", "info", { message, ...(details || {}) }) });
+
+    const groupedFields = Array.isArray(rule.fields) ? rule.fields : Array.isArray(rule.paths) ? rule.paths : [];
+    if (rule.operator === "any_filled" && groupedFields.length > 0 && groupedFields.every(isWildcardField)) {
+      const basePattern = wildcardGroupBasePattern(groupedFields);
+      if (!basePattern) throw new RuntimeError({ code: "WILDCARD_GROUP_INVALID", message: "any_filled wildcard fields must share one base pattern", details: { ruleId: rule.id, fields: groupedFields } });
+      const aggregateMode = rule.aggregate && rule.aggregate.mode || "EACH";
+      const cacheKey = `any_filled:${basePattern}`;
+      let groups = ctx.wildcardCache.get(cacheKey);
+      if (!groups) { groups = expandWildcardGroups(basePattern, ctx.payloadKeys || []); ctx.wildcardCache.set(cacheKey, groups); }
+      if (groups.length === 0) {
+        const behavior = onEmptyBehavior(rule, "PASS");
+        t("check.aggregate", "empty", { pattern: basePattern, aggregateMode, onEmpty: behavior });
+        if (behavior === "ERROR") throw new RuntimeError({ code: "WILDCARD_EMPTY", message: `Wildcard fields matched no groups: ${basePattern}` });
+        return behavior === "FAIL" ? { status: "FAIL", field: groupedFields[0], meta: { reason: "WILDCARD_EMPTY", patterns: groupedFields } } : { status: "OK" };
+      }
+      const failures = [];
+      for (const group of groups) {
+        const fields = groupedFields.map((field) => materializeWildcardPattern(field, group.indexes));
+        const result = op(Object.assign({}, rule, { fields, paths: undefined, _patternFields: groupedFields, _patternBase: basePattern }), ctx);
+        if (result.status === "EXCEPTION") return result;
+        if (result.status === "FAIL") failures.push({ status: "FAIL", field: materializeWildcardPattern(basePattern, group.indexes), actual: undefined, meta: { reason: "ANY_FILLED_GROUP_EMPTY", patterns: groupedFields, indexes: group.indexes } });
+      }
+      t("check.aggregate", failures.length ? "fail" : "ok", { pattern: basePattern, aggregateMode, matchedCount: groups.length, failedCount: failures.length });
+      if (failures.length === 0) return { status: "OK" };
+      if (aggregateMode === "ALL" && rule.aggregate && rule.aggregate.summaryIssue === true) return { status: "FAIL", field: basePattern, actual: failures.length, meta: { reason: "ANY_FILLED_GROUPS_FAILED", patterns: groupedFields, failedCount: failures.length, mode: "ALL" } };
+      return { status: "FAIL", failures };
+    }
 
     // Wildcard / aggregation for check-rules
     if (isWildcardField(rule.field)) {
@@ -529,14 +576,14 @@ function evalCheck(operators, rule, ctxBase, trace, scope) {
 
       if (keys.length === 0) {
         const beh = onEmptyBehavior(rule, "PASS");
-        t("wildcard check matched 0 fields", {
+        t("check.aggregate", "empty", {
           pattern: rule.field,
           aggregateMode,
           onEmpty: beh,
         });
 
         if (beh === "FAIL") {
-          t("wildcard aggregate", {
+          t("check.aggregate", "fail", {
             patternField: rule.field,
             aggregateMode,
             matchedCount: 0,
@@ -554,7 +601,7 @@ function evalCheck(operators, rule, ctxBase, trace, scope) {
           throw new Error(`Wildcard pattern matched 0 fields: ${rule.field}`);
 
         // PASS or UNDEFINED -> treat as OK (do not create issues)
-        t("wildcard aggregate", {
+        t("check.aggregate", "ok", {
           patternField: rule.field,
           aggregateMode,
           matchedCount: 0,
@@ -584,7 +631,7 @@ function evalCheck(operators, rule, ctxBase, trace, scope) {
           }
         }
 
-        t("wildcard aggregate", {
+        t("check.aggregate", failures.length === 0 ? "ok" : "fail", {
           patternField: rule.field,
           aggregateMode,
           matchedCount: keys.length,
@@ -634,7 +681,7 @@ function evalCheck(operators, rule, ctxBase, trace, scope) {
           throw new Error(`COUNT aggregate requires numeric aggregate.value`);
         const ok = compareCount(opStr, passCount, target);
 
-        t("wildcard aggregate", {
+        t("check.aggregate", ok ? "ok" : "fail", {
           patternField: rule.field,
           aggregateMode,
           matchedCount: keys.length,
@@ -671,14 +718,14 @@ function evalCheck(operators, rule, ctxBase, trace, scope) {
         }
         if (vals.length === 0) {
           const beh = onEmptyBehavior(rule, "PASS");
-          t("wildcard MIN/MAX produced 0 comparable values", {
+          t("check.aggregate", "empty", {
             pattern: rule.field,
             aggregateMode,
             onEmpty: beh,
           });
 
           if (beh === "FAIL") {
-            t("wildcard aggregate", {
+            t("check.aggregate", "fail", {
               patternField: rule.field,
               aggregateMode,
               matchedCount: keys.length,
@@ -697,7 +744,7 @@ function evalCheck(operators, rule, ctxBase, trace, scope) {
               `Wildcard pattern produced 0 comparable values: ${rule.field}`,
             );
 
-          t("wildcard aggregate", {
+          t("check.aggregate", "ok", {
             patternField: rule.field,
             aggregateMode,
             matchedCount: keys.length,
@@ -710,7 +757,7 @@ function evalCheck(operators, rule, ctxBase, trace, scope) {
         // Ensure all comparable kinds are the same.
         const kind = vals[0].comp.kind;
         if (!vals.every((v) => v.comp.kind === kind)) {
-          t("wildcard aggregate", {
+          t("check.aggregate", "fail", {
             patternField: rule.field,
             aggregateMode,
             matchedCount: keys.length,
@@ -736,8 +783,11 @@ function evalCheck(operators, rule, ctxBase, trace, scope) {
         // Run operator against a synthetic payload key.
         const aggKey = "__agg__";
         const pickedValue = deepGet(ctx.payload, picked.key).value;
+        const syntheticPayload = Object.assign(Object.create(null), { [aggKey]: pickedValue });
         const syntheticCtx = Object.assign({}, ctx, {
-          payload: { [aggKey]: pickedValue },
+          payload: syntheticPayload,
+          get: (path) => deepGet(syntheticPayload, path),
+          has: (path) => deepGet(syntheticPayload, path).ok,
         });
         const rr = op(
           Object.assign({}, rule, { field: aggKey, _patternField: rule.field }),
@@ -747,7 +797,7 @@ function evalCheck(operators, rule, ctxBase, trace, scope) {
 
         const ok = rr.status === "OK";
 
-        t("wildcard aggregate", {
+        t("check.aggregate", ok ? "ok" : "fail", {
           patternField: rule.field,
           aggregateMode,
           matchedCount: keys.length,
@@ -782,6 +832,18 @@ function evalCheck(operators, rule, ctxBase, trace, scope) {
   }
 }
 
+function validateOperatorResult(role, rule, result) {
+  const allowed = role === "check" ? new Set(["OK", "FAIL", "EXCEPTION"]) : new Set(["TRUE", "FALSE", "UNDEFINED", "EXCEPTION"]);
+  if (!result || typeof result !== "object" || !allowed.has(result.status)) {
+    throw new RuntimeError({
+      code: "OPERATOR_CONTRACT_VIOLATION",
+      message: `Operator ${rule.operator} returned an invalid ${role} result`,
+      details: { operator: rule.operator, ruleId: rule.id, returned: normalizeTransportSafe(result) },
+    });
+  }
+  return result;
+}
+
 function evalCondition(
   registry,
   operators,
@@ -793,7 +855,7 @@ function evalCondition(
   issues,
   trace,
 ) {
-  const t = makeTrace(trace, `condition:${condition.id}`);
+  const t = makeTrace(trace, condition.id);
   const w = compiledCond.when;
 
   function predBool(predId) {
@@ -803,21 +865,15 @@ function evalCondition(
       `when predicate must be predicate-rule: ${predId}`,
     );
 
-    // For observability: explicitly log predicate evaluation as a trace step.
-    trace.push({
-      kind: "TRACE",
-      message: "exec predicate step",
-      data: {
-        scope: `condition:${condition.id}`,
+    t("rule.start", "start", {
+        conditionId: condition.id,
         ruleId: pr.id,
         role: pr.role,
         description: pr.description || '',
         field: pr.field || '',
         operator: pr.operator || '',
         meta: pr.meta !== undefined ? pr.meta : null,
-      },
-      ts: new Date().toISOString(),
-    });
+      }, pr.id);
 
     const r = evalPredicate(
       operators,
@@ -827,6 +883,7 @@ function evalCondition(
       `condition:${condition.id}`,
     );
     if (r.status === "EXCEPTION") throw r.error;
+    t("rule.finish", r.status.toLowerCase(), { conditionId: condition.id, ruleId: pr.id }, pr.id);
     return r.status === "TRUE";
   }
 
@@ -839,7 +896,7 @@ function evalCondition(
 
   let ok = evalWhen(w);
 
-  t("condition evaluated", { whenMode: w.mode, result: ok });
+  t("condition.evaluate", ok ? "true" : "false", { whenMode: w.mode, result: ok });
 
   if (ok) {
     const control = execSteps(

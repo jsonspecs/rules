@@ -3,7 +3,7 @@
 [![CI](https://github.com/catindev/jsonspecs/actions/workflows/ci.yml/badge.svg)](https://github.com/catindev/jsonspecs/actions)
 [![npm](https://img.shields.io/npm/v/jsonspecs)](https://www.npmjs.com/package/jsonspecs)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
-[![Node 18+](https://img.shields.io/badge/Node-18%2B-green)](https://nodejs.org/)
+[![Node 20+](https://img.shields.io/badge/Node-20%2B-green)](https://nodejs.org/)
 
 Декларативный движок валидационных правил. Правила описываются в JSON-файлах. Движок компилирует их, запускает на payload любой глубины вложенности и возвращает структурированный результат с уровнями `ERROR`, `WARNING` и `EXCEPTION`, полным списком issue и execution trace. Без внешних зависимостей.
 
@@ -137,7 +137,7 @@ const engine = createEngine({ operators: Operators });
 const compiled = engine.compile(artifacts);
 ```
 
-Проверки на этапе компиляции: валидация схемы, целостность ссылок, обнаружение циклов в DAG, наличие операторов и уникальность `code` среди всех правил. `sources` необязательный `Map<artifactId, sourceFile>`, используемый для показа путей к файлам в сообщениях об ошибках; автоматически заполняется `loadArtifactsFromDir`.
+Проверки на этапе компиляции: валидация схемы, целостность ссылок, обнаружение циклов в DAG, наличие операторов и уникальность `code` среди всех правил. `sources` необязательный `Map<artifactId, sourceFile | {file,line?,column?}>`, используемый для заполнения структурного поля `location` в диагностике; автоматически заполняется `loadArtifactsFromDir`.
 
 ### `engine.runPipeline(compiled, pipelineId, payload)`
 
@@ -238,7 +238,7 @@ const compiled = engine.compile(artifacts, { sources });
 
 ```js
 const snapshot = JSON.parse(fs.readFileSync("snapshot.json", "utf8"));
-const compiled = engine.compile(snapshot.artifacts);
+const compiled = engine.compileSnapshot(snapshot);
 ```
 
 **Inline** (тесты: артефакты задаются как обычные JS-объекты):

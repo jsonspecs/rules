@@ -1,6 +1,7 @@
 const { assert, isObject } = require("./utils");
 const { compile } = require("./compiler/index.js");
 const { runPipeline } = require("./runner");
+const { validate, inspect, compileSnapshot } = require("./public-api");
 
 /**
  * createEngine({ operators })
@@ -24,6 +25,16 @@ function createEngine({ operators }) {
       // compiler will validate operator existence; it also returns operators
       return compile(artifacts, { operators, sources: options.sources });
     },
+
+    validate(artifacts, options = {}) {
+      return validate(artifacts, { operators, sources: options.sources });
+    },
+
+    compileSnapshot(snapshot, options = {}) {
+      return compileSnapshot(snapshot, { operators, sources: options.sources });
+    },
+
+    inspect,
 
     runPipeline(compiled, pipelineId, payload, options) {
       return runPipeline(compiled, pipelineId, payload, options);

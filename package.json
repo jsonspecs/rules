@@ -1,30 +1,37 @@
 {
   "name": "jsonspecs",
-  "version": "1.1.0",
+  "version": "2.0.0",
   "description": "Composable validation pipelines powered by JSON rules",
   "type": "commonjs",
   "main": "index.js",
   "types": "./index.d.ts",
   "exports": {
     ".": {
+      "types": "./index.d.ts",
+      "import": "./index.mjs",
       "require": "./index.js",
-      "types": "./index.d.ts"
-    }
+      "default": "./index.js"
+    },
+    "./package.json": "./package.json"
   },
   "files": [
     "index.js",
+    "index.mjs",
     "index.d.ts",
     "src/**/*.js",
+    "scripts/pack-smoke.js",
     "README.md",
     "OPERATORS.md",
     "SPEC.md",
+    "COMPATIBILITY.md",
     "LICENSE",
     "CHANGELOG.md"
   ],
   "scripts": {
-    "test": "node --test tests/compiler.test.js tests/runner.test.js",
+    "test": "node --test tests/*.test.js",
     "test:smoke": "node examples/basic/run.js",
-    "prepublishOnly": "npm test"
+    "test:pack": "node scripts/pack-smoke.js",
+    "prepublishOnly": "npm test && npm run test:pack"
   },
   "keywords": [
     "validation",
@@ -38,15 +45,13 @@
   "license": "MIT",
   "repository": {
     "type": "git",
-    "url": " https://github.com/catindev/jsonspecs"
+    "url": "git+https://github.com/catindev/jsonspecs.git"
   },
   "bugs": {
-    "url": " https://github.com/catindev/jsonspecs/issues"
+    "url": "https://github.com/catindev/jsonspecs/issues"
   },
-  "homepage": " https://github.com/catindev/jsonspecs#readme",
+  "homepage": "https://github.com/catindev/jsonspecs#readme",
   "engines": {
-    "node": ">=18"
-  },
-  "dependencies": {},
-  "devDependencies": {}
+    "node": ">=20"
+  }
 }

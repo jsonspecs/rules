@@ -531,12 +531,15 @@ not from the `payload`:
 
 ## 10. Compiler behaviour
 
-Compilation runs sequentially in 7 phases. Each phase collects **all** errors
-before stopping. Errors from different phases are not mixed.
+Compilation runs sequentially in 7 phases and is **phase-fail-fast**. The first
+phase that finds errors completes its pass, returns all errors found inside that
+phase, and prevents later phases from running. Errors from different phases are
+therefore not mixed; `validate()` exposes diagnostics from that first failing
+phase only.
 
 | Phase                       | What is checked                                          | Stop condition                              |
 | --------------------------- | -------------------------------------------------------- | ------------------------------------------- |
-| 1. `buildRegistry`          | `id` uniqueness, presence of `id`, `type`, `description` | on first registry error                     |
+| 1. `buildRegistry`          | `id` uniqueness, presence of `id`, `type`, `description` | all registry errors in one pass             |
 | 2. `validateSchema`         | artifact structure per type                              | all schema errors in one pass               |
 | 3. `validateCodeUniqueness` | uniqueness of `code` among check rules                   | all duplicates in one pass                  |
 | 4. `validateRefs`           | references and visibility                                | all reference errors in one pass            |
@@ -584,3 +587,16 @@ before stopping. Errors from different phases are not mixed.
 
 After stopping on `EXCEPTION`, remaining pipeline steps are not executed.
 Already-accumulated issues are preserved in the response.
+# Public runtime contract (v2)
+
+`validate(artifacts, options)` returns `{ok, diagnostics}` and does not throw for invalid source. Every diagnostic has stable `code`, `level`, `message`, `phase`, `artifactId`, `path`, and `location` fields. Compiler phases construct these fields directly; they are not inferred from message text. `path` identifies the offending property relative to the artifact, while `location` is `file`, `file:line`, or `file:line:column` when supplied through `options.sources`, and `null` otherwise. `compile()` returns an opaque `prepared-jsonspecs` artifact; runtime internals are available only through `inspect()`.
+
+`runPipeline(prepared, {pipelineId?, payload, context?}, options)` accepts only a prepared artifact. If `pipelineId` is omitted, exactly one pipeline must be marked `entrypoint`. Runtime results always include `status`, `control`, and `issues`. ABORT includes `{code,message,details}`, never a stack. Trace is disabled by default and enabled with `basic` or `verbose`.
+
+An exception thrown by `traceRedactor` is contained and returned as ABORT with `TRACE_REDACTOR_ERROR`; it never escapes `runPipeline`. Unexpected engine faults use the neutral fallback code `RUNTIME_ABORT`.
+
+Trace entries use one structural contract: `{kind:"TRACE",artifactType:"jsonspecs",artifactId,step,at,outcome,details?}`. The normative `step` enum is `pipeline.start`, `pipeline.finish`, `pipeline.abort`, `pipeline.strict`, `rule.start`, `rule.finish`, `condition.evaluate`, `predicate.aggregate`, `check.aggregate`, `context.required`, and `operator.trace`. Basic mode removes runtime values; verbose details pass through `traceRedactor` when provided.
+
+Custom check operators return `OK|FAIL|EXCEPTION`; predicate operators return `TRUE|FALSE|UNDEFINED|EXCEPTION`. `ctx.get(path)` returns `{ok,value}` where `ok` is a boolean property. Any other operator result aborts with `OPERATOR_CONTRACT_VIOLATION`.
+
+Normative snapshots have `format: "jsonspecs-snapshot"`, `formatVersion: 1`, canonical `sourceHash`, `engine.minVersion`, `artifacts`, and optional project `meta`. `engine.minVersion` must be a complete SemVer 2.0.0 version; compatibility uses SemVer precedence across major, minor, patch, and prerelease identifiers. They are consumed only through `compileSnapshot()`.

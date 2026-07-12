@@ -28,6 +28,10 @@ const { validateSchema, validateCodeUniqueness } = require('./validate-schema');
 const { validateRefs } = require('./validate-refs');
 const { validatePipelineDAG } = require('./validate-dag');
 const { buildConditions, buildPipelines } = require('./build-steps');
+const { createHash } = require('node:crypto');
+const { cloneJsonSafe } = require('../safe-json');
+const { createPrepared } = require('../prepared');
+const { diagnostic, artifactDiagnostic } = require('./diagnostic');
 
 function compile(artifacts, options = {}) {
   assert(Array.isArray(artifacts), 'compile: artifacts must be an array');
@@ -41,10 +45,10 @@ function compile(artifacts, options = {}) {
   );
 
   const sources = options.sources instanceof Map ? options.sources : null;
-  const detachedArtifacts = artifacts.map((artifact) => deepFreeze(deepCloneJsonLike(artifact)));
-
   setContext(sources);
   try {
+    const detachedArtifacts = artifacts.map((artifact, index) => detachArtifact(artifact, index));
+
     // Фаза 1: реестр — fail-fast, остальные фазы зависят от него
     const { registry, dictionaries, errors: regErrors } = buildRegistry(detachedArtifacts);
     throwIfErrors(regErrors);
@@ -69,21 +73,68 @@ function compile(artifacts, options = {}) {
     const dagErrors = validatePipelineDAG(registry, compiledPipelines, compiledConditions);
     throwIfErrors(dagErrors);
 
-    return Object.freeze({
+    const sourceHash = computeSourceHash(detachedArtifacts);
+    return createPrepared({
       registry,
       dictionaries,
       sources,
-      operators,
+      operators: freezeOperatorPack(operators),
       pipelines:  compiledPipelines,
       conditions: compiledConditions,
-    });
+      artifacts: detachedArtifacts,
+    }, { kind: 'prepared-jsonspecs', artifactType: 'jsonspecs', version: '1', sourceHash, diagnostics: Object.freeze([]) });
   } finally {
     clearContext();
   }
 }
 
+function detachArtifact(artifact, index) {
+  try {
+    return deepFreeze(cloneJsonSafe(artifact));
+  } catch (error) {
+    const rawPath = error && error.details && error.details.path;
+    const path = rawPath === '$'
+      ? `[${index}]`
+      : typeof rawPath === 'string' && rawPath.startsWith('$.')
+        ? rawPath.slice(2)
+        : rawPath || `[${index}]`;
+    throw new CompilationError([diagnostic({
+      code: error.code || 'ARTIFACT_NOT_JSON_SAFE',
+      message: error.message,
+      phase: 'source_validation',
+      artifactId: safeArtifactId(artifact),
+      path,
+      details: error.details || null,
+    })]);
+  }
+}
+
+function safeArtifactId(artifact) {
+  if (!artifact || typeof artifact !== 'object') return null;
+  try {
+    const descriptor = Object.getOwnPropertyDescriptor(artifact, 'id');
+    return descriptor && Object.prototype.hasOwnProperty.call(descriptor, 'value') && typeof descriptor.value === 'string'
+      ? descriptor.value
+      : null;
+  } catch (_) {
+    return null;
+  }
+}
+
 function throwIfErrors(errors) {
   if (errors && errors.length > 0) throw new CompilationError(errors);
+}
+
+function stableStringify(value) {
+  if (Array.isArray(value)) return `[${value.map(stableStringify).join(',')}]`;
+  if (value && typeof value === 'object') return `{${Object.keys(value).sort().map((key) => `${JSON.stringify(key)}:${stableStringify(value[key])}`).join(',')}}`;
+  return JSON.stringify(value);
+}
+
+function computeSourceHash(artifacts) { return createHash('sha256').update(stableStringify(artifacts)).digest('hex'); }
+
+function freezeOperatorPack(operators) {
+  return Object.freeze({ check: Object.freeze({ ...operators.check }), predicate: Object.freeze({ ...operators.predicate }), meta: operators.meta ? Object.freeze({ ...operators.meta }) : undefined });
 }
 
 /**
@@ -95,21 +146,42 @@ function buildRegistry(artifacts) {
   const dictionaries = new Map();
   const errors      = [];
 
-  for (const a of artifacts) {
+  for (let index = 0; index < artifacts.length; index++) {
+    const a = artifacts[index];
     if (!a || typeof a.id !== 'string' || a.id.length === 0) {
-      errors.push('Artifact must have non-empty id');
+      errors.push(diagnostic({
+        code: 'ARTIFACT_ID_REQUIRED',
+        message: 'Artifact must have non-empty id',
+        phase: 'registry_build',
+        path: `[${index}].id`,
+      }));
       continue;
     }
     if (typeof a.type !== 'string') {
-      errors.push(`Artifact ${a.id} must have type`);
+      errors.push(artifactDiagnostic(a, {
+        code: 'SCHEMA_VALIDATION_ERROR',
+        message: `Artifact ${a.id} must have type`,
+        phase: 'registry_build',
+        path: 'type',
+      }));
       continue;
     }
     if (typeof a.description !== 'string') {
-      errors.push(`Artifact ${a.id} must have description`);
+      errors.push(artifactDiagnostic(a, {
+        code: 'DESCRIPTION_REQUIRED',
+        message: `Artifact ${a.id} must have description`,
+        phase: 'registry_build',
+        path: 'description',
+      }));
       continue;
     }
     if (registry.has(a.id)) {
-      errors.push(`Duplicate artifact id: ${a.id}`);
+      errors.push(artifactDiagnostic(a, {
+        code: 'DUPLICATE_ARTIFACT_ID',
+        message: `Duplicate artifact id: ${a.id}`,
+        phase: 'registry_build',
+        path: 'id',
+      }));
       continue;
     }
     registry.set(a.id, a);
@@ -117,18 +189,6 @@ function buildRegistry(artifacts) {
   }
 
   return { registry, dictionaries, errors };
-}
-
-function deepCloneJsonLike(value) {
-  if (Array.isArray(value)) return value.map((item) => deepCloneJsonLike(item));
-  if (value && typeof value === 'object') {
-    const out = {};
-    for (const [key, inner] of Object.entries(value)) {
-      out[key] = deepCloneJsonLike(inner);
-    }
-    return out;
-  }
-  return value;
 }
 
 function deepFreeze(value) {
@@ -143,4 +203,4 @@ function deepFreeze(value) {
   return value;
 }
 
-module.exports = { compile };
+module.exports = { compile, computeSourceHash, stableStringify };

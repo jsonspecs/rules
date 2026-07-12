@@ -1,210 +1,47 @@
-/**
- * jsonspecs — Composable validation pipelines powered by JSON rules.
- * 
- * Public API (semver-stable):
- *   createEngine, Operators, CompilationError, deepGet
- *
- * Internal modules (src/**) are not part of the stable API and may change.
- */
-
-// ---------------------------------------------------------------------------
-// Result types
-// ---------------------------------------------------------------------------
-
-/** A single validation issue produced by a check rule. */
-export interface Issue {
-  /** Always "ISSUE" */
-  kind: "ISSUE";
-  /** Severity level */
-  level: "WARNING" | "ERROR" | "EXCEPTION";
-  /** Machine-readable error code from the rule artifact */
-  code: string;
-  /** Human-readable message from the rule artifact */
-  message: string;
-  /** Dot-notation field path the rule applied to */
-  field: string | undefined;
-  /** ID of the rule artifact that produced this issue */
-  ruleId: string;
-  /** Expected value (from rule.value or rule.dictionary), if applicable */
-  expected?: unknown;
-  /** Actual value found in the payload, if applicable */
-  actual?: unknown;
-  /** Compile-time step ID that triggered this issue */
-  stepId?: string;
-  /** Pipeline ID that owns the step */
-  pipelineId?: string;
-}
-
-/** A single trace entry produced during pipeline execution. */
-export interface TraceEntry {
-  kind: "TRACE";
-  message: string;
-  data: Record<string, unknown>;
-  ts: string; // ISO timestamp
-}
-
-/**
- * Result of runPipeline().
- *
- * status values:
- *   "OK"              — all checks passed
- *   "OK_WITH_WARNINGS"— all checks passed, but some WARNING-level issues were found
- *   "ERROR"           — one or more ERROR-level issues; pipeline ran to completion
- *   "EXCEPTION"       — an EXCEPTION-level issue stopped the pipeline early
- *   "ABORT"           — an unexpected runtime error occurred inside the engine itself;
- *                       issues[] contains whatever was accumulated before the abort;
- *                       error.message and error.stack describe the engine fault
- *
- * control values:
- *   "CONTINUE" — caller may proceed to next step
- *   "STOP"     — caller must not proceed (EXCEPTION or ERROR present)
- */
-export type PipelineStatus = "OK" | "OK_WITH_WARNINGS" | "ERROR" | "EXCEPTION" | "ABORT";
-export type PipelineControl = "CONTINUE" | "STOP";
-
-export interface PipelineResult {
-  status: PipelineStatus;
-  control: PipelineControl;
-  issues: Issue[];
-  /** Execution trace. Present when trace option is not disabled. */
-  trace: TraceEntry[];
-  /** Only present when status === "ABORT" */
-  error?: { message: string; stack?: string };
-}
-
-// ---------------------------------------------------------------------------
-// Operator types
-// ---------------------------------------------------------------------------
-
-/** Context passed to every operator at runtime. */
-export interface OperatorContext {
-  /** Flat payload map available for diagnostics and advanced cases. Prefer ctx.get()/ctx.has() in operators. */
-  payload: Record<string, unknown>;
-  /** Stable helper to read a field from the flat payload map, including $context.* fields. */
-  get(path: string): { ok: true; value: unknown } | { ok: false; value: undefined };
-  /** Stable helper to check whether a field is present in the flat payload map. */
-  has(path: string): boolean;
-  /** Returns a compiled dictionary artifact by id, or null when missing. */
-  getDictionary(id: string): Record<string, unknown> | null;
-  /** Flat payload keys available for wildcard expansion and diagnostics. */
-  payloadKeys?: string[];
-}
-
-/** Internal result returned by a check operator. */
-export interface CheckResult {
-  status: "OK" | "FAIL" | "EXCEPTION";
-  error?: Error;
-  field?: string;
-  actual?: unknown;
-  failures?: Array<{ field: string; actual?: unknown }>;
-}
-
-/** Internal result returned by a predicate operator. */
-export interface PredicateResult {
-  status: "TRUE" | "FALSE" | "UNDEFINED" | "EXCEPTION";
-  error?: Error;
-}
-
-export type CheckOperator = (rule: Record<string, unknown>, ctx: OperatorContext) => CheckResult;
-export type PredicateOperator = (rule: Record<string, unknown>, ctx: OperatorContext) => PredicateResult;
-
-export interface OperatorPack {
-  check: Record<string, CheckOperator>;
-  predicate: Record<string, PredicateOperator>;
-}
-
-// ---------------------------------------------------------------------------
-// Engine types
-// ---------------------------------------------------------------------------
-
-/** Opaque compiled artifact bundle returned by engine.compile(). Detached from source artifact objects at compile time. */
-export interface Compiled {
-  readonly registry: Map<string, Record<string, unknown>>;
-  readonly dictionaries: Map<string, Record<string, unknown>>;
-  readonly operators: OperatorPack;
-  readonly pipelines: Map<string, unknown>;
-  readonly conditions: Map<string, unknown>;
-}
-
-/** Options for engine.compile() */
-export interface CompileOptions {
-  /** Source map for error reporting: artifact id → file path */
-  sources?: Map<string, string>;
-}
-
-/** Options for engine.runPipeline() */
-export interface RunOptions {
-  /**
-   * Set to false to skip trace collection (reduces memory overhead on hot paths).
-   * Default: true.
-   */
-  trace?: boolean;
-}
-
-export interface Engine {
-  /**
-   * Compile an array of artifact objects into an executable bundle.
-   * Throws CompilationError if any artifact is invalid.
-   * Compile once, run many times.
-   */
-  compile(artifacts: Record<string, unknown>[], options?: CompileOptions): Compiled;
-
-  /**
-   * Execute a named pipeline against a payload.
-   * Accepts both nested JSON ({ a: { b: 1 } }) and flat maps ({ "a.b": 1 }).
-   * Never throws — runtime errors are returned as { status: "ABORT" }.
-   */
-  runPipeline(compiled: Compiled, pipelineId: string, payload: Record<string, unknown>, options?: RunOptions): PipelineResult;
-}
-
-// ---------------------------------------------------------------------------
-// Public API
-// ---------------------------------------------------------------------------
-
-/**
- * Create an engine instance bound to an operator pack.
- *
- * @example
- * const { createEngine, Operators } = require('jsonspecs');
- * const engine = createEngine({ operators: Operators });
- */
+export type DiagnosticLevel = "error" | "warning";
+export interface Diagnostic { code: string; level: DiagnosticLevel; message: string; phase: string; artifactId: string | null; pipelineId?: string | null; ruleId?: string | null; path: string | null; location: string | null; details?: Record<string, unknown> | null; }
+export interface Issue { kind: "ISSUE"; level: "WARNING" | "ERROR" | "EXCEPTION"; code: string; message?: string; field?: string | null; ruleId: string; pipelineId?: string; stepId?: string; expected?: unknown; actual?: unknown; meta?: Record<string, unknown>; }
+export type TraceMode = false | "basic" | "verbose";
+export type TraceStep = "pipeline.start" | "pipeline.finish" | "pipeline.abort" | "pipeline.strict" | "rule.start" | "rule.finish" | "condition.evaluate" | "predicate.aggregate" | "check.aggregate" | "context.required" | "operator.trace";
+export interface TraceEntry { kind: "TRACE"; artifactType: "jsonspecs"; step: TraceStep; artifactId: string | null; outcome: string | null; at: string; details?: unknown; }
+export interface RuntimeErrorShape { code: string; message: string; details: Record<string, unknown> | null; }
+export interface PipelineResult { status: "OK" | "OK_WITH_WARNINGS" | "ERROR" | "EXCEPTION" | "ABORT"; control: "CONTINUE" | "STOP"; issues: Issue[]; trace?: TraceEntry[]; error?: RuntimeErrorShape; }
+export interface OperatorContext { payload: Record<string, unknown>; payloadKeys: string[]; get(path: string): { ok: true; value: unknown } | { ok: false; value: undefined }; has(path: string): boolean; getDictionary(id: string): Record<string, unknown> | null; trace?(message: string, details?: Record<string, unknown>): void; }
+export interface CheckResult { status: "OK" | "FAIL" | "EXCEPTION"; error?: Error; field?: string; actual?: unknown; meta?: Record<string, unknown>; failures?: Array<{ field: string; actual?: unknown; meta?: Record<string, unknown> }>; }
+export interface PredicateResult { status: "TRUE" | "FALSE" | "UNDEFINED" | "EXCEPTION"; error?: Error; }
+export type CheckOperator = (rule: Record<string, any>, ctx: OperatorContext) => CheckResult;
+export type PredicateOperator = (rule: Record<string, any>, ctx: OperatorContext) => PredicateResult;
+export interface OperatorPack { check: Record<string, CheckOperator>; predicate: Record<string, PredicateOperator>; meta?: Record<string, unknown>; }
+export interface PreparedArtifact { readonly kind: "prepared-jsonspecs"; readonly artifactType: "jsonspecs"; readonly version: string; readonly sourceHash: string; readonly diagnostics: readonly Diagnostic[]; }
+export interface CompileOptions { sources?: ReadonlyMap<string, string | { file: string; line?: number; column?: number }>; }
+export interface RunOptions { trace?: boolean | "basic" | "verbose"; traceRedactor?: (value: unknown, mode: Exclude<TraceMode, false>) => unknown; debug?: boolean; }
+export interface EvaluationInput { pipelineId?: string; payload: Record<string, unknown>; context?: Record<string, unknown>; }
+export interface Inspector { listArtifacts(filter?: { type?: string }): ReadonlyArray<Record<string, unknown>>; getArtifact(id: string): Readonly<Record<string, any>> | null; listEntrypoints(): ReadonlyArray<Record<string, unknown>>; getPipelineSteps(id: string): unknown[] | null; getConditionModel(id: string): Record<string, any> | null; listDictionaries(): ReadonlyArray<Record<string, unknown>>; getDictionary(id: string): Readonly<Record<string, unknown>> | null; stats(): { artifacts: number; byType: Readonly<Record<string, number>>; entrypointCount: number }; }
+export interface Engine { compile(artifacts: Record<string, any>[], options?: CompileOptions): PreparedArtifact; validate(artifacts: Record<string, any>[], options?: CompileOptions): { ok: boolean; diagnostics: Diagnostic[] }; compileSnapshot(snapshot: Snapshot, options?: CompileOptions): PreparedArtifact; inspect(artifact: PreparedArtifact): Inspector; runPipeline(artifact: PreparedArtifact, input: EvaluationInput, options?: RunOptions): PipelineResult; /** @deprecated */ runPipeline(artifact: PreparedArtifact, pipelineId: string, payload: Record<string, unknown>, options?: RunOptions): PipelineResult; }
+export interface Snapshot { format: "jsonspecs-snapshot"; formatVersion: 1; sourceHash: string; engine: { minVersion: string }; artifacts: Record<string, any>[]; meta?: { projectId?: string; projectTitle?: string; description?: string }; }
 export function createEngine(options: { operators: OperatorPack }): Engine;
-
-/**
- * Built-in operator pack covering all standard check and predicate operators.
- * Pass to createEngine() or extend with your own operators.
- */
 export const Operators: OperatorPack;
+export function validate(artifacts: Record<string, any>[], options?: CompileOptions & { operators?: OperatorPack }): { ok: boolean; diagnostics: Diagnostic[] };
+export function compileSnapshot(snapshot: Snapshot, options?: CompileOptions & { operators?: OperatorPack }): PreparedArtifact;
+export function inspect(artifact: PreparedArtifact): Inspector;
+export function computeSourceHash(artifacts: Record<string, any>[]): string;
+export function formatDiagnostics(diagnostics: Diagnostic[]): string;
+export function formatRuntimeError(error: RuntimeErrorShape): string;
+export function deepGet(obj: Record<string, unknown>, path: string): { ok: true; value: unknown } | { ok: false; value: undefined };
+export class CompilationError extends Error { readonly errors: string[]; readonly diagnostics: Diagnostic[]; constructor(diagnostics: Array<string | Diagnostic>); }
+export class RuntimeError extends Error { readonly code: string; readonly details: Record<string, unknown> | null; constructor(input: RuntimeErrorShape); }
 
-/**
- * Thrown by engine.compile() when artifacts contain errors.
- * Contains the full list of all errors found (not just the first one).
- *
- * @example
- * try {
- *   engine.compile(artifacts);
- * } catch (e) {
- *   if (e instanceof CompilationError) {
- *     e.errors.forEach(msg => console.error(msg));
- *   }
- * }
- */
-export class CompilationError extends Error {
-  /** All compilation error messages found across all phases. */
-  readonly errors: string[];
-  constructor(errors: string[]);
-}
-
-/**
- * Look up a dot-notation field path in a flat payload map.
- * Supports $context.* prefix for runtime context fields.
- * Exported as a stable helper for advanced/custom operators and backward compatibility. Prefer ctx.get() in new operators.
- *
- * @example
- * const { ok, value } = deepGet(ctx.payload, 'person.firstName');
- * if (ok) { ... }
- */
-export function deepGet(
-  obj: Record<string, unknown>,
-  path: string
-): { ok: true; value: unknown } | { ok: false; value: undefined };
+declare const jsonspecs: {
+  createEngine: typeof createEngine;
+  Operators: typeof Operators;
+  validate: typeof validate;
+  compileSnapshot: typeof compileSnapshot;
+  inspect: typeof inspect;
+  computeSourceHash: typeof computeSourceHash;
+  formatDiagnostics: typeof formatDiagnostics;
+  formatRuntimeError: typeof formatRuntimeError;
+  deepGet: typeof deepGet;
+  CompilationError: typeof CompilationError;
+  RuntimeError: typeof RuntimeError;
+};
+export default jsonspecs;
