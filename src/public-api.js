@@ -70,7 +70,15 @@ function compileSnapshot(snapshot, options = {}) {
       { required: minimum, current: packageJson.version },
     );
   }
-  return compile(snapshot.artifacts, options);
+  const meta = snapshot.meta && typeof snapshot.meta === "object" ? snapshot.meta : {};
+  return compile(snapshot.artifacts, {
+    ...options,
+    provenance: {
+      sourceHash: snapshot.sourceHash,
+      rulesetVersion: meta.rulesetVersion,
+      projectId: meta.projectId,
+    },
+  });
 }
 
 function snapshotCompilationError(code, message, path = null, details = null) {

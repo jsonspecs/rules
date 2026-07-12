@@ -85,6 +85,28 @@ test('runtime result survives exact JSON roundtrip', () => {
   assert.deepEqual(JSON.parse(JSON.stringify(result)), result);
 });
 
+test('runtime result carries ruleset provenance from compiled source and snapshot', () => {
+  const engine = createEngine({ operators: Operators });
+  const artifacts = source();
+  const direct = engine.runPipeline(engine.compile(artifacts), { payload: { x: 'ok' } });
+  assert.deepEqual(direct.ruleset, { sourceHash: computeSourceHash(artifacts) });
+
+  const snapshot = {
+    format: 'jsonspecs-snapshot',
+    formatVersion: 1,
+    sourceHash: computeSourceHash(artifacts),
+    engine: { minVersion: '2.0.0' },
+    artifacts,
+    meta: { projectId: 'demo', rulesetVersion: '1.2.3' },
+  };
+  const result = engine.runPipeline(engine.compileSnapshot(snapshot), { payload: { x: 'ok' } });
+  assert.deepEqual(result.ruleset, {
+    sourceHash: snapshot.sourceHash,
+    rulesetVersion: '1.2.3',
+    projectId: 'demo',
+  });
+});
+
 test('trace basic redacts values and verbose uses redactor', () => {
   const engine = createEngine({ operators: Operators }); const prepared = engine.compile(source());
   const basic = engine.runPipeline(prepared, { payload: { x: 'secret' } }, { trace: 'basic' });

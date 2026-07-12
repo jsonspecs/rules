@@ -74,6 +74,15 @@ function compile(artifacts, options = {}) {
     throwIfErrors(dagErrors);
 
     const sourceHash = computeSourceHash(detachedArtifacts);
+    const provenance = Object.freeze({
+      sourceHash,
+      ...(options.provenance && typeof options.provenance.rulesetVersion === 'string'
+        ? { rulesetVersion: options.provenance.rulesetVersion }
+        : {}),
+      ...(options.provenance && typeof options.provenance.projectId === 'string'
+        ? { projectId: options.provenance.projectId }
+        : {}),
+    });
     return createPrepared({
       registry,
       dictionaries,
@@ -82,6 +91,7 @@ function compile(artifacts, options = {}) {
       pipelines:  compiledPipelines,
       conditions: compiledConditions,
       artifacts: detachedArtifacts,
+      provenance,
     }, { kind: 'prepared-jsonspecs', artifactType: 'jsonspecs', version: '1', sourceHash, diagnostics: Object.freeze([]) });
   } finally {
     clearContext();

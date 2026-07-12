@@ -2,6 +2,11 @@
 
 All notable changes to this project will be documented in this file.
 
+## [2.1.0] - 2026-07-12
+
+- Added ruleset provenance to runtime results, including snapshot ruleset versions.
+- Exported JSON Schema 2020-12 documents for artifacts and snapshots.
+
 ## [2.0.0] - 2026-07-12
 
 - Added structured diagnostics, non-throwing validation, opaque prepared artifacts, introspection, deterministic snapshots, and coded runtime errors.

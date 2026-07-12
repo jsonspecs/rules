@@ -24,6 +24,9 @@ try {
   run("npm", ["install", "--ignore-scripts", tarball]);
   fs.writeFileSync(path.join(temp, "smoke.cjs"), `
     const api = require("jsonspecs");
+    const artifactSchema = require("jsonspecs/schema");
+    const snapshotSchema = require("jsonspecs/schema/snapshot");
+    if (!artifactSchema.$defs || snapshotSchema.properties.format.const !== "jsonspecs-snapshot") process.exit(1);
     const artifacts = [
       { id: "library.required", type: "rule", description: "required", role: "check", operator: "not_empty", level: "ERROR", code: "X", message: "required", field: "x" },
       { id: "entry.main", type: "pipeline", description: "main", strict: false, entrypoint: true, flow: [{ rule: "library.required" }] }

@@ -1,6 +1,6 @@
 {
   "name": "jsonspecs",
-  "version": "2.0.0",
+  "version": "2.1.0",
   "description": "Composable validation pipelines powered by JSON rules",
   "type": "commonjs",
   "main": "index.js",
@@ -12,13 +12,17 @@
       "require": "./index.js",
       "default": "./index.js"
     },
-    "./package.json": "./package.json"
+    "./package.json": "./package.json",
+    "./schema": "./schema/artifact.schema.json",
+    "./schema/artifact": "./schema/artifact.schema.json",
+    "./schema/snapshot": "./schema/snapshot.schema.json"
   },
   "files": [
     "index.js",
     "index.mjs",
     "index.d.ts",
     "src/**/*.js",
+    "schema/*.json",
     "scripts/pack-smoke.js",
     "README.md",
     "OPERATORS.md",
@@ -53,5 +57,8 @@
   "homepage": "https://github.com/catindev/jsonspecs#readme",
   "engines": {
     "node": ">=20"
+  },
+  "devDependencies": {
+    "ajv": "^8.20.0"
   }
 }

@@ -287,6 +287,20 @@ const result = engine.runPipeline(compiled, "test.pipeline", {
 // result.issues[0].code === "NAME.REQUIRED"
 ```
 
+## JSON Schema
+
+The package exports JSON Schema 2020-12 documents for editor integration and
+structural validation:
+
+```js
+const artifactSchema = require("jsonspecs/schema");
+const snapshotSchema = require("jsonspecs/schema/snapshot");
+```
+
+JSON Schema covers artifact and snapshot structure. Cross-artifact references,
+visibility, uniqueness, custom operator semantics, and pipeline cycles remain
+the responsibility of `validate()`.
+
 ## Artifact types
 
 | Type         | Purpose                                                            |

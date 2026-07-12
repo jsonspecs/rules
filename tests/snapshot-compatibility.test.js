@@ -23,16 +23,16 @@ function incompatible(error) {
 }
 
 test("snapshot compatibility compares major, minor and patch", () => {
-  assert.equal(compileSnapshot(snapshot("2.0.0")).kind, "prepared-jsonspecs");
-  assert.throws(() => compileSnapshot(snapshot("2.0.1")), incompatible);
-  assert.throws(() => compileSnapshot(snapshot("2.1.0")), incompatible);
+  assert.equal(compileSnapshot(snapshot("2.1.0")).kind, "prepared-jsonspecs");
+  assert.throws(() => compileSnapshot(snapshot("2.1.1")), incompatible);
+  assert.throws(() => compileSnapshot(snapshot("2.2.0")), incompatible);
   assert.throws(() => compileSnapshot(snapshot("3.0.0")), incompatible);
 });
 
 test("snapshot compatibility follows SemVer prerelease and build precedence", () => {
-  assert.equal(compileSnapshot(snapshot("2.0.0-rc.1")).kind, "prepared-jsonspecs");
-  assert.equal(compileSnapshot(snapshot("2.0.0+snapshot.7")).kind, "prepared-jsonspecs");
-  assert.throws(() => compileSnapshot(snapshot("2.0.1-alpha.1")), incompatible);
+  assert.equal(compileSnapshot(snapshot("2.1.0-rc.1")).kind, "prepared-jsonspecs");
+  assert.equal(compileSnapshot(snapshot("2.1.0+snapshot.7")).kind, "prepared-jsonspecs");
+  assert.throws(() => compileSnapshot(snapshot("2.1.1-alpha.1")), incompatible);
 });
 
 test("snapshot minVersion must be a complete valid semantic version", () => {

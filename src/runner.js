@@ -99,6 +99,7 @@ function checkRequiredContext(pipeline, ctxBase, issues, trace, stepId = null) {
 }
 
 function runPipeline(compiled, pipelineId, payload, options) {
+  let provenance = null;
   let inputContext = null;
   if (pipelineId && typeof pipelineId === "object") {
     const input = pipelineId;
@@ -119,6 +120,7 @@ function runPipeline(compiled, pipelineId, payload, options) {
     const state = getPreparedState(compiled);
     if (!state) throw new RuntimeError({ code: "INVALID_COMPILED_ARTIFACT", message: "runPipeline expects an artifact produced by compile()" });
     const { registry, dictionaries, operators, pipelines, conditions } = state;
+    provenance = state.provenance || null;
     if (!pipelineId) {
       const entrypoints = [...registry.values()].filter((item) => item.type === "pipeline" && item.entrypoint === true);
       if (entrypoints.length !== 1) throw new RuntimeError({ code: "PIPELINE_ID_REQUIRED", message: "pipelineId is required unless exactly one entrypoint exists", details: { entrypointCount: entrypoints.length } });
@@ -144,7 +146,7 @@ function runPipeline(compiled, pipelineId, payload, options) {
   assert(pipelineArtifact && pipelineArtifact.type === "pipeline", `Missing pipeline ${pipelineId}`);
   if (checkRequiredContext(pipelineArtifact, ctxBase, issues, traceTarget)) {
     traceFn("pipeline.finish", "exception", { issueCount: issues.length }, pipelineId);
-    return finishResult({ status: "EXCEPTION", control: "STOP", issues }, traceMode, trace, options);
+    return finishResult({ status: "EXCEPTION", control: "STOP", issues }, traceMode, trace, options, provenance);
   }
 
   const control = execSteps(
@@ -162,7 +164,7 @@ function runPipeline(compiled, pipelineId, payload, options) {
 
     if (applyStrictBoundary(pipelineArtifact, issues, 0, null, traceFn)) {
       traceFn("pipeline.finish", "exception", { issueCount: issues.length }, pipelineId);
-      return finishResult({ status: "EXCEPTION", control: "STOP", issues }, traceMode, trace, options);
+      return finishResult({ status: "EXCEPTION", control: "STOP", issues }, traceMode, trace, options, provenance);
     }
 
     const hasException = control === "STOP";
@@ -182,7 +184,7 @@ function runPipeline(compiled, pipelineId, payload, options) {
     const ctrl = hasException || hasErrors ? "STOP" : "CONTINUE";
 
     traceFn("pipeline.finish", status.toLowerCase(), { issueCount: issues.length }, pipelineId);
-    return finishResult({ status, control: ctrl, issues }, traceMode, trace, options);
+    return finishResult({ status, control: ctrl, issues }, traceMode, trace, options, provenance);
   } catch (e) {
     traceFn("pipeline.abort", "abort", {
       pipelineId,
@@ -193,12 +195,13 @@ function runPipeline(compiled, pipelineId, payload, options) {
       control: "STOP",
       issues,
       error: { code: e && e.code ? e.code : "RUNTIME_ABORT", message: e && e.message ? e.message : String(e), details: e && e.details ? e.details : null },
-    }, traceMode, trace, options);
+    }, traceMode, trace, options, provenance);
   }
 }
 
-function finishResult(result, traceMode, trace, options) {
+function finishResult(result, traceMode, trace, options, provenance) {
   try {
+    if (provenance) result.ruleset = provenance;
     if (traceMode) result.trace = trace.map((entry) => sanitizeTraceEntry(entry, traceMode, options && options.traceRedactor));
     return normalizeTransportSafe(result);
   } catch (error) {
@@ -208,6 +211,7 @@ function finishResult(result, traceMode, trace, options) {
       issues: Array.isArray(result.issues) ? result.issues : [],
       error: { code: "TRACE_REDACTOR_ERROR", message: error && error.message ? error.message : String(error), details: null },
     };
+    if (provenance) aborted.ruleset = provenance;
     if (traceMode) aborted.trace = trace.map((entry) => sanitizeTraceEntry(entry, "basic", null));
     return normalizeTransportSafe(aborted);
   }
