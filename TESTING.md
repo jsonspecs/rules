@@ -23,6 +23,17 @@ What they cover today:
 - JSON Schema parity fixtures;
 - CommonJS and ESM packed-consumer smoke tests.
 
+## Release publishing
+
+The npm package trusts the GitHub Actions workflow `.github/workflows/release.yml`
+from `catindev/jsonspecs` for `npm publish`. The release job runs on a GitHub-hosted
+runner with `id-token: write`, uses npm 11.18.0, and does not use a long-lived npm
+token. Trusted publishing generates provenance automatically.
+
+Tagged releases are published under the `next` dist-tag. The separate promotion
+workflow retains `NPM_TOKEN` because npm trusted publishing does not authorize
+`npm dist-tag` operations.
+
 ## Recommended additions
 
 ### P1

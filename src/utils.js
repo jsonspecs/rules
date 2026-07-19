@@ -51,6 +51,7 @@ function parseStrictYMD(s) {
   if (!/^\d{4}-\d{2}-\d{2}$/.test(s)) return null;
   const d = new Date(s + "T00:00:00Z");
   if (Number.isNaN(d.getTime())) return null;
+  if (d.toISOString().slice(0, 10) !== s) return null;
   return d;
 }
 
@@ -216,7 +217,7 @@ function expandWildcardGroups(basePattern, payloadKeys) {
       const diff = (a.indexes[index] || 0) - (b.indexes[index] || 0);
       if (diff !== 0) return diff;
     }
-    return a.key.localeCompare(b.key);
+    return a.key < b.key ? -1 : a.key > b.key ? 1 : 0;
   });
 }
 

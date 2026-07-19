@@ -2,6 +2,12 @@
 
 All notable changes to this project will be documented in this file.
 
+## [2.1.2] - 2026-07-19
+
+- Reject calendar-impossible `YYYY-MM-DD` values instead of silently normalizing them during date comparisons.
+- Make wildcard group ordering independent of the host locale.
+- Publish tagged releases from GitHub Actions through npm trusted publishing with OIDC.
+
 ## [2.1.1] - 2026-07-12
 
 - Refreshed README, Russian README, specification, operators reference, compatibility notes, and package metadata for the v2.1 public contract.

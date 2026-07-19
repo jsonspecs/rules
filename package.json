@@ -1,6 +1,6 @@
 {
   "name": "jsonspecs",
-  "version": "2.1.1",
+  "version": "2.1.2",
   "description": "Declarative JSON rules engine for validation pipelines",
   "type": "commonjs",
   "main": "index.js",
