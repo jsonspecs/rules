@@ -15,6 +15,7 @@ const {
   cloneContextSafe,
   exceedsMaxJsonDepth,
   normalizeTransportSafe,
+  SafeJsonError,
   hasOwn,
 } = require("./safe-json");
 const { getPreparedState } = require("./prepared");
@@ -48,6 +49,27 @@ function traceValue(value) {
   if (Array.isArray(value)) return "[array]";
   if (typeof value === "object") return "[object]";
   return String(value);
+}
+
+function runtimeAbortPayload(error) {
+  if (error instanceof RuntimeError || error instanceof SafeJsonError) {
+    return {
+      code: error.code || "RUNTIME_ABORT",
+      message: error.message || "Runtime aborted",
+      details: error.details || null,
+    };
+  }
+  return {
+    code: "RUNTIME_ABORT",
+    message: "Runtime aborted",
+    details: null,
+  };
+}
+
+function returnedStatusSummary(result) {
+  const status = result && typeof result === "object" ? result.status : undefined;
+  if (typeof status === "string") return status.slice(0, 64);
+  return typeof status;
 }
 
 function onEmptyBehavior(rule, defaultBehavior) {
@@ -115,33 +137,43 @@ function checkRequiredContext(pipeline, ctxBase, issues, trace, stepId = null) {
   return true;
 }
 
-function runPipeline(compiled, pipelineId, payload, options) {
+function runPipeline(compiled, pipelineIdArg, payloadArg, optionsArg) {
   let provenance = null;
-  let inputContext = undefined;
-  let hasInputContext = false;
-  if (pipelineId && typeof pipelineId === "object") {
-    const input = pipelineId;
-    options = payload || {};
-    pipelineId = input.pipelineId;
-    payload = input.payload;
-    if (hasOwn(input, "context")) {
-      inputContext = input.context;
-      hasInputContext = true;
-    }
-  }
-  options = options || {};
-  const traceMode = options.trace === true ? "basic" : (options.trace || false);
-  const traceEnabled = traceMode === "basic" || traceMode === "verbose";
   const trace = [];
   const issues = [];
-  const traceTarget = traceEnabled ? trace : [];
-  const traceFn = makeTrace(traceTarget, `pipeline:${pipelineId}`);
+  let traceMode = false;
+  let traceTarget = [];
+  let traceFn = () => {};
+  let pipelineId = null;
+  let options = null;
 
   try {
     const state = getPreparedState(compiled);
     if (!state) throw new RuntimeError({ code: "INVALID_COMPILED_ARTIFACT", message: "runPipeline expects an artifact produced by compile()" });
     const { registry, dictionaries, operators, pipelines, conditions } = state;
     provenance = state.provenance || null;
+
+    let payload = payloadArg;
+    let inputContext = undefined;
+    let hasInputContext = false;
+    pipelineId = pipelineIdArg;
+    options = optionsArg;
+    if (pipelineId && typeof pipelineId === "object") {
+      const input = pipelineId;
+      options = payloadArg || {};
+      pipelineId = input.pipelineId;
+      payload = input.payload;
+      if (hasOwn(input, "context")) {
+        inputContext = input.context;
+        hasInputContext = true;
+      }
+    }
+    options = options || {};
+    traceMode = options.trace === true ? "basic" : (options.trace || false);
+    const traceEnabled = traceMode === "basic" || traceMode === "verbose";
+    traceTarget = traceEnabled ? trace : [];
+    traceFn = makeTrace(traceTarget, `pipeline:${pipelineId}`);
+
     if (!pipelineId) {
       const entrypoints = [...registry.values()].filter((item) => item.type === "pipeline" && item.entrypoint === true);
       if (entrypoints.length !== 1) throw new RuntimeError({ code: "PIPELINE_ID_REQUIRED", message: "pipelineId is required unless exactly one entrypoint exists", details: { entrypointCount: entrypoints.length } });
@@ -210,15 +242,16 @@ function runPipeline(compiled, pipelineId, payload, options) {
     traceFn("pipeline.finish", status.toLowerCase(), { issueCount: issues.length }, pipelineId);
     return finishResult({ status, control: ctrl, issues }, traceMode, trace, options, provenance);
   } catch (e) {
+    const error = runtimeAbortPayload(e);
     traceFn("pipeline.abort", "abort", {
       pipelineId,
-      error: String(e && e.message ? e.message : e),
+      error: error.code,
     }, pipelineId);
     return finishResult({
       status: "ABORT",
       control: "STOP",
       issues,
-      error: { code: e && e.code ? e.code : "RUNTIME_ABORT", message: e && e.message ? e.message : String(e), details: e && e.details ? e.details : null },
+      error,
     }, traceMode, trace, options, provenance);
   }
 }
@@ -907,7 +940,7 @@ function validateOperatorResult(role, rule, result) {
     throw new RuntimeError({
       code: "OPERATOR_CONTRACT_VIOLATION",
       message: `Operator ${rule.operator} returned an invalid ${role} result`,
-      details: { operator: rule.operator, ruleId: rule.id, returned: normalizeTransportSafe(result) },
+      details: { operator: rule.operator, ruleId: rule.id, returnedStatus: returnedStatusSummary(result) },
     });
   }
   validateOperatorResultDepth(rule, result);

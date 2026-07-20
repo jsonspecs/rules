@@ -4,7 +4,8 @@ function lintRegexReDoS(pattern) {
   const source = String(pattern);
   const findings = [];
   for (const group of quantifiedGroups(source)) {
-    if (isUnboundedQuantifier(group.quantifier) && containsQuantifier(group.body)) {
+    if (!isUnboundedQuantifier(group.quantifier)) continue;
+    if (containsQuantifier(group.body)) {
       findings.push({
         type: "NESTED_QUANTIFIER",
         message: "quantified group contains another quantified expression",

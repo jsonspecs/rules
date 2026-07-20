@@ -84,18 +84,46 @@ test('predicate operator result depth violations are contract ABORTs', () => {
 });
 
 test('invalid operator status with pathological body is a structured contract violation', () => {
+  const returned = Object.create(null);
+  returned.status = 'NOPE';
+  returned.secret = 'secret-token';
+  for (let index = 0; index < 10000; index++) returned[`key${index}`] = `value${index}`;
   const custom = createEngine({
     operators: {
-      check: { ...Operators.check, invalid_deep: () => ({ status: 'NOPE', actual: nestedObject(200000) }) },
+      check: { ...Operators.check, invalid_wide: () => returned },
       predicate: Operators.predicate,
     },
   });
-  const result = custom.runPipeline(custom.compile(source('invalid_deep')), { payload: { x: 'value' } });
+  const result = custom.runPipeline(custom.compile(source('invalid_wide')), { payload: { x: 'value' } });
+  const serialized = JSON.stringify(result);
 
   assert.equal(result.status, 'ABORT');
   assert.equal(result.error.code, 'OPERATOR_CONTRACT_VIOLATION');
-  assert.equal(result.error.details.operator, 'invalid_deep');
-  assert.equal(JSON.stringify(result.error.details.returned).includes('"[MaxDepth]"'), true);
+  assert.deepEqual(result.error.details, {
+    operator: 'invalid_wide',
+    ruleId: 'library.required',
+    returnedStatus: 'NOPE',
+  });
+  assert.equal(serialized.includes('secret-token'), false);
+  assert.equal(serialized.length < 4096, true);
+});
+
+test('invalid operator status object is summarized by type', () => {
+  const custom = createEngine({
+    operators: {
+      check: { ...Operators.check, invalid_status_object: () => ({ status: { value: 'NOPE' } }) },
+      predicate: Operators.predicate,
+    },
+  });
+  const result = custom.runPipeline(custom.compile(source('invalid_status_object')), { payload: { x: 'value' } });
+
+  assert.equal(result.status, 'ABORT');
+  assert.equal(result.error.code, 'OPERATOR_CONTRACT_VIOLATION');
+  assert.deepEqual(result.error.details, {
+    operator: 'invalid_status_object',
+    ruleId: 'library.required',
+    returnedStatus: 'object',
+  });
 });
 
 test('hostile primitive and function operator outputs return structured results', () => {
@@ -145,6 +173,52 @@ test('context safety errors are coded like payload safety errors', () => {
   assert.equal(engine.runPipeline(prepared, { payload: { x: 'ok' }, context: { k: new Date('2026-01-01T00:00:00Z') } }).error.code, 'PAYLOAD_NOT_JSON_SAFE');
   assert.equal(engine.runPipeline(prepared, { payload: { x: 'ok' }, context: [] }).error.code, 'INVALID_EVALUATION_INPUT');
   assert.equal(engine.runPipeline(prepared, { payload: { x: 'ok' }, context: 'bad' }).error.code, 'INVALID_EVALUATION_INPUT');
+});
+
+test('throwing input pipelineId getter aborts with provenance and generic error', () => {
+  const engine = createEngine({ operators: Operators });
+  const artifacts = source();
+  const prepared = engine.compile(artifacts);
+  const input = {};
+  Object.defineProperty(input, 'pipelineId', {
+    enumerable: true,
+    get() {
+      throw new Error('boom pipelineId');
+    },
+  });
+
+  const result = engine.runPipeline(prepared, input);
+  const serialized = JSON.stringify(result);
+
+  assert.equal(result.status, 'ABORT');
+  assert.equal(result.control, 'STOP');
+  assert.equal(result.error.code, 'RUNTIME_ABORT');
+  assert.equal(serialized.includes('boom'), false);
+  assert.equal(result.ruleset.sourceHash, computeSourceHash(artifacts));
+  assert.equal(result.ruleset.engineVersion, packageVersion);
+});
+
+test('throwing options trace getter aborts with provenance and generic error', () => {
+  const engine = createEngine({ operators: Operators });
+  const artifacts = source();
+  const prepared = engine.compile(artifacts);
+  const options = {};
+  Object.defineProperty(options, 'trace', {
+    enumerable: true,
+    get() {
+      throw new Error('boom trace');
+    },
+  });
+
+  const result = engine.runPipeline(prepared, { payload: { x: 'ok' } }, options);
+  const serialized = JSON.stringify(result);
+
+  assert.equal(result.status, 'ABORT');
+  assert.equal(result.control, 'STOP');
+  assert.equal(result.error.code, 'RUNTIME_ABORT');
+  assert.equal(serialized.includes('boom'), false);
+  assert.equal(result.ruleset.sourceHash, computeSourceHash(artifacts));
+  assert.equal(result.ruleset.engineVersion, packageVersion);
 });
 
 test('deep payload and context inputs abort with structured depth errors', () => {

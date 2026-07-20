@@ -12,6 +12,9 @@ All notable changes to this project will be documented in this file.
 - Added full depth validation for public custom-operator result surfaces.
 - Truncated operator trace details without changing evaluation verdicts.
 - Narrowed the `matches_regex` nested-quantifier heuristic to unbounded outer repetition.
+- Sanitized `OPERATOR_CONTRACT_VIOLATION` details so invalid operator results expose only status metadata.
+- Extended the never-throws runtime boundary to envelope and options parsing.
+- Applied the unbounded outer repetition gate to every current `matches_regex` ReDoS heuristic.
 
 ## [2.3.0] - 2026-07-20
 

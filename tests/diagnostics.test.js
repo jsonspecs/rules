@@ -149,7 +149,7 @@ test("validate accepts allowed matches_regex flags for checks and predicates", (
 });
 
 test("validate reports ReDoS warnings without failing compilation", () => {
-  for (const value of ["^(a+)+$", "^(a|aa)+$", "(a|a)+", "(\\d*)*", "(a+){2,}"]) {
+  for (const value of ["^(a+)+$", "^(a|aa)+$", "(a|a)+", "(\\d*)*", "(a+){2,}", "(a|aa)*", "(a|aa){2,}"]) {
     const result = validate([regexRule({ value })]);
     assert.equal(result.ok, true, value);
     assert.equal(result.diagnostics.length, 1, value);
@@ -166,6 +166,9 @@ test("ReDoS lint does not warn for bounded outer nested quantifiers", () => {
     "(?:a*b)?",
     "(a+){2}",
     "(a+){2,5}",
+    "^(a|aa)?$",
+    "^(a|aa){2}$",
+    "^(a|aa){2,5}$",
   ];
   for (const value of safePatterns) {
     const result = validate([regexRule({ value })]);
