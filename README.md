@@ -23,6 +23,10 @@ const { createEngine, Operators } = require("jsonspecs");
 import { createEngine, Operators } from "jsonspecs";
 ```
 
+## Scope of Use
+
+`jsonspecs` can be used as a rules and data-validation engine for credit scoring, lending pipelines, payment gateways, KYC, and other banking processes. Calculation services provide the engine with prepared facts such as amounts, income, debt burden, scoring indicators, balances, limits, fees, currencies, and transaction states. `jsonspecs` applies versioned rules to validate formats, ranges, relationships, and decision conditions, then returns a deterministic result with structured issues and information about the exact rule set and version used. `@jsonspecs/decimal` provides precision-safe validation and comparison of monetary values. This keeps business rules separate from service code, allows them to be reviewed and tested as independent JSON artifacts, and enables controlled rule updates without moving calculations or state into the rules engine.
+
 ## Concepts
 
 | Artifact | Purpose |
