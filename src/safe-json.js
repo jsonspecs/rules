@@ -1,6 +1,7 @@
 "use strict";
 
 const DANGEROUS_KEYS = new Set(["__proto__", "prototype", "constructor"]);
+const DEFAULT_MAX_JSON_DEPTH = 256;
 
 class SafeJsonError extends Error {
   constructor(code, message, details = {}) {
@@ -33,8 +34,14 @@ function assertSafePath(path) {
 function cloneJsonSafe(value, options = {}) {
   const ancestors = new WeakSet();
   const dangerousCode = options.dangerousCode || "DANGEROUS_ARTIFACT_KEY";
+  const maxDepth = Number.isInteger(options.maxDepth) && options.maxDepth > 0
+    ? options.maxDepth
+    : DEFAULT_MAX_JSON_DEPTH;
 
-  function visit(input, path) {
+  function visit(input, path, depth) {
+    if (depth > maxDepth) {
+      throw new SafeJsonError("ARTIFACT_TOO_DEEP", `JSON artifact exceeds max depth ${maxDepth} at ${path}`, { path, maxDepth });
+    }
     if (input === null || typeof input === "string" || typeof input === "boolean") return input;
     if (typeof input === "number") {
       if (!Number.isFinite(input)) throw new SafeJsonError("ARTIFACT_NOT_JSON_SAFE", `Non-finite number at ${path}`, { path });
@@ -51,27 +58,30 @@ function cloneJsonSafe(value, options = {}) {
     ancestors.add(input);
     let output;
     if (Array.isArray(input)) {
-      output = input.map((item, index) => visit(item, `${path}[${index}]`));
+      output = input.map((item, index) => visit(item, `${path}[${index}]`, depth + 1));
     } else {
       output = Object.create(null);
       for (const key of Object.keys(input)) {
         const next = path ? `${path}.${key}` : key;
         assertSafeKey(key, next, dangerousCode);
-        output[key] = visit(input[key], next);
+        output[key] = visit(input[key], next, depth + 1);
       }
     }
     ancestors.delete(input);
     return output;
   }
-  return visit(value, "$");
+  return visit(value, "$", 0);
 }
 
-function flattenPayloadSafe(payload) {
+function flattenPayloadSafe(payload, options = {}) {
   if (payload === null || typeof payload !== "object" || Array.isArray(payload)) {
     throw new SafeJsonError("INVALID_EVALUATION_INPUT", "payload must be a JSON object", { path: "$" });
   }
   const result = Object.create(null);
   const ancestors = new WeakSet();
+  const maxDepth = Number.isInteger(options.maxDepth) && options.maxDepth > 0
+    ? options.maxDepth
+    : DEFAULT_MAX_JSON_DEPTH;
 
   function put(path, value, origin) {
     if (hasOwn(result, path)) {
@@ -79,7 +89,10 @@ function flattenPayloadSafe(payload) {
     }
     result[path] = value;
   }
-  function visit(value, prefix) {
+  function visit(value, prefix, depth) {
+    if (depth > maxDepth) {
+      throw new SafeJsonError("PAYLOAD_TOO_DEEP", `Payload exceeds max depth ${maxDepth} at ${prefix || "$"}`, { path: prefix || "$", maxDepth });
+    }
     if (value === null || typeof value !== "object") {
       if (typeof value === "number" && !Number.isFinite(value)) throw new SafeJsonError("PAYLOAD_NOT_JSON_SAFE", `Non-finite number at ${prefix}`, { path: prefix });
       if (["undefined", "function", "symbol", "bigint"].includes(typeof value)) throw new SafeJsonError("PAYLOAD_NOT_JSON_SAFE", `Unsupported ${typeof value} at ${prefix}`, { path: prefix });
@@ -95,7 +108,7 @@ function flattenPayloadSafe(payload) {
     for (const key of keys) {
       assertSafeKey(key, prefix ? `${prefix}.${key}` : key);
       const child = Array.isArray(value) ? `${prefix}[${key}]` : (prefix ? `${prefix}.${key}` : key);
-      visit(value[key], child);
+      visit(value[key], child, depth + 1);
     }
     ancestors.delete(value);
   }
@@ -103,18 +116,24 @@ function flattenPayloadSafe(payload) {
   for (const key of Object.keys(payload)) {
     assertSafeKey(key, key);
     if (key === "__context") continue;
-    visit(payload[key], key);
+    visit(payload[key], key, 1);
   }
   return result;
 }
 
-function cloneContextSafe(context) {
+function cloneContextSafe(context, options = {}) {
   if (context === null || typeof context !== "object" || Array.isArray(context)) {
     throw new SafeJsonError("INVALID_EVALUATION_INPUT", "context must be a JSON object", { path: "$" });
   }
   const ancestors = new WeakSet();
+  const maxDepth = Number.isInteger(options.maxDepth) && options.maxDepth > 0
+    ? options.maxDepth
+    : DEFAULT_MAX_JSON_DEPTH;
 
-  function visit(value, path) {
+  function visit(value, path, depth) {
+    if (depth > maxDepth) {
+      throw new SafeJsonError("PAYLOAD_TOO_DEEP", `Context exceeds max depth ${maxDepth} at ${path}`, { path, maxDepth });
+    }
     if (value === null || typeof value === "string" || typeof value === "boolean") return value;
     if (typeof value === "number") {
       if (!Number.isFinite(value)) throw new SafeJsonError("PAYLOAD_NOT_JSON_SAFE", `Non-finite number at ${path}`, { path });
@@ -131,20 +150,20 @@ function cloneContextSafe(context) {
     ancestors.add(value);
     let output;
     if (Array.isArray(value)) {
-      output = value.map((item, index) => visit(item, `${path}[${index}]`));
+      output = value.map((item, index) => visit(item, `${path}[${index}]`, depth + 1));
     } else {
       output = Object.create(null);
       for (const key of Object.keys(value)) {
         const next = path === "$" ? key : `${path}.${key}`;
         assertSafeKey(key, next);
-        output[key] = visit(value[key], next);
+        output[key] = visit(value[key], next, depth + 1);
       }
     }
     ancestors.delete(value);
     return output;
   }
 
-  return visit(context, "$");
+  return visit(context, "$", 0);
 }
 
 function normalizeTransportSafe(value) {
@@ -168,4 +187,4 @@ function normalizeTransportSafe(value) {
   return visit(value, false);
 }
 
-module.exports = { DANGEROUS_KEYS, SafeJsonError, hasOwn, assertSafePath, cloneJsonSafe, flattenPayloadSafe, cloneContextSafe, normalizeTransportSafe };
+module.exports = { DANGEROUS_KEYS, DEFAULT_MAX_JSON_DEPTH, SafeJsonError, hasOwn, assertSafePath, cloneJsonSafe, flattenPayloadSafe, cloneContextSafe, normalizeTransportSafe };

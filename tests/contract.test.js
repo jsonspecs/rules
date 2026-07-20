@@ -58,6 +58,27 @@ test('context safety errors are coded like payload safety errors', () => {
   assert.equal(engine.runPipeline(prepared, { payload: { x: 'ok' }, context: 'bad' }).error.code, 'INVALID_EVALUATION_INPUT');
 });
 
+test('deep payload and context inputs abort with structured depth errors', () => {
+  const engine = createEngine({ operators: Operators });
+  const prepared = engine.compile(source());
+
+  {
+    const result = engine.runPipeline(prepared, { payload: { x: 'ok', deep: nestedObject(300) } });
+    assert.equal(result.status, 'ABORT');
+    assert.equal(result.error.code, 'PAYLOAD_TOO_DEEP');
+    assert.equal(result.error.details.maxDepth, 256);
+    assert.equal(result.error.details.path.startsWith('deep.'), true);
+  }
+
+  {
+    const result = engine.runPipeline(prepared, { payload: { x: 'ok' }, context: { deep: nestedObject(300) } });
+    assert.equal(result.status, 'ABORT');
+    assert.equal(result.error.code, 'PAYLOAD_TOO_DEEP');
+    assert.equal(result.error.details.maxDepth, 256);
+    assert.equal(result.error.details.path.startsWith('deep.'), true);
+  }
+});
+
 test('legacy payload.__context uses the same safety checks', () => {
   const engine = createEngine({ operators: Operators });
   const prepared = engine.compile(source());
@@ -533,6 +554,12 @@ function directCtx(payload) {
       return Object.hasOwn(payload, path);
     },
   };
+}
+
+function nestedObject(depth) {
+  let value = 'leaf';
+  for (let index = 0; index < depth; index++) value = { x: value };
+  return value;
 }
 
 test('trace basic redacts values and verbose uses redactor', () => {

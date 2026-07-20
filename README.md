@@ -117,7 +117,7 @@ Everything exported from the package root is the supported public surface. Files
 
 ### `engine.validate(artifacts, options?)`
 
-Returns `{ ok, diagnostics }` and never throws for ordinary source errors.
+Returns `{ ok, diagnostics }` and never throws for ordinary source errors. Successful validation may still return warning-level diagnostics; warnings do not make `ok` false.
 
 Diagnostics are structured:
 
@@ -133,7 +133,7 @@ Diagnostics are structured:
 }
 ```
 
-Compiler phases are intentionally phase-fail-fast: a failed phase returns all diagnostics from that phase and later dependent phases are not executed.
+Compiler phases are intentionally phase-fail-fast for errors: a failed phase returns all error diagnostics from that phase and later dependent phases are not executed. Warning diagnostics are non-blocking.
 
 ### `engine.compile(artifacts, options?)`
 
@@ -282,14 +282,18 @@ Every trace entry has one shape:
 
 ## Safety guarantees
 
-The engine treats artifacts and payloads as untrusted JSON:
+The engine treats artifacts, payloads, and context objects as untrusted JSON at the technical boundary:
 
 - dangerous keys `__proto__`, `prototype`, and `constructor` are rejected;
 - prototype-chain reads are avoided;
-- cyclic artifacts and payloads are rejected;
+- cyclic artifacts, payloads, and context objects are rejected;
 - unsupported JSON values are rejected or normalized at the runtime boundary;
+- artifacts, payloads, and context objects have a deterministic JSON depth limit;
+- `matches_regex` patterns are linted for common ReDoS risks at compile time as warning diagnostics;
 - prepared artifacts are opaque and immutable from the public API;
 - runtime results are safe to `JSON.stringify()` and round-trip through JSON.
+
+Regex linting is a heuristic guardrail, not a linear-time guarantee. Rule artifacts and custom operators are trusted author inputs; runtime payload and context are untrusted inputs. Callers remain responsible for message-size, issue-count, and transport-result limits at their boundary.
 
 ## JSON Schema
 
@@ -360,8 +364,10 @@ intentionally override built-ins by placing them after `...Operators.check` or
 npm test
 npm run test:smoke
 npm run test:pack
+npm run test:perf
 ```
 
 `test:pack` installs the packed package into clean CommonJS and ESM consumers and verifies the published artifact shape.
+`test:perf` is a smoke gate for large flat payloads, wildcard scans, issue growth, and synthetic large rulesets.
 
 Current coverage and recommended additions are tracked in [TESTING.md](./TESTING.md).

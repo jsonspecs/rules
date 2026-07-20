@@ -20,6 +20,7 @@
 9. [Payload field semantics](#9-payload-field-semantics)
 10. [Compiler behaviour](#10-compiler-behaviour)
 11. [Runtime behaviour](#11-runtime-behaviour)
+12. [Security and threat model](#12-security-and-threat-model)
 
 ---
 
@@ -564,11 +565,12 @@ not from the `payload`:
 
 ## 10. Compiler behaviour
 
-Compilation runs sequentially in 7 phases and is **phase-fail-fast**. The first
-phase that finds errors completes its pass, returns all errors found inside that
-phase, and prevents later phases from running. Errors from different phases are
-therefore not mixed; `validate()` exposes diagnostics from that first failing
-phase only.
+Compilation runs sequentially in 7 phases and is **phase-fail-fast** for errors.
+The first phase that finds errors completes its pass, returns all errors found
+inside that phase, and prevents later phases from running. Errors from different
+phases are therefore not mixed; `validate()` exposes diagnostics from that first
+failing phase only. Warning diagnostics do not stop compilation and may be
+returned by successful `validate()` and `compile()` calls.
 
 | Phase                       | What is checked                                          | Stop condition                              |
 | --------------------------- | -------------------------------------------------------- | ------------------------------------------- |
@@ -580,7 +582,7 @@ phase only.
 | 6. `buildPipelines`         | pipeline step normalisation                              | assert                                      |
 | 7. `validatePipelineDAG`    | absence of cycles in the pipeline call graph             | all cycles in one pass                      |
 
-`engine.compile()` throws `CompilationError` with the full list of errors if any phase fails.
+`engine.compile()` throws `CompilationError` with the full list of errors if any phase fails. If no errors exist, `compile()` succeeds even when warning diagnostics were collected.
 
 ## 11. Runtime behaviour
 
@@ -620,11 +622,35 @@ phase only.
 
 After stopping on `EXCEPTION`, remaining pipeline steps are not executed.
 Already-accumulated issues are preserved in the response.
+
+## 12. Security and threat model
+
+Runtime `payload` and `context` are treated as untrusted input. Rule artifacts,
+dictionaries, snapshots, and custom operator code are treated as trusted author
+input, but trusted authors can still accidentally write expensive rules. In
+particular, JavaScript regular expressions are not guaranteed to run in linear
+time.
+
+The compiler lints `matches_regex` patterns for common ReDoS-prone constructs,
+including nested quantified groups and overlapping quantified alternations. Such
+findings are emitted as `REGEX_REDOS_RISK` diagnostics with `level: "warning"`.
+The linter is a heuristic detector; it highlights known risk patterns but is not
+a proof that accepted regular expressions are safe for all inputs.
+
+Artifacts, runtime payload, and runtime context have a deterministic maximum
+JSON depth of 256. Over-deep artifacts fail source validation with
+`ARTIFACT_TOO_DEEP`. Over-deep payload or context input aborts evaluation with
+`PAYLOAD_TOO_DEEP`.
+
+The engine does not impose a normative limit on total payload size, number of
+produced issues, or serialized result size. Callers are responsible for those
+limits at the transport or service boundary.
+
 # Public runtime contract (v2)
 
-`validate(artifacts, options)` returns `{ok, diagnostics}` and does not throw for invalid source. Every diagnostic has stable `code`, `level`, `message`, `phase`, `artifactId`, `path`, and `location` fields. Compiler phases construct these fields directly; they are not inferred from message text. `path` identifies the offending property relative to the artifact, while `location` is `file`, `file:line`, or `file:line:column` when supplied through `options.sources`, and `null` otherwise. `compile()` returns an opaque `prepared-jsonspecs` artifact; runtime internals are available only through `inspect()`.
+`validate(artifacts, options)` returns `{ok, diagnostics}` and does not throw for invalid source. Successful validation may include warning diagnostics. Every diagnostic has stable `code`, `level`, `message`, `phase`, `artifactId`, `path`, and `location` fields. Compiler phases construct these fields directly; they are not inferred from message text. `path` identifies the offending property relative to the artifact, while `location` is `file`, `file:line`, or `file:line:column` when supplied through `options.sources`, and `null` otherwise. `compile()` returns an opaque `prepared-jsonspecs` artifact; runtime internals are available only through `inspect()`.
 
-`runPipeline(prepared, {pipelineId?, payload, context?}, options)` accepts only a prepared artifact. If `pipelineId` is omitted, exactly one pipeline must be marked `entrypoint`. `payload` and `context` must be JSON-safe objects. Runtime clones and validates `context` before evaluation; the legacy `payload.__context` source follows the same checks. Runtime results for a valid prepared artifact always include `status`, `control`, `issues`, and `ruleset`. `ruleset.sourceHash` identifies the compiled artifacts; `ruleset.engineVersion` is the version of the loaded jsonspecs engine from its `package.json`; snapshot builds additionally expose optional `rulesetVersion` and `projectId`. ABORT results produced after a prepared artifact is accepted preserve the same `ruleset`. ABORT includes `{code,message,details}`, never a stack. Trace is disabled by default and enabled with `basic` or `verbose`.
+`runPipeline(prepared, {pipelineId?, payload, context?}, options)` accepts only a prepared artifact. If `pipelineId` is omitted, exactly one pipeline must be marked `entrypoint`. `payload` and `context` must be JSON-safe objects within the maximum JSON depth. Runtime clones and validates `context` before evaluation; the legacy `payload.__context` source follows the same checks. Runtime results for a valid prepared artifact always include `status`, `control`, `issues`, and `ruleset`. `ruleset.sourceHash` identifies the compiled artifacts; `ruleset.engineVersion` is the version of the loaded jsonspecs engine from its `package.json`; snapshot builds additionally expose optional `rulesetVersion` and `projectId`. ABORT results produced after a prepared artifact is accepted preserve the same `ruleset`. ABORT includes `{code,message,details}`, never a stack. Trace is disabled by default and enabled with `basic` or `verbose`.
 
 An exception thrown by `traceRedactor` is contained and returned as ABORT with `TRACE_REDACTOR_ERROR`; it never escapes `runPipeline`. Unexpected engine faults use the neutral fallback code `RUNTIME_ABORT`.
 

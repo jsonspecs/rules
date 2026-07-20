@@ -20,6 +20,7 @@
 9. [Семантика полей payload](#9-семантика-полей-payload)
 10. [Поведение компилятора](#10-поведение-компилятора)
 11. [Поведение рантайма](#11-поведение-рантайма)
+12. [Модель угроз и безопасности](#12-модель-угроз-и-безопасности)
 
 ## 1. Общие правила для всех артефактов
 
@@ -540,7 +541,7 @@ Pipeline cycle detected: pipeline_A -> pipeline_B -> pipeline_A
 
 ## 10. Поведение компилятора
 
-Компиляция выполняется последовательно в 7 фаз. Каждая фаза собирает все ошибки перед остановкой. Ошибки разных фаз не смешиваются. При любой ошибке компиляции результат не возвращается и выбрасывается `CompilationError`.
+Компиляция выполняется последовательно в 7 фаз и является **phase-fail-fast** для ошибок. Каждая фаза собирает все ошибки перед остановкой. Ошибки разных фаз не смешиваются. При любой ошибке компиляции результат не возвращается и выбрасывается `CompilationError`. Warning diagnostics не останавливают компиляцию и могут возвращаться успешными `validate()` и `compile()`.
 
 | Фаза                        | Что проверяется                                        | Условие остановки                                |
 | --------------------------- | ------------------------------------------------------ | ------------------------------------------------ |
@@ -551,6 +552,8 @@ Pipeline cycle detected: pipeline_A -> pipeline_B -> pipeline_A
 | 5. `buildConditions`        | нормализация condition-шагов                           | assert (не должно падать если фазы 1–4 пройдены) |
 | 6. `buildPipelines`         | нормализация pipeline-шагов                            | assert                                           |
 | 7. `validatePipelineDAG`    | отсутствие циклов в графе вызовов pipeline             | все циклы за один прогон                         |
+
+`engine.compile()` бросает `CompilationError` с полным списком ошибок, если любая фаза неуспешна. Если ошибок нет, `compile()` успешно завершается даже при наличии warning diagnostics.
 
 ## 11. Поведение рантайма
 
@@ -592,11 +595,21 @@ Pipeline cycle detected: pipeline_A -> pipeline_B -> pipeline_A
 
 После остановки по `EXCEPTION` оставшиеся шаги pipeline не выполняются. Уже накопленные issues сохраняются в ответе.
 
+## 12. Модель угроз и безопасности
+
+Runtime `payload` и `context` рассматриваются как недоверенный ввод. Rule artifacts, dictionaries, snapshots и код custom operators рассматриваются как доверенный авторский ввод, но доверенный автор может случайно написать дорогое правило. В частности, JavaScript regular expressions не гарантируют линейное время выполнения.
+
+Компилятор проверяет `matches_regex` паттерны на типовые ReDoS-риски, включая вложенные quantified groups и пересекающиеся quantified alternations. Такие находки возвращаются как diagnostics с кодом `REGEX_REDOS_RISK` и `level: "warning"`. Линтер является эвристическим детектором: он подсвечивает известные рискованные паттерны, но не доказывает безопасность принятых regular expressions на всех входах.
+
+Artifacts, runtime payload и runtime context имеют детерминированный максимальный JSON depth 256. Слишком глубокие artifacts не проходят source validation с кодом `ARTIFACT_TOO_DEEP`. Слишком глубокий payload или context завершает runtime с `ABORT` и кодом `PAYLOAD_TOO_DEEP`.
+
+Движок не задает нормативный лимит на общий размер payload, число созданных issues или размер сериализованного результата. Эти лимиты остаются ответственностью вызывающей стороны на transport или service boundary.
+
 ## Публичный runtime-контракт (v2)
 
-`validate(artifacts, options)` возвращает `{ok, diagnostics}` и не бросает исключения для обычных ошибок исходников. Каждая diagnostic имеет стабильные поля `code`, `level`, `message`, `phase`, `artifactId`, `path` и `location`. Фазы компилятора формируют эти поля напрямую, а не выводят их из текста сообщения. `path` указывает на проблемное свойство относительно артефакта, а `location` равно `file`, `file:line` или `file:line:column`, если значение передано через `options.sources`; иначе `location` равно `null`. `compile()` возвращает opaque artifact `prepared-jsonspecs`; runtime internals доступны только через `inspect()`.
+`validate(artifacts, options)` возвращает `{ok, diagnostics}` и не бросает исключения для обычных ошибок исходников. Успешная валидация может включать warning diagnostics. Каждая diagnostic имеет стабильные поля `code`, `level`, `message`, `phase`, `artifactId`, `path` и `location`. Фазы компилятора формируют эти поля напрямую, а не выводят их из текста сообщения. `path` указывает на проблемное свойство относительно артефакта, а `location` равно `file`, `file:line` или `file:line:column`, если значение передано через `options.sources`; иначе `location` равно `null`. `compile()` возвращает opaque artifact `prepared-jsonspecs`; runtime internals доступны только через `inspect()`.
 
-`runPipeline(prepared, {pipelineId?, payload, context?}, options)` принимает prepared artifact. Если `pipelineId` не передан, ровно один pipeline должен быть помечен `entrypoint`. `payload` и `context` должны быть JSON-safe объектами: циклы, опасные ключи, не-конечные числа, не-plain объекты, массив или примитивный top-level `context` завершают выполнение с `ABORT`. Runtime клонирует и валидирует `context` до вычисления; legacy `payload.__context` проходит те же проверки. Runtime result для валидного prepared artifact всегда содержит `status`, `control`, `issues` и `ruleset`. `ruleset.sourceHash` идентифицирует скомпилированные artifacts, `ruleset.engineVersion` — версию движка; snapshot-сборки дополнительно передают опциональные `rulesetVersion` и `projectId`. `ABORT` содержит `{code,message,details}` и никогда не раскрывает stack. Trace выключен по умолчанию и включается через `basic` или `verbose`.
+`runPipeline(prepared, {pipelineId?, payload, context?}, options)` принимает prepared artifact. Если `pipelineId` не передан, ровно один pipeline должен быть помечен `entrypoint`. `payload` и `context` должны быть JSON-safe объектами в пределах максимальной JSON depth: циклы, опасные ключи, не-конечные числа, не-plain объекты, массив или примитивный top-level `context` завершают выполнение с `ABORT`. Runtime клонирует и валидирует `context` до вычисления; legacy `payload.__context` проходит те же проверки. Runtime result для валидного prepared artifact всегда содержит `status`, `control`, `issues` и `ruleset`. `ruleset.sourceHash` идентифицирует скомпилированные artifacts, `ruleset.engineVersion` — версию движка; snapshot-сборки дополнительно передают опциональные `rulesetVersion` и `projectId`. `ABORT` содержит `{code,message,details}` и никогда не раскрывает stack. Trace выключен по умолчанию и включается через `basic` или `verbose`.
 
 Исключение из `traceRedactor` изолируется и возвращается как `ABORT` с кодом `TRACE_REDACTOR_ERROR`; оно не выходит наружу из `runPipeline`. Неожиданные сбои движка используют нейтральный fallback code `RUNTIME_ABORT`.
 

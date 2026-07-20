@@ -117,7 +117,7 @@ const result = engine.runPipeline(prepared, {
 
 ### `engine.validate(artifacts, options?)`
 
-Возвращает `{ ok, diagnostics }` и не бросает исключения на обычных ошибках исходников.
+Возвращает `{ ok, diagnostics }` и не бросает исключения на обычных ошибках исходников. Успешная валидация может вернуть warning-level diagnostics; warnings не делают `ok` равным `false`.
 
 Диагностики структурированы:
 
@@ -133,7 +133,7 @@ const result = engine.runPipeline(prepared, {
 }
 ```
 
-Фазы компилятора намеренно phase-fail-fast: неуспешная фаза возвращает все свои diagnostics, а следующие зависимые фазы не запускаются.
+Фазы компилятора намеренно phase-fail-fast для ошибок: неуспешная фаза возвращает все свои error diagnostics, а следующие зависимые фазы не запускаются. Warning diagnostics не блокируют компиляцию.
 
 ### `engine.compile(artifacts, options?)`
 
@@ -282,14 +282,18 @@ Trace по умолчанию выключен и отсутствует в resu
 
 ## Safety guarantees
 
-Движок рассматривает artifacts и payload как недоверенный JSON:
+Движок рассматривает artifacts, payload и context как недоверенный JSON на технической границе:
 
 - опасные ключи `__proto__`, `prototype`, `constructor` отклоняются;
 - чтение через prototype chain не используется;
-- циклические artifacts и payload отклоняются;
+- циклические artifacts, payload и context отклоняются;
 - неподдерживаемые JSON-значения отклоняются или нормализуются на runtime boundary;
+- artifacts, payload и context имеют детерминированный лимит глубины JSON;
+- `matches_regex` паттерны проверяются compile-time линтером на типовые ReDoS-риски и дают warning diagnostics;
 - prepared artifacts opaque и immutable с точки зрения публичного API;
 - runtime results можно безопасно `JSON.stringify()` и прогонять через JSON round-trip.
+
+Regex linting - эвристический guardrail, а не гарантия линейного времени. Rule artifacts и custom operators являются доверенным авторским вводом; runtime payload и context являются недоверенным вводом. Лимиты размера сообщения, числа issues и размера transport-result остаются ответственностью вызывающей стороны.
 
 ## JSON Schema
 
@@ -360,8 +364,10 @@ const engine = createEngine({
 npm test
 npm run test:smoke
 npm run test:pack
+npm run test:perf
 ```
 
 `test:pack` устанавливает собранный пакет в чистые CommonJS и ESM consumers и проверяет форму публикуемого артефакта.
+`test:perf` - smoke gate для больших плоских payload, wildcard scans, роста issues и синтетических больших ruleset.
 
 Текущее покрытие и рекомендуемые доработки тестов зафиксированы в [TESTING.md](./TESTING.md).

@@ -7,7 +7,10 @@ const { parseSemver, compareSemver } = require("./semver");
 const packageJson = require("../package.json");
 
 function validate(artifacts, options = {}) {
-  try { compile(artifacts, options); return { ok: true, diagnostics: [] }; }
+  try {
+    const prepared = compile(artifacts, options);
+    return { ok: true, diagnostics: Array.from(prepared.diagnostics || []) };
+  }
   catch (error) {
     if (error instanceof CompilationError) return { ok: false, diagnostics: error.diagnostics };
     return { ok: false, diagnostics: [{ code: error.code || "SOURCE_VALIDATION_ERROR", level: "error", message: error.message || String(error), phase: "source_validation", artifactId: null, path: null, location: null }] };

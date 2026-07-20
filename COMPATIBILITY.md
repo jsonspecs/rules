@@ -10,6 +10,14 @@ Every trace entry has one shape: `{kind:"TRACE",artifactType:"jsonspecs",artifac
 
 The normative snapshot shape is `{format:"jsonspecs-snapshot",formatVersion:1,sourceHash,engine:{minVersion},artifacts,meta?}`. `sourceHash` is SHA-256 over the canonicalized artifacts and is verified by `compileSnapshot()`. `engine.minVersion` is a complete SemVer 2.0.0 version and is compared to the running engine using full SemVer precedence, not only its major component.
 
+## 2.3.0 minor behavior changes
+
+- Successful `validate()` and `compile()` calls may include warning-level diagnostics. Warnings do not make validation fail and do not block compilation.
+- `matches_regex` patterns are linted for common ReDoS-prone constructs at compile time. The diagnostic code is `REGEX_REDOS_RISK`, the level is `warning`, and the linter is heuristic: it highlights risk but does not prove linear-time regex safety.
+- Source artifacts now have a deterministic maximum JSON depth. Inputs that exceed it fail source validation with `ARTIFACT_TOO_DEEP`.
+- Runtime payload and context now have the same deterministic maximum JSON depth. Inputs that exceed it abort with `PAYLOAD_TOO_DEEP` instead of depending on the JavaScript stack limit.
+- Payload size, issue-count size, and transport-result size limits remain caller responsibilities unless a future major or explicitly documented minor adds a public engine limit.
+
 ## 2.2.0 minor behavior changes
 
 - Numeric string coercion is stricter: only documented decimal strings are numeric. Hex strings, whitespace-padded strings, `Infinity`, `NaN`, leading or trailing dot forms, and underscore-separated numbers now fail numeric comparisons instead of being accepted by JavaScript coercion.

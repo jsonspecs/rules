@@ -6,6 +6,14 @@ All notable changes to this project will be documented in this file.
 
 - Publish future tagged releases directly under `latest`, removing the obsolete token-based promotion workflow.
 
+## [2.3.0] - 2026-07-20
+
+- Added warning-level compile diagnostics for potentially dangerous `matches_regex` patterns, including nested quantified groups and overlapping quantified alternations.
+- Added deterministic JSON depth limits for artifacts, payload, and context. Over-deep runtime input now aborts with `PAYLOAD_TOO_DEEP`; over-deep source artifacts fail validation with `ARTIFACT_TOO_DEEP`.
+- Successful `validate()` and `compile()` calls can now expose non-blocking warning diagnostics.
+- Documented the threat model for trusted rule artifacts versus untrusted runtime payload and context.
+- Added `npm run test:perf` as a smoke gate for large flat payloads, wildcard scans, issue growth, and synthetic large rulesets.
+
 ## [2.2.0] - 2026-07-19
 
 - Runtime results now include `ruleset.engineVersion` alongside `sourceHash`.

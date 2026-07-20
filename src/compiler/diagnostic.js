@@ -13,13 +13,14 @@ function diagnostic({
   artifactId = null,
   path = null,
   details = null,
+  level = "error",
 }) {
   const normalizedArtifactId = typeof artifactId === "string" && artifactId.length > 0
     ? artifactId
     : null;
   return {
     code,
-    level: "error",
+    level: level === "warning" ? "warning" : "error",
     message: String(message),
     phase,
     artifactId: normalizedArtifactId,

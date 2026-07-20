@@ -8,6 +8,7 @@ Run before release:
 npm test
 npm run test:smoke
 npm run test:pack
+npm run test:perf
 ```
 
 What they cover today:
@@ -21,7 +22,8 @@ What they cover today:
 - trace modes, redaction, and redactor failure containment;
 - snapshot hash and SemVer compatibility;
 - JSON Schema parity fixtures;
-- CommonJS and ESM packed-consumer smoke tests.
+- CommonJS and ESM packed-consumer smoke tests;
+- large-payload, wildcard, issue-growth, and synthetic large-ruleset performance smoke checks.
 
 ## Release publishing
 

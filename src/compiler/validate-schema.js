@@ -10,6 +10,7 @@ const { isObject, normalizeWhenExpr, stepKind } = require('../utils');
 const { where } = require('./context');
 const { artifactDiagnostic } = require('./diagnostic');
 const { assertSafePath } = require('../safe-json');
+const { lintRegexReDoS } = require('./regex-redos');
 
 const SCHEMA_PHASE = 'schema_validation';
 const UNIQUENESS_PHASE = 'uniqueness_validation';
@@ -29,13 +30,14 @@ const FIELD_COMPARE_OPERATORS = new Set([
 ]);
 const REGEX_FLAGS_RE = /^(?!.*(.).*\1)[ims]*$/;
 
-function schemaDiagnostic(artifact, message, path, code = SCHEMA_CODE, details = null) {
+function schemaDiagnostic(artifact, message, path, code = SCHEMA_CODE, details = null, level = 'error') {
   return artifactDiagnostic(artifact, {
     code,
     message,
     phase: SCHEMA_PHASE,
     path,
     details,
+    level,
   });
 }
 
@@ -308,6 +310,17 @@ function validateOperatorParams(artifact, dictionaries) {
         const flags = flagsError ? '' : (typeof artifact.flags === 'string' ? artifact.flags : '');
         const pattern = String(artifact.value).replace(/\\\\/g, '\\');
         new RegExp(pattern, flags);
+        const redosFindings = lintRegexReDoS(pattern);
+        if (redosFindings.length > 0) {
+          errors.push(schemaDiagnostic(
+            artifact,
+            `Rule ${where(artifact)}: matches_regex pattern has potential ReDoS risk`,
+            'value',
+            'REGEX_REDOS_RISK',
+            { findings: redosFindings },
+            'warning',
+          ));
+        }
       } catch (error) {
         errors.push(schemaDiagnostic(artifact, `Rule ${where(artifact)}: matches_regex has invalid regex pattern — ${error.message}`, 'value'));
       }

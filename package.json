@@ -1,6 +1,6 @@
 {
   "name": "jsonspecs",
-  "version": "2.2.0",
+  "version": "2.3.0",
   "description": "Declarative JSON rules engine for validation pipelines",
   "type": "commonjs",
   "main": "index.js",
@@ -24,6 +24,7 @@
     "src/**/*.js",
     "schema/*.json",
     "scripts/pack-smoke.js",
+    "scripts/perf-smoke.js",
     "README.md",
     "README_RU.md",
     "OPERATORS.md",
@@ -39,7 +40,8 @@
     "test": "node --test tests/*.test.js",
     "test:smoke": "node examples/basic/run.js",
     "test:pack": "node scripts/pack-smoke.js",
-    "prepublishOnly": "npm test && npm run test:pack"
+    "test:perf": "node scripts/perf-smoke.js",
+    "prepublishOnly": "npm test && npm run test:pack && npm run test:perf"
   },
   "keywords": [
     "validation",

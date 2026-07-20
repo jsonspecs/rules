@@ -147,6 +147,32 @@ test("validate accepts allowed matches_regex flags for checks and predicates", (
   }
 });
 
+test("validate reports ReDoS warnings without failing compilation", () => {
+  for (const value of ["^(a+)+$", "^(a|aa)+$"]) {
+    const result = validate([regexRule({ value })]);
+    assert.equal(result.ok, true, value);
+    assert.equal(result.diagnostics.length, 1, value);
+    assert.equal(result.diagnostics[0].code, "REGEX_REDOS_RISK");
+    assert.equal(result.diagnostics[0].level, "warning");
+    assert.equal(result.diagnostics[0].path, "value");
+    assert.equal(result.diagnostics[0].details.findings.length > 0, true);
+  }
+});
+
+test("compiled artifacts retain ReDoS warnings for inspection", () => {
+  const engine = createEngine({ operators: Operators });
+  const prepared = engine.compile([regexRule({ value: "^(a+)+$" })]);
+  assert.equal(prepared.diagnostics.length, 1);
+  assert.equal(prepared.diagnostics[0].code, "REGEX_REDOS_RISK");
+  assert.equal(prepared.diagnostics[0].level, "warning");
+});
+
+test("ReDoS lint does not warn on the known lookahead migration case", () => {
+  const result = validate([regexRule({ value: "^(?!RU$)[A-Z]{2}$" })]);
+  assert.equal(result.ok, true);
+  assert.equal(result.diagnostics.some((item) => item.code === "REGEX_REDOS_RISK"), false);
+});
+
 test("validate rejects invalid matches_regex flags for checks", () => {
   for (const flags of ["g", "u", "ii", 42]) {
     const result = validate([regexRule({ flags })]);
@@ -173,6 +199,21 @@ test("validate rejects null dictionary entries and accepts scalar/object entries
   assert.equal(good.ok, true);
 });
 
+test("artifact source depth limit returns structured diagnostics", () => {
+  const artifacts = [
+    {
+      ...regexRule({ value: "^x$" }),
+      meta: nestedObject(300),
+    },
+  ];
+  const result = validate(artifacts);
+  assert.equal(result.ok, false);
+  assert.equal(result.diagnostics[0].code, "ARTIFACT_TOO_DEEP");
+  assert.equal(result.diagnostics[0].phase, "source_validation");
+  assert.equal(result.diagnostics[0].path.startsWith("meta."), true);
+  assert.equal(result.diagnostics[0].details.maxDepth, 256);
+});
+
 function regexRule(overrides = {}) {
   const role = overrides.role || "check";
   const base = {
@@ -195,4 +236,10 @@ function regexRule(overrides = {}) {
 function pick(diagnostic) {
   const { code, phase, artifactId, path } = diagnostic;
   return { code, phase, artifactId, path };
+}
+
+function nestedObject(depth) {
+  let value = "leaf";
+  for (let index = 0; index < depth; index++) value = { x: value };
+  return value;
 }

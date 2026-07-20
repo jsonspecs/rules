@@ -24,6 +24,7 @@ jobs:
       - run: npm ci
       - run: npm test
       - run: npm run test:pack
+      - run: npm run test:perf
       - run: npm publish --access public --tag latest
       - name: Create GitHub release
         env:

@@ -49,22 +49,23 @@ function compile(artifacts, options = {}) {
   setContext(sources);
   try {
     const detachedArtifacts = artifacts.map((artifact, index) => detachArtifact(artifact, index));
+    const diagnostics = [];
 
     // Фаза 1: реестр — fail-fast, остальные фазы зависят от него
     const { registry, dictionaries, errors: regErrors } = buildRegistry(detachedArtifacts);
-    throwIfErrors(regErrors);
+    collectWarningsOrThrow(regErrors, diagnostics);
 
     // Фаза 2: схема артефактов — собираем все ошибки по всем артефактам
     const schemaErrors = validateSchema(detachedArtifacts, dictionaries, operators);
-    throwIfErrors(schemaErrors);
+    collectWarningsOrThrow(schemaErrors, diagnostics);
 
     // Фаза 3: уникальность кодов
     const codeErrors = validateCodeUniqueness(detachedArtifacts);
-    throwIfErrors(codeErrors);
+    collectWarningsOrThrow(codeErrors, diagnostics);
 
     // Фаза 4: ссылки и видимость
     const refErrors = validateRefs(detachedArtifacts, registry);
-    throwIfErrors(refErrors);
+    collectWarningsOrThrow(refErrors, diagnostics);
 
     // Фазы 5–6: компиляция шагов (бросают assert — структура уже проверена)
     const compiledConditions = buildConditions(detachedArtifacts);
@@ -72,7 +73,7 @@ function compile(artifacts, options = {}) {
 
     // Фаза 7: DAG (нет циклов)
     const dagErrors = validatePipelineDAG(registry, compiledPipelines, compiledConditions);
-    throwIfErrors(dagErrors);
+    collectWarningsOrThrow(dagErrors, diagnostics);
 
     const sourceHash = computeSourceHash(detachedArtifacts);
     const provenance = Object.freeze({
@@ -94,7 +95,7 @@ function compile(artifacts, options = {}) {
       conditions: compiledConditions,
       artifacts: detachedArtifacts,
       provenance,
-    }, { kind: 'prepared-jsonspecs', artifactType: 'jsonspecs', version: '1', sourceHash, diagnostics: Object.freeze([]) });
+    }, { kind: 'prepared-jsonspecs', artifactType: 'jsonspecs', version: '1', sourceHash, diagnostics: Object.freeze(diagnostics.slice()) });
   } finally {
     clearContext();
   }
@@ -135,6 +136,14 @@ function safeArtifactId(artifact) {
 
 function throwIfErrors(errors) {
   if (errors && errors.length > 0) throw new CompilationError(errors);
+}
+
+function collectWarningsOrThrow(items, diagnostics) {
+  if (!Array.isArray(items) || items.length === 0) return;
+  for (const item of items) {
+    if (item && item.level === 'warning') diagnostics.push(item);
+  }
+  throwIfErrors(items.filter((item) => !item || item.level !== 'warning'));
 }
 
 function stableStringify(value) {
