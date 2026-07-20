@@ -5,6 +5,8 @@
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 [![Node 20+](https://img.shields.io/badge/Node-20%2B-green)](https://nodejs.org/)
 
+[`На русском языке`](README_RU.md)
+
 Declarative validation engine for JSON rules and deterministic validation pipelines.
 
 Rules are plain JSON artifacts. JSONSpecs validates and prepares them once, runs a named pipeline against a JSON payload, and returns a transport-safe result with stable statuses, issues, diagnostics, optional trace, and ruleset provenance. The package has no runtime dependencies.
@@ -25,16 +27,16 @@ import { createEngine, Operators } from "jsonspecs";
 
 ## Scope of Use
 
-`jsonspecs` can be used as a rules and data-validation engine for credit scoring, lending pipelines, payment gateways, KYC, and other banking processes. Calculation services provide the engine with prepared facts such as amounts, income, debt burden, scoring indicators, balances, limits, fees, currencies, and transaction states. `jsonspecs` applies versioned rules to validate formats, ranges, relationships, and decision conditions, then returns a deterministic result with structured issues and information about the exact rule set and version used. `@jsonspecs/decimal` provides precision-safe validation and comparison of monetary values. This keeps business rules separate from service code, allows them to be reviewed and tested as independent JSON artifacts, and enables controlled rule updates without moving calculations or state into the rules engine.
+`jsonspecs` can be used as a rules and data-validation engine for credit scoring, lending pipelines, payment gateways, KYC, and other banking processes. Calculation services provide the engine with prepared facts such as amounts, income, debt burden, scoring indicators, balances, limits, fees, currencies, and transaction states. `jsonspecs` applies versioned rules to validate formats, ranges, relationships, and decision conditions, then returns a deterministic result with structured issues and information about the exact rule set and version used. This keeps business rules separate from service code, allows them to be reviewed and tested as independent JSON artifacts, and enables controlled rule updates without moving calculations or state into the rules engine.
 
 ## Concepts
 
-| Artifact | Purpose |
-| --- | --- |
-| `rule` | Atomic check or predicate backed by one operator. |
-| `condition` | Predicate guard plus steps that run only when the guard is true. |
-| `pipeline` | Ordered scenario composed from rules, conditions, and sub-pipelines. |
-| `dictionary` | Static value list used by `in_dictionary`. |
+| Artifact     | Purpose                                                              |
+| ------------ | -------------------------------------------------------------------- |
+| `rule`       | Atomic check or predicate backed by one operator.                    |
+| `condition`  | Predicate guard plus steps that run only when the guard is true.     |
+| `pipeline`   | Ordered scenario composed from rules, conditions, and sub-pipelines. |
+| `dictionary` | Static value list used by `in_dictionary`.                           |
 
 The usual production flow is:
 
@@ -106,18 +108,18 @@ If exactly one pipeline has `entrypoint: true`, `pipelineId` may be omitted. The
 
 Everything exported from the package root is the supported public surface. Files under `src/**` are internal.
 
-| Export | Description |
-| --- | --- |
-| `createEngine({ operators })` | Creates an engine bound to an operator pack. |
-| `Operators` | Built-in check and predicate operators. |
-| `validate(artifacts, options?)` | Non-throwing source validation using the built-in operators unless `options.operators` is provided. |
-| `compileSnapshot(snapshot, options?)` | Validates snapshot integrity and prepares it for runtime. |
-| `inspect(prepared)` | Read-only introspection over a prepared artifact. |
-| `computeSourceHash(artifacts)` | Canonical SHA-256 over artifacts. |
-| `formatDiagnostics(diagnostics)` | Compact human-readable diagnostics formatter. |
-| `formatRuntimeError(error)` | Compact runtime error formatter. |
-| `deepGet(payload, path)` | Backward-compatible field lookup helper. New operators should prefer `ctx.get()`. |
-| `CompilationError` / `RuntimeError` | Typed errors for compile-time and internal runtime failures. |
+| Export                                | Description                                                                                         |
+| ------------------------------------- | --------------------------------------------------------------------------------------------------- |
+| `createEngine({ operators })`         | Creates an engine bound to an operator pack.                                                        |
+| `Operators`                           | Built-in check and predicate operators.                                                             |
+| `validate(artifacts, options?)`       | Non-throwing source validation using the built-in operators unless `options.operators` is provided. |
+| `compileSnapshot(snapshot, options?)` | Validates snapshot integrity and prepares it for runtime.                                           |
+| `inspect(prepared)`                   | Read-only introspection over a prepared artifact.                                                   |
+| `computeSourceHash(artifacts)`        | Canonical SHA-256 over artifacts.                                                                   |
+| `formatDiagnostics(diagnostics)`      | Compact human-readable diagnostics formatter.                                                       |
+| `formatRuntimeError(error)`           | Compact runtime error formatter.                                                                    |
+| `deepGet(payload, path)`              | Backward-compatible field lookup helper. New operators should prefer `ctx.get()`.                   |
+| `CompilationError` / `RuntimeError`   | Typed errors for compile-time and internal runtime failures.                                        |
 
 ### `engine.validate(artifacts, options?)`
 
@@ -182,13 +184,17 @@ Snapshots are deterministic production artifacts:
 ### `engine.runPipeline(prepared, input, options?)`
 
 ```js
-const result = engine.runPipeline(prepared, {
-  pipelineId: "registration.pipeline",
-  payload: { person: { firstName: "" } },
-  context: { currentDate: "2026-03-27" },
-}, {
-  trace: "basic",
-});
+const result = engine.runPipeline(
+  prepared,
+  {
+    pipelineId: "registration.pipeline",
+    payload: { person: { firstName: "" } },
+    context: { currentDate: "2026-03-27" },
+  },
+  {
+    trace: "basic",
+  },
+);
 ```
 
 `input.payload` must be a JSON object. It may be nested or already flattened with dot-notation keys. `input.context` is exposed to rules as `$context.*`.
@@ -264,11 +270,11 @@ view.stats();
 
 Trace is disabled by default and absent from the result unless enabled.
 
-| Option | Behaviour |
-| --- | --- |
-| `false` / omitted | No `trace` field. |
-| `true` / `"basic"` | Structural trace without raw payload values. |
-| `"verbose"` | Trace may include detailed values after `traceRedactor` is applied. |
+| Option             | Behaviour                                                           |
+| ------------------ | ------------------------------------------------------------------- |
+| `false` / omitted  | No `trace` field.                                                   |
+| `true` / `"basic"` | Structural trace without raw payload values.                        |
+| `"verbose"`        | Trace may include detailed values after `traceRedactor` is applied. |
 
 Every trace entry has one shape:
 
@@ -321,11 +327,11 @@ Artifact IDs control visibility:
 
 Result levels:
 
-| Level | Meaning | Pipeline behaviour |
-| --- | --- | --- |
-| `WARNING` | Soft issue. | Accumulated; does not stop execution. |
-| `ERROR` | Validation failure. | Accumulated; final `control` is `STOP`. |
-| `EXCEPTION` | Hard block. | Stops execution immediately. |
+| Level       | Meaning             | Pipeline behaviour                      |
+| ----------- | ------------------- | --------------------------------------- |
+| `WARNING`   | Soft issue.         | Accumulated; does not stop execution.   |
+| `ERROR`     | Validation failure. | Accumulated; final `control` is `STOP`. |
+| `EXCEPTION` | Hard block.         | Stops execution immediately.            |
 
 Built-in operators and custom operator authoring are documented in [OPERATORS.md](./OPERATORS.md). The normative artifact format is documented in [SPEC.md](./SPEC.md), and public compatibility rules are documented in [COMPATIBILITY.md](./COMPATIBILITY.md).
 
