@@ -632,15 +632,22 @@ particular, JavaScript regular expressions are not guaranteed to run in linear
 time.
 
 The compiler lints `matches_regex` patterns for common ReDoS-prone constructs,
-including nested quantified groups and overlapping quantified alternations. Such
-findings are emitted as `REGEX_REDOS_RISK` diagnostics with `level: "warning"`.
-The linter is a heuristic detector; it highlights known risk patterns but is not
-a proof that accepted regular expressions are safe for all inputs.
+including overlapping quantified alternations and nested quantified groups when
+the outer group uses unbounded repetition (`*`, `+`, or `{n,}`). Nested
+quantifiers under bounded outer repetition (`?`, `{n}`, or `{n,m}`) are not
+classified in this release. Such findings are emitted as `REGEX_REDOS_RISK`
+diagnostics with `level: "warning"`. The linter is a heuristic detector; it
+highlights known risk patterns but is not a proof that accepted regular
+expressions are safe for all inputs.
 
-Artifacts, runtime payload, and runtime context have a deterministic maximum
-JSON depth of 256. Over-deep artifacts fail source validation with
-`ARTIFACT_TOO_DEEP`. Over-deep payload or context input aborts evaluation with
-`PAYLOAD_TOO_DEEP`.
+Artifacts, runtime payload, runtime context, transport-normalized runtime
+results, trace details, and public custom-operator result surfaces have a
+deterministic maximum JSON depth of 256. Over-deep artifacts fail source
+validation with `ARTIFACT_TOO_DEEP`. Over-deep payload or context input aborts
+evaluation with `PAYLOAD_TOO_DEEP`. Over-deep operator result surfaces abort
+with `OPERATOR_CONTRACT_VIOLATION`. Transport normalization truncates over-deep
+values with the string marker `"[MaxDepth]"`; trace truncation does not affect
+the evaluation verdict.
 
 The engine does not impose a normative limit on total payload size, number of
 produced issues, or serialized result size. Callers are responsible for those
@@ -650,13 +657,13 @@ limits at the transport or service boundary.
 
 `validate(artifacts, options)` returns `{ok, diagnostics}` and does not throw for invalid source. Successful validation may include warning diagnostics. Every diagnostic has stable `code`, `level`, `message`, `phase`, `artifactId`, `path`, and `location` fields. Compiler phases construct these fields directly; they are not inferred from message text. `path` identifies the offending property relative to the artifact, while `location` is `file`, `file:line`, or `file:line:column` when supplied through `options.sources`, and `null` otherwise. `compile()` returns an opaque `prepared-jsonspecs` artifact; runtime internals are available only through `inspect()`.
 
-`runPipeline(prepared, {pipelineId?, payload, context?}, options)` accepts only a prepared artifact. If `pipelineId` is omitted, exactly one pipeline must be marked `entrypoint`. `payload` and `context` must be JSON-safe objects within the maximum JSON depth. Runtime clones and validates `context` before evaluation; the legacy `payload.__context` source follows the same checks. Runtime results for a valid prepared artifact always include `status`, `control`, `issues`, and `ruleset`. `ruleset.sourceHash` identifies the compiled artifacts; `ruleset.engineVersion` is the version of the loaded jsonspecs engine from its `package.json`; snapshot builds additionally expose optional `rulesetVersion` and `projectId`. ABORT results produced after a prepared artifact is accepted preserve the same `ruleset`. ABORT includes `{code,message,details}`, never a stack. Trace is disabled by default and enabled with `basic` or `verbose`.
+`runPipeline(prepared, {pipelineId?, payload, context?}, options)` accepts only a prepared artifact. If `pipelineId` is omitted, exactly one pipeline must be marked `entrypoint`. After a prepared artifact is accepted, `runPipeline` returns a runtime result and does not throw; unexpected runtime faults are contained as ABORT results. `payload` and `context` must be JSON-safe objects within the maximum JSON depth. Runtime clones and validates `context` before evaluation; the legacy `payload.__context` source follows the same checks. Runtime results for a valid prepared artifact always include `status`, `control`, `issues`, and `ruleset`. `ruleset.sourceHash` identifies the compiled artifacts; `ruleset.engineVersion` is the version of the loaded jsonspecs engine from its `package.json`; snapshot builds additionally expose optional `rulesetVersion` and `projectId`. ABORT results produced after a prepared artifact is accepted preserve the same `ruleset`. ABORT includes `{code,message,details}`, never a stack. Trace is disabled by default and enabled with `basic` or `verbose`.
 
 An exception thrown by `traceRedactor` is contained and returned as ABORT with `TRACE_REDACTOR_ERROR`; it never escapes `runPipeline`. Unexpected engine faults use the neutral fallback code `RUNTIME_ABORT`.
 
-Trace entries use one structural contract: `{kind:"TRACE",artifactType:"jsonspecs",artifactId,step,at,outcome,details?}`. The normative `step` enum is `pipeline.start`, `pipeline.finish`, `pipeline.abort`, `pipeline.strict`, `rule.start`, `rule.finish`, `condition.evaluate`, `predicate.aggregate`, `check.aggregate`, `context.required`, and `operator.trace`. Basic mode removes runtime values; verbose details pass through `traceRedactor` when provided.
+Trace entries use one structural contract: `{kind:"TRACE",artifactType:"jsonspecs",artifactId,step,at,outcome,details?}`. The normative `step` enum is `pipeline.start`, `pipeline.finish`, `pipeline.abort`, `pipeline.strict`, `rule.start`, `rule.finish`, `condition.evaluate`, `predicate.aggregate`, `check.aggregate`, `context.required`, and `operator.trace`. Basic mode removes runtime values; verbose details pass through `traceRedactor` when provided. Operator-provided trace details are transport-normalized before the trace event is recorded, so over-deep values are truncated with `"[MaxDepth]"`.
 
-Custom check operators return `OK|FAIL|EXCEPTION`; predicate operators return `TRUE|FALSE|UNDEFINED|EXCEPTION`. `ctx.get(path)` returns `{ok,value}` where `ok` is a boolean property. Any other operator result aborts with `OPERATOR_CONTRACT_VIOLATION`.
+Custom check operators return `OK|FAIL|EXCEPTION`; predicate operators return `TRUE|FALSE|UNDEFINED|EXCEPTION`. `ctx.get(path)` returns `{ok,value}` where `ok` is a boolean property. Any other operator result aborts with `OPERATOR_CONTRACT_VIOLATION`. Over-deep values in `result.actual`, `result.meta`, `result.failures[*].actual`, or `result.failures[*].meta` also abort with `OPERATOR_CONTRACT_VIOLATION`.
 
 When an operator reports `EXCEPTION`, runtime aborts with `OPERATOR_FAULT`. The public error message is generic: `Operator <operator> failed for rule <ruleId>`. `details` contains only `{operator, ruleId}`. The original operator error message and stack are not included in the transport-safe result. Built-in operator `EXCEPTION` results follow the same rule.
 

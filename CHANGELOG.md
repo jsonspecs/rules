@@ -6,6 +6,13 @@ All notable changes to this project will be documented in this file.
 
 - Publish future tagged releases directly under `latest`, removing the obsolete token-based promotion workflow.
 
+## [2.3.1] - 2026-07-20
+
+- Hardened transport normalization with the `"[MaxDepth]"` marker for over-deep values.
+- Added full depth validation for public custom-operator result surfaces.
+- Truncated operator trace details without changing evaluation verdicts.
+- Narrowed the `matches_regex` nested-quantifier heuristic to unbounded outer repetition.
+
 ## [2.3.0] - 2026-07-20
 
 - Added warning-level compile diagnostics for potentially dangerous `matches_regex` patterns, including nested quantified groups and overlapping quantified alternations.

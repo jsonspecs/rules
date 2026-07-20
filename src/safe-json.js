@@ -2,6 +2,8 @@
 
 const DANGEROUS_KEYS = new Set(["__proto__", "prototype", "constructor"]);
 const DEFAULT_MAX_JSON_DEPTH = 256;
+const MAX_DEPTH_MARKER = "[MaxDepth]";
+const UNSERIALIZABLE_MARKER = "[Unserializable]";
 
 class SafeJsonError extends Error {
   constructor(code, message, details = {}) {
@@ -166,25 +168,110 @@ function cloneContextSafe(context, options = {}) {
   return visit(context, "$", 0);
 }
 
+function exceedsMaxJsonDepth(value, options = {}) {
+  const maxDepth = Number.isInteger(options.maxDepth) && options.maxDepth > 0
+    ? options.maxDepth
+    : DEFAULT_MAX_JSON_DEPTH;
+  const ancestors = new WeakSet();
+
+  function visit(input, depth) {
+    if (depth > maxDepth) return true;
+    if (input === null || typeof input !== "object") return false;
+    if (ancestors.has(input)) return false;
+    ancestors.add(input);
+    let keys;
+    try {
+      keys = Object.keys(input);
+    } catch (_) {
+      ancestors.delete(input);
+      return false;
+    }
+    for (const key of keys) {
+      let child;
+      try {
+        child = input[key];
+      } catch (_) {
+        continue;
+      }
+      if (visit(child, depth + 1)) {
+        ancestors.delete(input);
+        return true;
+      }
+    }
+    ancestors.delete(input);
+    return false;
+  }
+
+  try {
+    return visit(value, 0);
+  } catch (_) {
+    return false;
+  }
+}
+
 function normalizeTransportSafe(value) {
   const seen = new WeakSet();
-  function visit(input, inArray) {
+  function visit(input, inArray, depth) {
+    if (depth > DEFAULT_MAX_JSON_DEPTH) return MAX_DEPTH_MARKER;
     if (input === undefined || typeof input === "function" || typeof input === "symbol") return inArray ? null : undefined;
     if (typeof input === "bigint") return String(input);
     if (typeof input === "number" && !Number.isFinite(input)) return null;
     if (input === null || typeof input !== "object") return input;
-    if (input instanceof Date) return input.toISOString();
+    try {
+      if (input instanceof Date) {
+        const time = input.getTime();
+        return Number.isFinite(time) ? input.toISOString() : null;
+      }
+    } catch (_) {
+      return UNSERIALIZABLE_MARKER;
+    }
     if (seen.has(input)) return "[Circular]";
     seen.add(input);
-    const output = Array.isArray(input) ? [] : {};
-    for (const key of Object.keys(input)) {
-      const normalized = visit(input[key], Array.isArray(input));
+    let inArrayValue;
+    try {
+      inArrayValue = Array.isArray(input);
+    } catch (_) {
+      seen.delete(input);
+      return UNSERIALIZABLE_MARKER;
+    }
+    const output = inArrayValue ? [] : {};
+    let keys;
+    try {
+      keys = Object.keys(input);
+    } catch (_) {
+      seen.delete(input);
+      return UNSERIALIZABLE_MARKER;
+    }
+    for (const key of keys) {
+      let child;
+      try {
+        child = input[key];
+      } catch (_) {
+        output[key] = UNSERIALIZABLE_MARKER;
+        continue;
+      }
+      const normalized = visit(child, inArrayValue, depth + 1);
       if (normalized !== undefined) output[key] = normalized;
     }
     seen.delete(input);
     return output;
   }
-  return visit(value, false);
+  try {
+    return visit(value, false, 0);
+  } catch (_) {
+    return UNSERIALIZABLE_MARKER;
+  }
 }
 
-module.exports = { DANGEROUS_KEYS, DEFAULT_MAX_JSON_DEPTH, SafeJsonError, hasOwn, assertSafePath, cloneJsonSafe, flattenPayloadSafe, cloneContextSafe, normalizeTransportSafe };
+module.exports = {
+  DANGEROUS_KEYS,
+  DEFAULT_MAX_JSON_DEPTH,
+  SafeJsonError,
+  hasOwn,
+  assertSafePath,
+  cloneJsonSafe,
+  flattenPayloadSafe,
+  cloneContextSafe,
+  exceedsMaxJsonDepth,
+  normalizeTransportSafe,
+};

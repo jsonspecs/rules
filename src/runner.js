@@ -9,7 +9,14 @@ const {
   wildcardGroupBasePattern,
   expandWildcardGroups,
 } = require("./utils");
-const { flattenPayloadSafe, cloneContextSafe, normalizeTransportSafe, hasOwn } = require("./safe-json");
+const {
+  DEFAULT_MAX_JSON_DEPTH,
+  flattenPayloadSafe,
+  cloneContextSafe,
+  exceedsMaxJsonDepth,
+  normalizeTransportSafe,
+  hasOwn,
+} = require("./safe-json");
 const { getPreparedState } = require("./prepared");
 const { RuntimeError } = require("./compiler/compilation-error");
 
@@ -219,19 +226,49 @@ function runPipeline(compiled, pipelineId, payload, options) {
 function finishResult(result, traceMode, trace, options, provenance) {
   try {
     if (provenance) result.ruleset = provenance;
-    if (traceMode) result.trace = trace.map((entry) => sanitizeTraceEntry(entry, traceMode, options && options.traceRedactor));
+    if (traceMode) {
+      try {
+        result.trace = trace.map((entry) => sanitizeTraceEntry(entry, traceMode, options && options.traceRedactor));
+      } catch (error) {
+        return normalizeTransportSafe(finishAbortResult({
+          code: "TRACE_REDACTOR_ERROR",
+          message: error && error.message ? error.message : String(error),
+          issues: Array.isArray(result.issues) ? result.issues : [],
+          trace,
+          traceMode,
+          provenance,
+        }));
+      }
+    }
     return normalizeTransportSafe(result);
   } catch (error) {
-    const aborted = {
-      status: "ABORT",
-      control: "STOP",
-      issues: Array.isArray(result.issues) ? result.issues : [],
-      error: { code: "TRACE_REDACTOR_ERROR", message: error && error.message ? error.message : String(error), details: null },
-    };
-    if (provenance) aborted.ruleset = provenance;
-    if (traceMode) aborted.trace = trace.map((entry) => sanitizeTraceEntry(entry, "basic", null));
-    return normalizeTransportSafe(aborted);
+    return normalizeTransportSafe(finishAbortResult({
+      code: "RUNTIME_ABORT",
+      message: error && error.message ? error.message : String(error),
+      issues: [],
+      trace,
+      traceMode,
+      provenance,
+    }));
   }
+}
+
+function finishAbortResult({ code, message, issues, trace, traceMode, provenance }) {
+  const aborted = {
+    status: "ABORT",
+    control: "STOP",
+    issues,
+    error: { code, message, details: null },
+  };
+  if (provenance) aborted.ruleset = provenance;
+  if (traceMode) {
+    try {
+      aborted.trace = trace.map((entry) => sanitizeTraceEntry(entry, "basic", null));
+    } catch (_) {
+      aborted.trace = [];
+    }
+  }
+  return aborted;
 }
 
 function sanitizeTraceEntry(entry, mode, redactor) {
@@ -249,6 +286,14 @@ function sanitizeBasicTraceDetails(details) {
     output[key] = value;
   }
   return output;
+}
+
+function operatorTraceDetails(message, details) {
+  const normalized = normalizeTransportSafe(details);
+  if (normalized && typeof normalized === "object" && !Array.isArray(normalized)) {
+    return { message, ...normalized };
+  }
+  return normalized === undefined ? { message } : { message, details: normalized };
 }
 
 function execSteps(
@@ -431,7 +476,7 @@ function evalPredicate(operators, rule, ctxBase, trace, scope) {
   const rawOp = operators.predicate[rule.operator];
   const op = (...args) => invokeOperator("predicate", rule, rawOp, args);
   try {
-    const ctx = Object.assign({}, ctxBase, { trace: (message, details) => t("operator.trace", "info", { message, ...(details || {}) }) });
+    const ctx = Object.assign({}, ctxBase, { trace: (message, details) => t("operator.trace", "info", operatorTraceDetails(message, details)) });
 
     // Wildcard aggregation for predicates
     if (isWildcardField(rule.field)) {
@@ -558,7 +603,7 @@ function evalCheck(operators, rule, ctxBase, trace, scope) {
   const rawOp = operators.check[rule.operator];
   const op = (...args) => invokeOperator("check", rule, rawOp, args);
   try {
-    const ctx = Object.assign({}, ctxBase, { trace: (message, details) => t("operator.trace", "info", { message, ...(details || {}) }) });
+    const ctx = Object.assign({}, ctxBase, { trace: (message, details) => t("operator.trace", "info", operatorTraceDetails(message, details)) });
 
     const groupedFields = Array.isArray(rule.fields) ? rule.fields : Array.isArray(rule.paths) ? rule.paths : [];
     if (rule.operator === "any_filled" && groupedFields.length > 0 && groupedFields.every(isWildcardField)) {
@@ -865,8 +910,39 @@ function validateOperatorResult(role, rule, result) {
       details: { operator: rule.operator, ruleId: rule.id, returned: normalizeTransportSafe(result) },
     });
   }
+  validateOperatorResultDepth(rule, result);
   if (result.status === "EXCEPTION") return operatorFaultResult(rule);
   return result;
+}
+
+function validateOperatorResultDepth(rule, result) {
+  const surfaces = [
+    ["actual", result.actual],
+    ["meta", result.meta],
+  ];
+  if (Array.isArray(result.failures)) {
+    for (let index = 0; index < result.failures.length; index++) {
+      const failure = result.failures[index];
+      if (!failure || typeof failure !== "object") continue;
+      surfaces.push([`failures[${index}].actual`, failure.actual]);
+      surfaces.push([`failures[${index}].meta`, failure.meta]);
+    }
+  }
+
+  for (const [path, value] of surfaces) {
+    if (value === undefined) continue;
+    if (!exceedsMaxJsonDepth(value)) continue;
+    throw new RuntimeError({
+      code: "OPERATOR_CONTRACT_VIOLATION",
+      message: `Operator ${rule.operator} returned an over-deep result at ${path}`,
+      details: {
+        operator: rule.operator,
+        ruleId: rule.id,
+        path,
+        maxDepth: DEFAULT_MAX_JSON_DEPTH,
+      },
+    });
+  }
 }
 
 function invokeOperator(role, rule, rawOp, args) {

@@ -3,6 +3,7 @@
 const test = require("node:test");
 const assert = require("node:assert/strict");
 const { validate, createEngine, Operators, CompilationError } = require("..");
+const nominalBeneficiariesRegexPatterns = require("./fixtures/nominal-beneficiaries-regex-patterns.json");
 
 function unknownOperatorRule() {
   return {
@@ -148,7 +149,7 @@ test("validate accepts allowed matches_regex flags for checks and predicates", (
 });
 
 test("validate reports ReDoS warnings without failing compilation", () => {
-  for (const value of ["^(a+)+$", "^(a|aa)+$"]) {
+  for (const value of ["^(a+)+$", "^(a|aa)+$", "(a|a)+", "(\\d*)*", "(a+){2,}"]) {
     const result = validate([regexRule({ value })]);
     assert.equal(result.ok, true, value);
     assert.equal(result.diagnostics.length, 1, value);
@@ -156,6 +157,29 @@ test("validate reports ReDoS warnings without failing compilation", () => {
     assert.equal(result.diagnostics[0].level, "warning");
     assert.equal(result.diagnostics[0].path, "value");
     assert.equal(result.diagnostics[0].details.findings.length > 0, true);
+  }
+});
+
+test("ReDoS lint does not warn for bounded outer nested quantifiers", () => {
+  const safePatterns = [
+    "^[A-Za-zА-Яа-яЁё](?:[A-Za-zА-Яа-яЁё -]*[A-Za-zА-Яа-яЁё])?$",
+    "(?:a*b)?",
+    "(a+){2}",
+    "(a+){2,5}",
+  ];
+  for (const value of safePatterns) {
+    const result = validate([regexRule({ value })]);
+    assert.equal(result.ok, true, value);
+    assert.equal(result.diagnostics.some((item) => item.code === "REGEX_REDOS_RISK"), false, value);
+  }
+});
+
+test("nominal-beneficiaries matches_regex corpus has no ReDoS warnings", () => {
+  assert.equal(nominalBeneficiariesRegexPatterns.length, 68);
+  for (const fixture of nominalBeneficiariesRegexPatterns) {
+    const result = validate([regexRule({ id: fixture.artifactId, value: fixture.value })]);
+    assert.equal(result.ok, true, fixture.artifactId);
+    assert.equal(result.diagnostics.some((item) => item.code === "REGEX_REDOS_RISK"), false, fixture.artifactId);
   }
 });
 

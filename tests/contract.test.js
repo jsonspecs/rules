@@ -2,6 +2,7 @@ const test = require('node:test');
 const assert = require('node:assert/strict');
 const { createEngine, Operators, validate, inspect, computeSourceHash, compileSnapshot } = require('..');
 const { version: packageVersion } = require('../package.json');
+const { normalizeTransportSafe } = require('../src/safe-json');
 
 function source(operator = 'not_empty') {
   return [
@@ -45,6 +46,94 @@ test('payload safety errors and operator contract violations are coded', () => {
   assert.equal(custom.runPipeline(broken, { payload: { x: 1 } }).error.code, 'OPERATOR_CONTRACT_VIOLATION');
 });
 
+test('operator result depth violations are contract ABORTs for every public surface', () => {
+  const cases = [
+    ['actual', () => ({ status: 'FAIL', actual: nestedObject(300) })],
+    ['meta', () => ({ status: 'FAIL', meta: nestedObject(300) })],
+    ['failures[0].actual', () => ({ status: 'FAIL', failures: [{ status: 'FAIL', field: 'x', actual: nestedObject(300) }] })],
+    ['failures[0].meta', () => ({ status: 'FAIL', failures: [{ status: 'FAIL', field: 'x', meta: nestedObject(300) }] })],
+  ];
+
+  for (const [path, operator] of cases) {
+    const custom = createEngine({
+      operators: { check: { ...Operators.check, hostile: operator }, predicate: Operators.predicate },
+    });
+    const result = custom.runPipeline(custom.compile(source('hostile')), { payload: { x: 'value' } });
+    assert.equal(result.status, 'ABORT', path);
+    assert.equal(result.error.code, 'OPERATOR_CONTRACT_VIOLATION', path);
+    assert.deepEqual(result.error.details, {
+      operator: 'hostile',
+      ruleId: 'library.required',
+      path,
+      maxDepth: 256,
+    });
+  }
+});
+
+test('predicate operator result depth violations are contract ABORTs', () => {
+  const custom = createEngine({
+    operators: {
+      check: Operators.check,
+      predicate: { ...Operators.predicate, hostile_predicate: () => ({ status: 'TRUE', meta: nestedObject(300) }) },
+    },
+  });
+  const result = custom.runPipeline(custom.compile(predicateConditionArtifacts('hostile_predicate')), { payload: { x: 'yes', y: 'ok' } });
+  assert.equal(result.status, 'ABORT');
+  assert.equal(result.error.code, 'OPERATOR_CONTRACT_VIOLATION');
+  assert.equal(result.error.details.path, 'meta');
+});
+
+test('invalid operator status with pathological body is a structured contract violation', () => {
+  const custom = createEngine({
+    operators: {
+      check: { ...Operators.check, invalid_deep: () => ({ status: 'NOPE', actual: nestedObject(200000) }) },
+      predicate: Operators.predicate,
+    },
+  });
+  const result = custom.runPipeline(custom.compile(source('invalid_deep')), { payload: { x: 'value' } });
+
+  assert.equal(result.status, 'ABORT');
+  assert.equal(result.error.code, 'OPERATOR_CONTRACT_VIOLATION');
+  assert.equal(result.error.details.operator, 'invalid_deep');
+  assert.equal(JSON.stringify(result.error.details.returned).includes('"[MaxDepth]"'), true);
+});
+
+test('hostile primitive and function operator outputs return structured results', () => {
+  {
+    const custom = createEngine({
+      operators: { check: { ...Operators.check, primitive_result: () => 7 }, predicate: Operators.predicate },
+    });
+    const result = custom.runPipeline(custom.compile(source('primitive_result')), { payload: { x: 'value' } });
+    assert.equal(result.status, 'ABORT');
+    assert.equal(result.error.code, 'OPERATOR_CONTRACT_VIOLATION');
+  }
+
+  {
+    const custom = createEngine({
+      operators: {
+        check: { ...Operators.check, function_actual: () => ({ status: 'FAIL', actual: function actual() {} }) },
+        predicate: Operators.predicate,
+      },
+    });
+    const result = custom.runPipeline(custom.compile(source('function_actual')), { payload: { x: 'value' } });
+    assert.equal(result.status, 'ERROR');
+    assert.equal(result.issues.length, 1);
+    assert.equal(Object.hasOwn(result.issues[0], 'actual'), false);
+  }
+
+  {
+    const custom = createEngine({
+      operators: {
+        check: Operators.check,
+        predicate: { ...Operators.predicate, primitive_predicate: () => 7 },
+      },
+    });
+    const result = custom.runPipeline(custom.compile(predicateConditionArtifacts('primitive_predicate')), { payload: { x: 'yes', y: 'ok' } });
+    assert.equal(result.status, 'ABORT');
+    assert.equal(result.error.code, 'OPERATOR_CONTRACT_VIOLATION');
+  }
+});
+
 test('context safety errors are coded like payload safety errors', () => {
   const engine = createEngine({ operators: Operators });
   const prepared = engine.compile(source());
@@ -76,6 +165,41 @@ test('deep payload and context inputs abort with structured depth errors', () =>
     assert.equal(result.error.code, 'PAYLOAD_TOO_DEEP');
     assert.equal(result.error.details.maxDepth, 256);
     assert.equal(result.error.details.path.startsWith('deep.'), true);
+  }
+});
+
+test('transport normalization truncates depth and preserves existing special-value behavior', () => {
+  {
+    const normalized = normalizeTransportSafe({ deep: nestedObject(300) });
+    assert.equal(JSON.stringify(normalized).includes('"[MaxDepth]"'), true);
+  }
+
+  {
+    const normalized = normalizeTransportSafe({ deep: nestedObject(255) });
+    assert.equal(JSON.stringify(normalized).includes('"[MaxDepth]"'), false);
+  }
+
+  {
+    const cyclic = { deep: nestedObject(300) };
+    cyclic.self = cyclic;
+    const normalized = normalizeTransportSafe(cyclic);
+    assert.equal(normalized.self, '[Circular]');
+    assert.equal(JSON.stringify(normalized).includes('"[MaxDepth]"'), true);
+  }
+
+  {
+    const fn = function noop() {};
+    const sym = Symbol('s');
+    const normalized = normalizeTransportSafe({
+      array: [undefined, fn, sym, 1n, Infinity],
+      object: { undef: undefined, fn, sym, bigint: 1n, infinite: Infinity },
+    });
+    assert.deepEqual(normalized.array, [null, null, null, '1', null]);
+    assert.equal(Object.hasOwn(normalized.object, 'undef'), false);
+    assert.equal(Object.hasOwn(normalized.object, 'fn'), false);
+    assert.equal(Object.hasOwn(normalized.object, 'sym'), false);
+    assert.equal(normalized.object.bigint, '1');
+    assert.equal(normalized.object.infinite, null);
   }
 });
 
@@ -498,6 +622,15 @@ function dictionaryPredicateArtifacts(entries) {
   ];
 }
 
+function predicateConditionArtifacts(operator) {
+  return [
+    { id: 'library.pred', type: 'rule', description: 'predicate', role: 'predicate', operator, field: 'x' },
+    { id: 'library.after', type: 'rule', description: 'after', role: 'check', operator: 'not_empty', field: 'y', level: 'ERROR', code: 'Y', message: 'y' },
+    { id: 'library.cond', type: 'condition', description: 'condition', when: 'library.pred', steps: [{ rule: 'library.after' }] },
+    { id: 'entry.pred', type: 'pipeline', description: 'predicate', strict: false, entrypoint: true, flow: [{ condition: 'library.cond' }] },
+  ];
+}
+
 function whenNotArtifacts(when) {
   return [
     { id: 'library.pred', type: 'rule', description: 'predicate', role: 'predicate', operator: 'equals', field: 'x', value: 'yes' },
@@ -568,6 +701,31 @@ test('trace basic redacts values and verbose uses redactor', () => {
   assert.equal(basic.trace.some((entry) => Object.hasOwn(entry.details || {}, 'actual')), false);
   const verbose = engine.runPipeline(prepared, { payload: { x: 'secret' } }, { trace: 'verbose', traceRedactor: () => '[redacted]' });
   assert.equal(verbose.trace.some((entry) => entry.details === '[redacted]'), true);
+});
+
+test('operator trace details are depth-truncated and do not affect verdict', () => {
+  const custom = createEngine({
+    operators: {
+      check: {
+        ...Operators.check,
+        trace_deep(rule, ctx) {
+          ctx.trace('deep details', { deep: nestedObject(300) });
+          return { status: 'OK' };
+        },
+      },
+      predicate: Operators.predicate,
+    },
+  });
+  const prepared = custom.compile(source('trace_deep'));
+  const withoutTrace = custom.runPipeline(prepared, { payload: { x: 'value' } });
+  const basic = custom.runPipeline(prepared, { payload: { x: 'value' } }, { trace: 'basic' });
+  const verbose = custom.runPipeline(prepared, { payload: { x: 'value' } }, { trace: 'verbose' });
+
+  assert.deepEqual([withoutTrace.status, withoutTrace.issues], [basic.status, basic.issues]);
+  assert.deepEqual([withoutTrace.status, withoutTrace.issues], [verbose.status, verbose.issues]);
+  const operatorTrace = verbose.trace.find((entry) => entry.step === 'operator.trace');
+  assert.ok(operatorTrace);
+  assert.equal(JSON.stringify(operatorTrace.details).includes('"[MaxDepth]"'), true);
 });
 
 test('throwing trace redactor is contained as coded ABORT', () => {
