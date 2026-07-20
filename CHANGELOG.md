@@ -4,9 +4,13 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+## [2.3.4] - 2026-07-20
+
+- Updated package metadata, badges, and trusted publishing documentation for the `jsonspecs/rules` repository rename.
+
 ## [2.3.3] - 2026-07-20
 
-- Updated package metadata and documentation links for the `jsonspecs/core` repository transfer.
+- Updated package metadata and documentation links for the GitHub repository transfer.
 - Prepared trusted publishing metadata for the new GitHub owner/repository identity.
 
 ## [2.3.2] - 2026-07-20

@@ -1,6 +1,6 @@
 # JSONSpecs
 
-[![CI](https://github.com/jsonspecs/core/actions/workflows/ci.yml/badge.svg)](https://github.com/jsonspecs/core/actions)
+[![CI](https://github.com/jsonspecs/rules/actions/workflows/ci.yml/badge.svg)](https://github.com/jsonspecs/rules/actions)
 [![npm](https://img.shields.io/npm/v/jsonspecs)](https://www.npmjs.com/package/jsonspecs)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 [![Node 20+](https://img.shields.io/badge/Node-20%2B-green)](https://nodejs.org/)

@@ -1,6 +1,6 @@
 {
   "name": "jsonspecs",
-  "version": "2.3.3",
+  "version": "2.3.4",
   "description": "Declarative JSON rules engine for validation pipelines",
   "type": "commonjs",
   "main": "index.js",
@@ -55,12 +55,12 @@
   "license": "MIT",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/jsonspecs/core.git"
+    "url": "git+https://github.com/jsonspecs/rules.git"
   },
   "bugs": {
-    "url": "https://github.com/jsonspecs/core/issues"
+    "url": "https://github.com/jsonspecs/rules/issues"
   },
-  "homepage": "https://github.com/jsonspecs/core#readme",
+  "homepage": "https://github.com/jsonspecs/rules#readme",
   "engines": {
     "node": ">=20"
   },
