@@ -46,6 +46,10 @@ function renderAtom(node) {
 }
 
 function renderClass(ranges) {
+  // Дополнение полного множества скалярных значений Unicode даёт пустой класс. Синтаксис
+  // `[]` в RE2 некорректен, поэтому печатаем допустимое выражение без совпадений:
+  // после абсолютного конца строки точка не может поглотить символ.
+  if (ranges.length === 0) return "(?:\\z.)";
   if (ranges.length === 1 && ranges[0][0] === ranges[0][1]) return scalar(ranges[0][0]);
   return `[${ranges.map(([start, end]) => start === end ? scalar(start) : `${scalar(start)}-${scalar(end)}`).join("")}]`;
 }

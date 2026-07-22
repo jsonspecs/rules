@@ -119,6 +119,16 @@ test("nested quantifier executes through linear RE2 backend", () => {
   assert.equal(result.status, "ERROR");
 });
 
+test("empty complemented regex class compiles as a never-matching expression", () => {
+  const value = snapshot({
+    type: "rule", operator: "matches_regex", field: "x", value: "^[^\\D\\d]$",
+    issue: { level: "ERROR", code: "X", message: "x" },
+  });
+  const prepared = compileSnapshot(value);
+  for (const field of ["", "a", "\n"])
+    assert.equal(runPipeline(prepared, { pipelineId: "p", payload: { x: field } }).status, "ERROR");
+});
+
 test("counted regex quantifiers reject leading zeros", () => {
   const value = snapshot({
     type: "rule", operator: "matches_regex", field: "x", value: "a{01}",

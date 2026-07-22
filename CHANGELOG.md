@@ -17,6 +17,8 @@
 - Contain self-throwing `Proxy` values through private `WeakSet` abort markers and
   preserve `INVALID_PAYLOAD` versus `INVALID_CONTEXT` classification.
 - Enforce portable regex expansion limits and finite external-operator contracts.
+- Render an empty complemented character class as a valid never-matching RE2
+  expression instead of rejecting the snapshot.
 - Validate and index dictionaries in linear time for constant-time built-in lookup.
 - Vendor and pass all 276 normative conformance fixtures from spec commit
   `d7f07976b0fe004584217adf079c57caec102ab3`; CI verifies the source tree before
