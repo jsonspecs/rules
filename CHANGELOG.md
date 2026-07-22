@@ -4,6 +4,12 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+## [4.0.1] - 2026-07-22
+
+- Correct the historical RC.6 migration guides: no RC.6-compatible npm package was
+  published, and the RC.6 implementation is available only at repository revision
+  `193a4a2`.
+
 ## [4.0.0] - 2026-07-22
 
 - Implement `jsonspecs/spec` 1.0.0-rc.7 and accept only RC.7 snapshots.

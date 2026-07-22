@@ -1,14 +1,18 @@
-# Migration from Rules 3.x / RC.5 to Rules 4.0.0 / RC.6
+# Migration from Rules 3.x / RC.5 to the historical RC.6 implementation
 
-This is the historical guide for the RC.6 revision. The current Rules 4.0.0 package
-targets RC.7; use [MIGRATION_RC7.md](MIGRATION_RC7.md) for the active migration.
-The RC.6 revision had no runtime flag or compatibility profile for RC.5.
+This guide describes repository revision
+[`193a4a2`](https://github.com/jsonspecs/rules/commit/193a4a2), which implemented RC.6
+before the `v4.0.0` release tag was created. The published Rules 4.0.0 package targets
+RC.7; use [MIGRATION_RC7.md](MIGRATION_RC7.md) for the active migration. The RC.6
+revision had no runtime flag or compatibility profile for RC.5.
 
 ## Snapshot
 
 1. Change `specVersion` to `"1.0.0-rc.6"`.
 2. Rebuild the snapshot and recompute `sourceHash` over the complete RC.6 snapshot.
-3. Upgrade the dependency to `@jsonspecs/rules@4.0.0`.
+3. To reproduce the historical behavior, use Rules repository revision `193a4a2`.
+   Do not install the published `@jsonspecs/rules@4.0.0` package for an RC.6 snapshot:
+   that package targets RC.7 and rejects RC.6.
 
 An RC.5 snapshot is rejected with `UNSUPPORTED_SPEC_VERSION`, even when its artifact
 shape is otherwise valid.
