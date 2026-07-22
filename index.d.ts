@@ -9,7 +9,7 @@ export type OperatorRegistry = Record<string, OperatorDefinition>;
 export interface Snapshot {
   format: "jsonspecs-snapshot";
   formatVersion: 2;
-  specVersion: "1.0.0-rc.6";
+  specVersion: "1.0.0-rc.7";
   sourceHash: string;
   exports: string[];
   artifacts: Record<string, Record<string, unknown>>;

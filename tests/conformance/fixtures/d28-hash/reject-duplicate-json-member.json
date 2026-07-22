@@ -1,6 +1,6 @@
 {
   "name": "d28/reject-duplicate-json-member",
-  "snapshotText": "{\"format\":\"jsonspecs-snapshot\",\"format\":\"jsonspecs-snapshot\",\"formatVersion\":2,\"specVersion\":\"1.0.0-rc.6\",\"exports\":[\"checks.main\"],\"artifacts\":{\"checks.main\":{\"type\":\"pipeline\",\"steps\":[\"library.d28.duplicate\"]},\"library.d28.duplicate\":{\"type\":\"rule\",\"operator\":\"not_empty\",\"field\":\"a\",\"issue\":{\"level\":\"ERROR\",\"code\":\"D28.X2\",\"message\":\"failed\"}}},\"sourceHash\":\"0c6794b1a7bcaad8df3a22e6045e05b754b76629d97b0f9695a96b76673a5c8c\"}",
+  "snapshotText": "{\"format\":\"jsonspecs-snapshot\",\"format\":\"jsonspecs-snapshot\",\"formatVersion\":2,\"specVersion\":\"1.0.0-rc.7\",\"exports\":[\"checks.main\"],\"artifacts\":{\"checks.main\":{\"type\":\"pipeline\",\"steps\":[\"library.d28.duplicate\"]},\"library.d28.duplicate\":{\"type\":\"rule\",\"operator\":\"not_empty\",\"field\":\"a\",\"issue\":{\"level\":\"ERROR\",\"code\":\"D28.X2\",\"message\":\"failed\"}}},\"sourceHash\":\"167d89bc2bfdc098852fc24aa3506e1ab522ce91b56afac942e4b709ed2e8b75\"}",
   "operators": [],
   "expected": {
     "verdict": "reject"

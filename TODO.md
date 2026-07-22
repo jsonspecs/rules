@@ -1,6 +1,6 @@
 # Backlog after 4.0.0
 
-These items are deliberately outside the RC.6 normative result and do not block
+These items are deliberately outside the RC.7 normative result and do not block
 4.0.0:
 
 1. Add an optional non-normative trace stream without adding fields to the result.

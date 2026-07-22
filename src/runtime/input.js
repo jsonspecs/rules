@@ -28,7 +28,7 @@ function validateEvaluationInput(state, input) {
 
   // Циклы, разреженные массивы и объекты среды выполнения не входят в I-JSON.
   // Проверяем их отдельным итеративным проходом, чтобы последующие нормативные
-  // сканы всегда завершались и сохраняли приоритет ошибок RC.6 для JSON-деревьев.
+  // сканы всегда завершались и сохраняли приоритет ошибок RC.7 для JSON-деревьев.
   assertHostJsonTree(payload, "INVALID_PAYLOAD");
   assertHostJsonTree(context, "INVALID_CONTEXT");
 

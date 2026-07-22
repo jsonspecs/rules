@@ -4,7 +4,7 @@ This document describes the Node.js implementation in `@jsonspecs/rules`. It is
 not a copy of the behavioral contract and does not redefine it.
 
 Normative behavior is defined by
-[`jsonspecs/spec` 1.0.0-rc.6](https://github.com/jsonspecs/spec/blob/25766710aa0f1fdf33354fa453003f7d819b93d6/SPEC.md).
+[`jsonspecs/spec` 1.0.0-rc.7](https://github.com/jsonspecs/spec/blob/f474b5924b55e20e61a8760f0ea752d630ccdf69/SPEC.md).
 The exact source commit used by the test suite is stored in
 `tests/conformance/spec-commit.txt`.
 
@@ -22,7 +22,8 @@ Ajv. Contracts must enumerate the accepted configuration, `inputs`, and immediat
 3. validate artifact shapes and operator contracts;
 4. parse portable regular expressions and enforce their compilation budgets;
 5. build dictionary membership indexes;
-6. pre-parse wildcard paths into immutable key/index/wildcard tokens;
+6. pre-parse wildcard paths into immutable key/index/wildcard tokens while retaining
+   the exact decimal spelling of every index;
 7. validate exact references, the combined control-flow graph, and closure;
 8. reject unresolved operator names only after independent defects are excluded.
 
@@ -45,7 +46,8 @@ Exact payload and context operands use private flat path projections. Wildcard f
 use a separate structural resolver over the frozen nested payload: it enumerates real
 array indexes in numeric odometer order and retains an absent candidate when only the
 exact suffix after the final wildcard is impassable. An impassable branch before a
-later wildcard produces no synthetic indexes.
+later wildcard produces no synthetic indexes. Array access uses a numeric index only
+when JavaScript can represent it safely; synthesized paths always use the authored text.
 
 Pipeline execution, condition traversal, and nested pipeline calls use explicit stacks
 rather than the JavaScript call stack. Operators receive a frozen invocation containing

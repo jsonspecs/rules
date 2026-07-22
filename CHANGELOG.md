@@ -6,7 +6,7 @@ All notable changes to this project will be documented in this file.
 
 ## [4.0.0] - 2026-07-22
 
-- Implement `jsonspecs/spec` 1.0.0-rc.6 and accept only RC.6 snapshots.
+- Implement `jsonspecs/spec` 1.0.0-rc.7 and accept only RC.7 snapshots.
 - Replace flat-leaf wildcard matching with structural candidate expansion over real
   nested payload arrays.
 - Preserve absent concrete paths after the final wildcard so presence rules can report
@@ -18,11 +18,11 @@ All notable changes to this project will be documented in this file.
 - Preserve the exact decimal spelling of exact index tokens in synthesized wildcard
   issue paths, including indices outside the binary64 safe-integer range.
 - Preserve exhaustive ALL/ANY/COUNT evaluation, all-`SKIP` behavior, `onEmpty`, and
-  aggregate counters over the RC.6 structural population.
-- Reject RC.5 snapshots with `UNSUPPORTED_SPEC_VERSION` and provide an RC.6 migration
-  guide without a compatibility profile.
+  aggregate counters over the RC.7 structural population.
+- Reject RC.6 and older snapshots with `UNSUPPORTED_SPEC_VERSION` and provide an
+  RC.7 migration guide without a compatibility profile.
 - Vendor and pass all 309 normative conformance fixtures from spec commit
-  `25766710aa0f1fdf33354fa453003f7d819b93d6`.
+  `f474b5924b55e20e61a8760f0ea752d630ccdf69`.
 
 ## [3.0.0] - 2026-07-22
 

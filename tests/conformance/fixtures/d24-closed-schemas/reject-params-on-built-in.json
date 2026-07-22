@@ -3,7 +3,7 @@
   "snapshot": {
     "format": "jsonspecs-snapshot",
     "formatVersion": 2,
-    "specVersion": "1.0.0-rc.6",
+    "specVersion": "1.0.0-rc.7",
     "exports": [
       "checks.main"
     ],
@@ -28,7 +28,7 @@
         }
       }
     },
-    "sourceHash": "223a51611a593260f55a2cd4fa9b6ad24058bffe40ea48b182ace4f254c77eaa"
+    "sourceHash": "923964e27efe755730c1cb4c3f6afc1a1b226b9fac27f3d2149391650d7e7547"
   },
   "operators": [],
   "expected": {

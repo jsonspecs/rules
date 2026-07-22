@@ -1,12 +1,12 @@
 "use strict";
 
-/** Регрессии перехода с RC.5 на структурные wildcard-кандидаты RC.6. */
+/** Регрессии поддержки RC.7 и отказа от предыдущей specVersion. */
 
 const test = require("node:test");
 const assert = require("node:assert/strict");
 const { compileSnapshot, computeSourceHash, runPipeline, CompilationError } = require("..");
 
-function snapshot(specVersion = "1.0.0-rc.6", field = "items[*].sku") {
+function snapshot(specVersion = "1.0.0-rc.7", field = "items[*].sku") {
   const value = {
     format: "jsonspecs-snapshot",
     formatVersion: 2,
@@ -27,9 +27,9 @@ function snapshot(specVersion = "1.0.0-rc.6", field = "items[*].sku") {
   return value;
 }
 
-test("Rules 4.0.0 отклоняет snapshot RC.5", () => {
+test("Rules 4.0.0 отклоняет snapshot RC.6", () => {
   assert.throws(
-    () => compileSnapshot(snapshot("1.0.0-rc.5")),
+    () => compileSnapshot(snapshot("1.0.0-rc.6")),
     (error) => error instanceof CompilationError
       && error.diagnostics[0]?.code === "UNSUPPORTED_SPEC_VERSION",
   );
@@ -53,7 +53,7 @@ test("отсутствующий дочерний field сохраняет concr
 });
 
 test("большой точный индекс сохраняет исходный текст в concrete wildcard path", () => {
-  const prepared = compileSnapshot(snapshot("1.0.0-rc.6", "items[*][9007199254740993].sku"));
+  const prepared = compileSnapshot(snapshot("1.0.0-rc.7", "items[*][9007199254740993].sku"));
   const result = runPipeline(prepared, { pipelineId: "p", payload: { items: [[]] } });
 
   assert.equal(result.status, "ERROR");

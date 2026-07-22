@@ -8,7 +8,7 @@ const { compileSnapshot, runPipeline, computeSourceHash } = require("../..");
 const snapshot = {
   format: "jsonspecs-snapshot",
   formatVersion: 2,
-  specVersion: "1.0.0-rc.6",
+  specVersion: "1.0.0-rc.7",
   exports: ["registration.pipeline"],
   artifacts: {
     "registration.pipeline": {

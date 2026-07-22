@@ -1,7 +1,8 @@
 # Migration from Rules 3.x / RC.5 to Rules 4.0.0 / RC.6
 
-Rules 4.0.0 supports only `jsonspecs/spec` 1.0.0-rc.6. It has no runtime flag or
-compatibility profile for RC.5.
+This is the historical guide for the RC.6 revision. The current Rules 4.0.0 package
+targets RC.7; use [MIGRATION_RC7.md](MIGRATION_RC7.md) for the active migration.
+The RC.6 revision had no runtime flag or compatibility profile for RC.5.
 
 ## Snapshot
 
@@ -38,5 +39,5 @@ field for every existing item. Keep collection-emptiness checks in their existin
 business rule.
 
 The complete behavior is defined by the pinned
-[RC.6 specification](https://github.com/jsonspecs/spec/blob/25766710aa0f1fdf33354fa453003f7d819b93d6/SPEC.md)
-and its [migration guide](https://github.com/jsonspecs/spec/blob/25766710aa0f1fdf33354fa453003f7d819b93d6/MIGRATION_RC6.md).
+[RC.6 specification](https://github.com/jsonspecs/spec/blob/d75024047437ce0119a28c6ceda818eb79c4f302/SPEC.md)
+and its [migration guide](https://github.com/jsonspecs/spec/blob/d75024047437ce0119a28c6ceda818eb79c4f302/MIGRATION_RC6.md).

@@ -3,7 +3,7 @@
   "snapshot": {
     "format": "jsonspecs-snapshot",
     "formatVersion": 2,
-    "specVersion": "1.0.0-rc.6",
+    "specVersion": "1.0.0-rc.7",
     "artifacts": {
       "checks.main": {
         "type": "pipeline",
@@ -22,7 +22,7 @@
         }
       }
     },
-    "sourceHash": "c95818dc542bab2fe668819a2a7e77fda518029fa9f3cb92774ae53acea097dc"
+    "sourceHash": "94c1d2d5ed8c0a5a9bfe08861347b7074351100c7fb3fe82c5bd93c31d695480"
   },
   "operators": [],
   "expected": {

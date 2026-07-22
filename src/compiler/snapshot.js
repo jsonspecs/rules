@@ -12,7 +12,7 @@ const { cloneIJson, isPlainObject, deepFreeze } = require("../json/i-json");
 const { computeSourceHash, compareUtf16 } = require("../json/jcs");
 const { reject, safeErrorString } = require("../errors");
 
-const SUPPORTED_SPEC_VERSIONS = Object.freeze(["1.0.0-rc.6"]);
+const SUPPORTED_SPEC_VERSIONS = Object.freeze(["1.0.0-rc.7"]);
 const SNAPSHOT_KEYS = new Set(["format", "formatVersion", "specVersion", "sourceHash", "exports", "artifacts"]);
 
 function prepareSnapshot(input) {

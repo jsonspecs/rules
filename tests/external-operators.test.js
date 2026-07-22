@@ -26,7 +26,7 @@ const definition = {
 
 function snapshot(extra = {}) {
   const value = {
-    format: "jsonspecs-snapshot", formatVersion: 2, specVersion: "1.0.0-rc.6", exports: ["p"],
+    format: "jsonspecs-snapshot", formatVersion: 2, specVersion: "1.0.0-rc.7", exports: ["p"],
     artifacts: {
       p: { type: "pipeline", steps: ["r"] },
       r: {

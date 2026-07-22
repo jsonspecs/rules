@@ -15,7 +15,7 @@ Patterns and dictionaries: `matches_regex`, `not_matches_regex`, `in_dictionary`
 `not_in_dictionary`.
 
 Exact operand schemas and semantics are normative in the
-[`jsonspecs/spec` operator section](https://github.com/jsonspecs/spec/blob/25766710aa0f1fdf33354fa453003f7d819b93d6/SPEC.md#3-operators).
+[`jsonspecs/spec` operator section](https://github.com/jsonspecs/spec/blob/f474b5924b55e20e61a8760f0ea752d630ccdf69/SPEC.md#3-operators).
 
 ## External definition
 
@@ -41,7 +41,7 @@ member with value `null`.
 Operator functions must be synchronous and deterministic. They must not read time,
 locale, network, process globals, or mutate inputs. Cross-runtime operator packs
 publish equivalent schemas and shared golden vectors as defined by the
-[behavior specification](https://github.com/jsonspecs/spec/blob/25766710aa0f1fdf33354fa453003f7d819b93d6/SPEC.md).
+[behavior specification](https://github.com/jsonspecs/spec/blob/f474b5924b55e20e61a8760f0ea752d630ccdf69/SPEC.md).
 
 `builtInOperators` exposes deeply frozen definitions for inspection. Neither their
 schemas nor nested schema members can be changed by consumers.

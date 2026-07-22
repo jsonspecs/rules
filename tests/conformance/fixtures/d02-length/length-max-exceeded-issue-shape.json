@@ -3,7 +3,7 @@
   "snapshot": {
     "format": "jsonspecs-snapshot",
     "formatVersion": 2,
-    "specVersion": "1.0.0-rc.6",
+    "specVersion": "1.0.0-rc.7",
     "exports": [
       "checks.main"
     ],
@@ -26,7 +26,7 @@
         }
       }
     },
-    "sourceHash": "e768d4d9d05d45e82e0996526c8a74e30daf585c94879872d091b6e61721709d"
+    "sourceHash": "0cc979429c72026932b4d93488b86c09aa8e2b320610005e3f9403f94719cc74"
   },
   "operators": [],
   "input": {
@@ -50,8 +50,8 @@
       }
     ],
     "ruleset": {
-      "specVersion": "1.0.0-rc.6",
-      "sourceHash": "e768d4d9d05d45e82e0996526c8a74e30daf585c94879872d091b6e61721709d"
+      "specVersion": "1.0.0-rc.7",
+      "sourceHash": "0cc979429c72026932b4d93488b86c09aa8e2b320610005e3f9403f94719cc74"
     }
   }
 }

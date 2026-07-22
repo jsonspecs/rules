@@ -4,13 +4,14 @@
 
 - Source repository: `jsonspecs/rules`
 - Base commit: `4b4d6fe42e9972e730648f71a6db49b733f201bf`
-- Target specification: `jsonspecs/spec` 1.0.0-rc.6
-- Specification commit: `25766710aa0f1fdf33354fa453003f7d819b93d6`
+- Target specification: `jsonspecs/spec` 1.0.0-rc.7
+- Specification commit: `f474b5924b55e20e61a8760f0ea752d630ccdf69`
 
-The specification and technical brief agree on the release boundary: RC.6 changes
-only wildcard population construction and keeps the DSL and operator boundary closed.
-All 309 normative fixtures pass. `any_filled.fields[]` still rejects wildcard paths
-because aggregation is defined only for the primary `field` operand.
+RC.7 is an exact-index portability erratum over the immutable RC.6 release. It keeps
+the DSL and operator boundary closed while requiring an authored decimal index to
+survive compilation and concrete-path synthesis unchanged. All 309 normative fixtures
+pass. `any_filled.fields[]` still rejects wildcard paths because aggregation is defined
+only for the primary `field` operand.
 
 ## Architecture
 
@@ -27,7 +28,7 @@ comments inside the code explain ordering, portability and security invariants.
 
 ## Verification
 
-- 24 package and hostile-JS regression tests include RC.5 rejection, structural absent
+- 24 package and hostile-JS regression tests include RC.6 rejection, structural absent
   paths, exact large-index preservation, immutable built-ins,
   self-throwing proxies, cyclic host values, huge sparse arrays, shared references
   and a 10,000-pipeline graph.
@@ -39,8 +40,8 @@ comments inside the code explain ordering, portability and security invariants.
 
 ## Deliberate boundaries
 
-- Only snapshot formatVersion 2 and specVersion 1.0.0-rc.6 are accepted; there is no
-  RC.5 compatibility profile.
+- Only snapshot formatVersion 2 and specVersion 1.0.0-rc.7 are accepted; there is no
+  RC.6 compatibility profile.
 - fv1 migration belongs to `@jsonspecs/cli`; v4 runtime contains no compatibility
   interpreter.
 - External operator business equivalence remains the operator pack's contract and

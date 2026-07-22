@@ -1,7 +1,7 @@
 "use strict";
 
 /**
- * Прогон нормативного приложения jsonspecs/spec 1.0.0-rc.6.
+ * Прогон нормативного приложения jsonspecs/spec 1.0.0-rc.7.
  *
  * Фикстуры привязаны к commit из tests/conformance/spec-commit.txt. Для каждого
  * файла создаётся registry ровно из `operators[]`: так проверяется относительная

@@ -1,6 +1,6 @@
 {
   "name": "d28/reject-lone-surrogate",
-  "snapshotText": "{\"format\":\"jsonspecs-snapshot\",\"formatVersion\":2,\"specVersion\":\"1.0.0-rc.6\",\"exports\":[\"checks.main\"],\"artifacts\":{\"checks.main\":{\"type\":\"pipeline\",\"steps\":[\"library.d28.surrogate\"]},\"library.d28.surrogate\":{\"type\":\"rule\",\"operator\":\"not_empty\",\"field\":\"a\",\"issue\":{\"level\":\"ERROR\",\"code\":\"D28.X3\",\"message\":\"\\ud800\"}}},\"sourceHash\":\"949477523196375772944f7552464003f026e1ec1a2b43b8385c45f1e2596c7b\"}",
+  "snapshotText": "{\"format\":\"jsonspecs-snapshot\",\"formatVersion\":2,\"specVersion\":\"1.0.0-rc.7\",\"exports\":[\"checks.main\"],\"artifacts\":{\"checks.main\":{\"type\":\"pipeline\",\"steps\":[\"library.d28.surrogate\"]},\"library.d28.surrogate\":{\"type\":\"rule\",\"operator\":\"not_empty\",\"field\":\"a\",\"issue\":{\"level\":\"ERROR\",\"code\":\"D28.X3\",\"message\":\"\\ud800\"}}},\"sourceHash\":\"0859b2b033b9b3fe1e25c82790553aa259595f218162bbccd777e701b1af1bfc\"}",
   "operators": [],
   "expected": {
     "verdict": "reject"

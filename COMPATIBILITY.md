@@ -1,10 +1,10 @@
 # Compatibility contract
 
-`@jsonspecs/rules` 4.0.0 implements `jsonspecs/spec` 1.0.0-rc.6 and accepts only
+`@jsonspecs/rules` 4.0.0 implements `jsonspecs/spec` 1.0.0-rc.7 and accepts only
 snapshot `formatVersion: 2`. The normative behavior is the projection defined by
-the [upstream specification](https://github.com/jsonspecs/spec/blob/25766710aa0f1fdf33354fa453003f7d819b93d6/SPEC.md).
+the [upstream specification](https://github.com/jsonspecs/spec/blob/f474b5924b55e20e61a8760f0ea752d630ccdf69/SPEC.md).
 The vendored 309-fixture suite is pinned to spec commit
-`25766710aa0f1fdf33354fa453003f7d819b93d6` and is compared byte for byte with a
+`f474b5924b55e20e61a8760f0ea752d630ccdf69` and is compared byte for byte with a
 checkout of that commit before execution.
 
 The semver-stable package-root API is `createEngine`, `builtInOperators`,
@@ -25,6 +25,6 @@ External operators use the synchronous `{schema,evaluate}` boundary documented i
 schema handling, result fields, accepted snapshot set, or any normative specification
 behavior is a breaking change.
 
-Version 4 has no RC.5 compatibility profile. A snapshot declaring
-`specVersion: "1.0.0-rc.5"` is rejected with `UNSUPPORTED_SPEC_VERSION`; consumers
-must rebuild the snapshot with RC.6 and recompute `sourceHash`.
+Version 4 has no RC.6 compatibility profile. A snapshot declaring
+`specVersion: "1.0.0-rc.6"` is rejected with `UNSUPPORTED_SPEC_VERSION`; consumers
+must rebuild the snapshot with RC.7 and recompute `sourceHash`.
