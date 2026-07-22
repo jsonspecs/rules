@@ -1,0 +1,44 @@
+{
+  "name": "d24/reject-unknown-dictionary-entry-field",
+  "snapshot": {
+    "format": "jsonspecs-snapshot",
+    "formatVersion": 2,
+    "specVersion": "1.0.0-rc.5",
+    "exports": [
+      "checks.main"
+    ],
+    "artifacts": {
+      "checks.main": {
+        "type": "pipeline",
+        "steps": [
+          "library.d24.dictentry"
+        ]
+      },
+      "dictionary": {
+        "type": "dictionary",
+        "entries": [
+          {
+            "code": "X",
+            "unknown": true
+          }
+        ]
+      },
+      "library.d24.dictentry": {
+        "type": "rule",
+        "operator": "in_dictionary",
+        "field": "a",
+        "dictionary": "dictionary",
+        "issue": {
+          "level": "ERROR",
+          "code": "D24.X7",
+          "message": "failed"
+        }
+      }
+    },
+    "sourceHash": "5a5f30baf88094f78ac2b6ea0116e98c29b727816cb132b17c7075ff5c82a4e6"
+  },
+  "operators": [],
+  "expected": {
+    "verdict": "reject"
+  }
+}

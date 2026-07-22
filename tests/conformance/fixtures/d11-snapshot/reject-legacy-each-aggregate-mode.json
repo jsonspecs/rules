@@ -1,0 +1,39 @@
+{
+  "name": "d11/reject-legacy-each-aggregate-mode",
+  "snapshot": {
+    "format": "jsonspecs-snapshot",
+    "formatVersion": 2,
+    "specVersion": "1.0.0-rc.5",
+    "exports": [
+      "checks.main"
+    ],
+    "artifacts": {
+      "checks.main": {
+        "type": "pipeline",
+        "steps": [
+          "library.d20.bad5"
+        ]
+      },
+      "library.d20.bad5": {
+        "type": "rule",
+        "operator": "greater_than",
+        "field": "x[*].v",
+        "value": 1,
+        "aggregate": {
+          "mode": "EACH",
+          "issueMode": "EACH"
+        },
+        "issue": {
+          "level": "ERROR",
+          "code": "D20.X5",
+          "message": "failed"
+        }
+      }
+    },
+    "sourceHash": "efa022383d48fb2d2fc1dc892bfd8cecfee6bb6fdb1b9b256b5117a53f0b4c84"
+  },
+  "operators": [],
+  "expected": {
+    "verdict": "reject"
+  }
+}

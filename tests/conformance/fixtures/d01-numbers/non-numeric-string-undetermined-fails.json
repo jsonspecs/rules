@@ -1,0 +1,57 @@
+{
+  "name": "d01/non-numeric-string-undetermined-fails",
+  "snapshot": {
+    "format": "jsonspecs-snapshot",
+    "formatVersion": 2,
+    "specVersion": "1.0.0-rc.5",
+    "exports": [
+      "checks.main"
+    ],
+    "artifacts": {
+      "checks.main": {
+        "type": "pipeline",
+        "steps": [
+          "library.n.gt2"
+        ]
+      },
+      "library.n.gt2": {
+        "type": "rule",
+        "operator": "greater_than",
+        "field": "a",
+        "value": 10,
+        "issue": {
+          "level": "ERROR",
+          "code": "N3",
+          "message": "failed"
+        }
+      }
+    },
+    "sourceHash": "34777a9003e835267f83a721c50398a19386c18060641eeeb534ff3aba58da6a"
+  },
+  "operators": [],
+  "input": {
+    "pipelineId": "checks.main",
+    "payload": {
+      "a": "10 "
+    }
+  },
+  "expected": {
+    "status": "ERROR",
+    "issues": [
+      {
+        "level": "ERROR",
+        "code": "N3",
+        "message": "failed",
+        "field": "a",
+        "ruleId": "library.n.gt2",
+        "pipelineId": "checks.main",
+        "expected": 10,
+        "actual": "10 "
+      }
+    ],
+    "ruleset": {
+      "specVersion": "1.0.0-rc.5",
+      "sourceHash": "34777a9003e835267f83a721c50398a19386c18060641eeeb534ff3aba58da6a"
+    }
+  }
+}

@@ -1,0 +1,46 @@
+{
+  "name": "d04/escaped-hyphen-in-class-is-literal",
+  "snapshot": {
+    "format": "jsonspecs-snapshot",
+    "formatVersion": 2,
+    "specVersion": "1.0.0-rc.5",
+    "exports": [
+      "checks.main"
+    ],
+    "artifacts": {
+      "checks.main": {
+        "type": "pipeline",
+        "steps": [
+          "library.r.hyphen.ok"
+        ]
+      },
+      "library.r.hyphen.ok": {
+        "type": "rule",
+        "operator": "matches_regex",
+        "field": "a",
+        "value": "^[\\-a]$",
+        "issue": {
+          "level": "ERROR",
+          "code": "R17",
+          "message": "failed"
+        }
+      }
+    },
+    "sourceHash": "98a027ecece8ddbb9e27fd8375d5c2654a6dd2f3c1a7b7417037baef307f1d92"
+  },
+  "operators": [],
+  "input": {
+    "pipelineId": "checks.main",
+    "payload": {
+      "a": "-"
+    }
+  },
+  "expected": {
+    "status": "OK",
+    "issues": [],
+    "ruleset": {
+      "specVersion": "1.0.0-rc.5",
+      "sourceHash": "98a027ecece8ddbb9e27fd8375d5c2654a6dd2f3c1a7b7417037baef307f1d92"
+    }
+  }
+}

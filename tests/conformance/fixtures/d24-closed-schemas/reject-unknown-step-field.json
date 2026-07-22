@@ -1,0 +1,37 @@
+{
+  "name": "d24/reject-unknown-step-field",
+  "snapshot": {
+    "format": "jsonspecs-snapshot",
+    "formatVersion": 2,
+    "specVersion": "1.0.0-rc.5",
+    "exports": [
+      "checks.main"
+    ],
+    "artifacts": {
+      "checks.main": {
+        "type": "pipeline",
+        "steps": [
+          {
+            "rule": "library.d24.step",
+            "unknown": true
+          }
+        ]
+      },
+      "library.d24.step": {
+        "type": "rule",
+        "operator": "not_empty",
+        "field": "a",
+        "issue": {
+          "level": "ERROR",
+          "code": "D24.X9",
+          "message": "failed"
+        }
+      }
+    },
+    "sourceHash": "cc516a69a922ffbf6f132ff70a4b03c508fbec4412a6482e3686e3ffdec02b7b"
+  },
+  "operators": [],
+  "expected": {
+    "verdict": "reject"
+  }
+}

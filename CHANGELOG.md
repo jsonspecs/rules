@@ -1,5 +1,24 @@
 # Changelog
 
+## 3.0.0
+
+- Implement `jsonspecs/spec` 1.0.0-rc.5 and snapshot formatVersion 2.
+- Unify check/predicate operators into PASS/FAIL/SKIP and add closed JSON Schema
+  contracts for external operators.
+- Replace fv1 source arrays, scopes and entrypoints with opaque artifact maps,
+  exact references, explicit exports, full closure and a combined DAG.
+- Add strict I-JSON parsing, binary64 guards, JCS whole-snapshot hashing and the
+  closed normative result contract.
+- Execute the portable regex language through `re2-wasm`.
+- Deep-freeze exported built-in operator definitions and their nested schemas.
+- Reject cyclic host values and huge sparse arrays without blocking evaluation.
+- Replace recursive control-flow traversal and execution with explicit stacks so valid
+  deep graphs do not depend on the Node.js call-stack limit.
+- Vendor and pass all 267 normative conformance fixtures from spec commit
+  `0dbd42533f46541c69dcb17eb52bd2fdae9e8a42`.
+- Remove legacy `role`, `strict`, `control`, trace-in-result, `payload.__context`,
+  `required_context`, object steps and formatVersion 1 compilation.
+
 All notable changes to this project will be documented in this file.
 
 ## [Unreleased]

@@ -1,0 +1,43 @@
+{
+  "name": "d11/reject-partial-issue-object",
+  "snapshot": {
+    "format": "jsonspecs-snapshot",
+    "formatVersion": 2,
+    "specVersion": "1.0.0-rc.5",
+    "exports": [
+      "checks.main"
+    ],
+    "artifacts": {
+      "checks.main": {
+        "type": "pipeline",
+        "steps": [
+          "library.x.ok"
+        ]
+      },
+      "library.x.ok": {
+        "type": "rule",
+        "operator": "not_empty",
+        "field": "a",
+        "issue": {
+          "level": "ERROR",
+          "code": "X6",
+          "message": "failed"
+        }
+      },
+      "library.x.p": {
+        "type": "rule",
+        "operator": "not_empty",
+        "field": "a",
+        "issue": {
+          "code": "NOPE",
+          "message": "failed"
+        }
+      }
+    },
+    "sourceHash": "81630670702249622e5cdee49937fea1bec5339453b262100fd45b635f5fc46a"
+  },
+  "operators": [],
+  "expected": {
+    "verdict": "reject"
+  }
+}

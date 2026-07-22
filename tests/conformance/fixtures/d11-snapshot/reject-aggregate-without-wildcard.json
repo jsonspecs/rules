@@ -1,0 +1,39 @@
+{
+  "name": "d11/reject-aggregate-without-wildcard",
+  "snapshot": {
+    "format": "jsonspecs-snapshot",
+    "formatVersion": 2,
+    "specVersion": "1.0.0-rc.5",
+    "exports": [
+      "checks.main"
+    ],
+    "artifacts": {
+      "checks.main": {
+        "type": "pipeline",
+        "steps": [
+          "library.x.aw"
+        ]
+      },
+      "library.x.aw": {
+        "type": "rule",
+        "operator": "greater_than",
+        "field": "a",
+        "value": 1,
+        "aggregate": {
+          "mode": "ALL",
+          "issueMode": "EACH"
+        },
+        "issue": {
+          "level": "ERROR",
+          "code": "X14",
+          "message": "failed"
+        }
+      }
+    },
+    "sourceHash": "a7ca7bbee555523cd314155858aeb4c757420d8836abdc9379bf621411e6c10b"
+  },
+  "operators": [],
+  "expected": {
+    "verdict": "reject"
+  }
+}

@@ -1,0 +1,40 @@
+{
+  "name": "d11/reject-legacy-on-empty-value",
+  "snapshot": {
+    "format": "jsonspecs-snapshot",
+    "formatVersion": 2,
+    "specVersion": "1.0.0-rc.5",
+    "exports": [
+      "checks.main"
+    ],
+    "artifacts": {
+      "checks.main": {
+        "type": "pipeline",
+        "steps": [
+          "library.x.oe"
+        ]
+      },
+      "library.x.oe": {
+        "type": "rule",
+        "operator": "greater_than",
+        "field": "x[*].v",
+        "value": 1,
+        "aggregate": {
+          "mode": "ALL",
+          "issueMode": "EACH",
+          "onEmpty": "TRUE"
+        },
+        "issue": {
+          "level": "ERROR",
+          "code": "X11",
+          "message": "failed"
+        }
+      }
+    },
+    "sourceHash": "7828fb982825e2c637a328afdb372d0f31b9be445bd2ecd1cd0d5146339bbdb4"
+  },
+  "operators": [],
+  "expected": {
+    "verdict": "reject"
+  }
+}

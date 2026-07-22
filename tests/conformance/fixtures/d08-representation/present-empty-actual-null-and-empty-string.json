@@ -1,0 +1,76 @@
+{
+  "name": "d08/present-empty-actual-null-and-empty-string",
+  "snapshot": {
+    "format": "jsonspecs-snapshot",
+    "formatVersion": 2,
+    "specVersion": "1.0.0-rc.5",
+    "exports": [
+      "checks.main"
+    ],
+    "artifacts": {
+      "checks.main": {
+        "type": "pipeline",
+        "steps": [
+          "library.p.n",
+          "library.p.e"
+        ]
+      },
+      "library.p.e": {
+        "type": "rule",
+        "operator": "not_empty",
+        "field": "b",
+        "issue": {
+          "level": "ERROR",
+          "code": "P3",
+          "message": "failed"
+        }
+      },
+      "library.p.n": {
+        "type": "rule",
+        "operator": "not_empty",
+        "field": "a",
+        "issue": {
+          "level": "ERROR",
+          "code": "P2",
+          "message": "failed"
+        }
+      }
+    },
+    "sourceHash": "1159df60c424d0a06f44c4eafc99a2b433ca226eb4cf1901776a010419ac4d4c"
+  },
+  "operators": [],
+  "input": {
+    "pipelineId": "checks.main",
+    "payload": {
+      "a": null,
+      "b": ""
+    }
+  },
+  "expected": {
+    "status": "ERROR",
+    "issues": [
+      {
+        "level": "ERROR",
+        "code": "P2",
+        "message": "failed",
+        "field": "a",
+        "ruleId": "library.p.n",
+        "pipelineId": "checks.main",
+        "actual": null
+      },
+      {
+        "level": "ERROR",
+        "code": "P3",
+        "message": "failed",
+        "field": "b",
+        "ruleId": "library.p.e",
+        "pipelineId": "checks.main",
+        "actual": ""
+      }
+    ],
+    "ruleset": {
+      "specVersion": "1.0.0-rc.5",
+      "sourceHash": "1159df60c424d0a06f44c4eafc99a2b433ca226eb4cf1901776a010419ac4d4c"
+    }
+  }
+}

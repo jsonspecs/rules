@@ -1,0 +1,37 @@
+{
+  "name": "d26/reject-legacy-step-id",
+  "snapshot": {
+    "format": "jsonspecs-snapshot",
+    "formatVersion": 2,
+    "specVersion": "1.0.0-rc.5",
+    "exports": [
+      "checks.main"
+    ],
+    "artifacts": {
+      "checks.main": {
+        "type": "pipeline",
+        "steps": [
+          {
+            "rule": "library.d26.step-id",
+            "stepId": "legacy"
+          }
+        ]
+      },
+      "library.d26.step-id": {
+        "type": "rule",
+        "operator": "not_empty",
+        "field": "a",
+        "issue": {
+          "level": "ERROR",
+          "code": "D26.X4",
+          "message": "failed"
+        }
+      }
+    },
+    "sourceHash": "c632930e81012411f6cc17c56163a667916b8dbbe129318dbab969b88f0d7e21"
+  },
+  "operators": [],
+  "expected": {
+    "verdict": "reject"
+  }
+}

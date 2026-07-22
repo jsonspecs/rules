@@ -1,0 +1,66 @@
+{
+  "name": "sem/condition-guard-true-runs-steps",
+  "snapshot": {
+    "format": "jsonspecs-snapshot",
+    "formatVersion": 2,
+    "specVersion": "1.0.0-rc.5",
+    "exports": [
+      "checks.main"
+    ],
+    "artifacts": {
+      "checks.main": {
+        "type": "pipeline",
+        "steps": [
+          "library.cond.g"
+        ]
+      },
+      "library.cond.g": {
+        "type": "condition",
+        "when": "library.se.p1",
+        "steps": [
+          "library.se.c1"
+        ]
+      },
+      "library.se.c1": {
+        "type": "rule",
+        "operator": "not_empty",
+        "field": "a",
+        "issue": {
+          "level": "ERROR",
+          "code": "SE1",
+          "message": "failed"
+        }
+      },
+      "library.se.p1": {
+        "type": "rule",
+        "operator": "not_empty",
+        "field": "trigger"
+      }
+    },
+    "sourceHash": "f0e907dd80c994f5b3e11884aede1985231080f5d49431bf116600f4cfc6e28a"
+  },
+  "operators": [],
+  "input": {
+    "pipelineId": "checks.main",
+    "payload": {
+      "trigger": "x"
+    }
+  },
+  "expected": {
+    "status": "ERROR",
+    "issues": [
+      {
+        "level": "ERROR",
+        "code": "SE1",
+        "message": "failed",
+        "field": "a",
+        "ruleId": "library.se.c1",
+        "pipelineId": "checks.main"
+      }
+    ],
+    "ruleset": {
+      "specVersion": "1.0.0-rc.5",
+      "sourceHash": "f0e907dd80c994f5b3e11884aede1985231080f5d49431bf116600f4cfc6e28a"
+    }
+  }
+}

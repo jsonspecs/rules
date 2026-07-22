@@ -1,0 +1,79 @@
+{
+  "name": "d19/all-builtins-are-usable-in-when",
+  "snapshot": {
+    "format": "jsonspecs-snapshot",
+    "formatVersion": 2,
+    "specVersion": "1.0.0-rc.5",
+    "exports": [
+      "checks.main"
+    ],
+    "artifacts": {
+      "checks.main": {
+        "type": "pipeline",
+        "steps": [
+          "library.d19.formerly-blocked"
+        ]
+      },
+      "library.d19.allowed": {
+        "type": "rule",
+        "operator": "not_empty",
+        "field": "required",
+        "issue": {
+          "level": "ERROR",
+          "code": "D19.4",
+          "message": "failed"
+        }
+      },
+      "library.d19.any": {
+        "type": "rule",
+        "operator": "any_filled",
+        "fields": [
+          "email",
+          "phone"
+        ]
+      },
+      "library.d19.formerly-blocked": {
+        "type": "condition",
+        "when": {
+          "all": [
+            "library.d19.any",
+            "library.d19.nottrue"
+          ]
+        },
+        "steps": [
+          "library.d19.allowed"
+        ]
+      },
+      "library.d19.nottrue": {
+        "type": "rule",
+        "operator": "not_true",
+        "field": "blocked"
+      }
+    },
+    "sourceHash": "9d7767cd9a3a94ea36711625767c6c3a42aba790399c4c0ebd1b0d92e59d7d23"
+  },
+  "operators": [],
+  "input": {
+    "pipelineId": "checks.main",
+    "payload": {
+      "email": "x@example.test"
+    }
+  },
+  "expected": {
+    "status": "ERROR",
+    "issues": [
+      {
+        "level": "ERROR",
+        "code": "D19.4",
+        "message": "failed",
+        "field": "required",
+        "ruleId": "library.d19.allowed",
+        "pipelineId": "checks.main"
+      }
+    ],
+    "ruleset": {
+      "specVersion": "1.0.0-rc.5",
+      "sourceHash": "9d7767cd9a3a94ea36711625767c6c3a42aba790399c4c0ebd1b0d92e59d7d23"
+    }
+  }
+}

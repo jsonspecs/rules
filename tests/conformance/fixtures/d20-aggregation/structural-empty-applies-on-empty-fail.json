@@ -1,0 +1,67 @@
+{
+  "name": "d20/structural-empty-applies-on-empty-fail",
+  "snapshot": {
+    "format": "jsonspecs-snapshot",
+    "formatVersion": 2,
+    "specVersion": "1.0.0-rc.5",
+    "exports": [
+      "checks.main"
+    ],
+    "artifacts": {
+      "checks.main": {
+        "type": "pipeline",
+        "steps": [
+          "library.d20.empty"
+        ]
+      },
+      "library.d20.empty": {
+        "type": "rule",
+        "operator": "conformance.rule.tri",
+        "field": "items[*].result",
+        "aggregate": {
+          "mode": "ANY",
+          "issueMode": "SUMMARY",
+          "onEmpty": "FAIL"
+        },
+        "issue": {
+          "level": "ERROR",
+          "code": "D20.6",
+          "message": "failed"
+        }
+      }
+    },
+    "sourceHash": "541ef188af6e7e0baaeedd1bc54ab3121ed1296607b3de30ac9fdc170c9ca9b9"
+  },
+  "operators": [
+    "conformance.rule.tri"
+  ],
+  "input": {
+    "pipelineId": "checks.main",
+    "payload": {}
+  },
+  "expected": {
+    "status": "ERROR",
+    "issues": [
+      {
+        "level": "ERROR",
+        "code": "D20.6",
+        "message": "failed",
+        "field": "items[*].result",
+        "ruleId": "library.d20.empty",
+        "pipelineId": "checks.main",
+        "details": {
+          "mode": "ANY",
+          "matched": 0,
+          "evaluated": 0,
+          "skipped": 0,
+          "passed": 0,
+          "failed": 0
+        }
+      }
+    ],
+    "ruleset": {
+      "specVersion": "1.0.0-rc.5",
+      "sourceHash": "541ef188af6e7e0baaeedd1bc54ab3121ed1296607b3de30ac9fdc170c9ca9b9"
+    }
+  }
+}

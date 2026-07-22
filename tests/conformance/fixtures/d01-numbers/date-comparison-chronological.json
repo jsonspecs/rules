@@ -1,0 +1,46 @@
+{
+  "name": "d01/date-comparison-chronological",
+  "snapshot": {
+    "format": "jsonspecs-snapshot",
+    "formatVersion": 2,
+    "specVersion": "1.0.0-rc.5",
+    "exports": [
+      "checks.main"
+    ],
+    "artifacts": {
+      "checks.main": {
+        "type": "pipeline",
+        "steps": [
+          "library.n.lt"
+        ]
+      },
+      "library.n.lt": {
+        "type": "rule",
+        "operator": "less_than",
+        "field": "a",
+        "value": "2026-12-31",
+        "issue": {
+          "level": "ERROR",
+          "code": "N4",
+          "message": "failed"
+        }
+      }
+    },
+    "sourceHash": "894b52f9fec4686427271f2129487a2e7509c75d992cddda2df9feb478a5f8df"
+  },
+  "operators": [],
+  "input": {
+    "pipelineId": "checks.main",
+    "payload": {
+      "a": "2026-07-21"
+    }
+  },
+  "expected": {
+    "status": "OK",
+    "issues": [],
+    "ruleset": {
+      "specVersion": "1.0.0-rc.5",
+      "sourceHash": "894b52f9fec4686427271f2129487a2e7509c75d992cddda2df9feb478a5f8df"
+    }
+  }
+}

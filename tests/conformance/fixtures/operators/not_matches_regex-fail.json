@@ -1,0 +1,57 @@
+{
+  "name": "operators/not_matches_regex-fail",
+  "snapshot": {
+    "format": "jsonspecs-snapshot",
+    "formatVersion": 2,
+    "specVersion": "1.0.0-rc.5",
+    "exports": [
+      "checks.main"
+    ],
+    "artifacts": {
+      "builtin.not_matches_regex": {
+        "type": "rule",
+        "operator": "not_matches_regex",
+        "field": "a",
+        "value": "^x$",
+        "issue": {
+          "level": "ERROR",
+          "code": "BUILTIN.not_matches_regex",
+          "message": "failed"
+        }
+      },
+      "checks.main": {
+        "type": "pipeline",
+        "steps": [
+          "builtin.not_matches_regex"
+        ]
+      }
+    },
+    "sourceHash": "ce848465f081a63341187385cc4e28e35fee3f8d63b16cfa2617bc387166c537"
+  },
+  "operators": [],
+  "input": {
+    "pipelineId": "checks.main",
+    "payload": {
+      "a": "x"
+    }
+  },
+  "expected": {
+    "status": "ERROR",
+    "issues": [
+      {
+        "level": "ERROR",
+        "code": "BUILTIN.not_matches_regex",
+        "message": "failed",
+        "field": "a",
+        "ruleId": "builtin.not_matches_regex",
+        "pipelineId": "checks.main",
+        "expected": "^x$",
+        "actual": "x"
+      }
+    ],
+    "ruleset": {
+      "specVersion": "1.0.0-rc.5",
+      "sourceHash": "ce848465f081a63341187385cc4e28e35fee3f8d63b16cfa2617bc387166c537"
+    }
+  }
+}

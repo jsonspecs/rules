@@ -1,0 +1,35 @@
+{
+  "name": "d11/reject-legacy-rule-role",
+  "snapshot": {
+    "format": "jsonspecs-snapshot",
+    "formatVersion": 2,
+    "specVersion": "1.0.0-rc.5",
+    "exports": [
+      "checks.main"
+    ],
+    "artifacts": {
+      "checks.main": {
+        "type": "pipeline",
+        "steps": [
+          "library.x.role"
+        ]
+      },
+      "library.x.role": {
+        "type": "rule",
+        "operator": "not_empty",
+        "field": "a",
+        "issue": {
+          "level": "ERROR",
+          "code": "X6R",
+          "message": "failed"
+        },
+        "role": "check"
+      }
+    },
+    "sourceHash": "531b6d1dbab3c3b254906dfd5ae4adc35542619aa4cee92430459444245fa1fb"
+  },
+  "operators": [],
+  "expected": {
+    "verdict": "reject"
+  }
+}

@@ -1,0 +1,52 @@
+{
+  "name": "d28/jcs-utf16-orders-u10000-before-ue000",
+  "snapshot": {
+    "format": "jsonspecs-snapshot",
+    "formatVersion": 2,
+    "specVersion": "1.0.0-rc.5",
+    "exports": [
+      "𐀀",
+      ""
+    ],
+    "artifacts": {
+      "shared.rule": {
+        "type": "rule",
+        "operator": "not_empty",
+        "field": "a",
+        "issue": {
+          "level": "ERROR",
+          "code": "D28.2",
+          "message": "failed"
+        }
+      },
+      "𐀀": {
+        "type": "pipeline",
+        "steps": [
+          "shared.rule"
+        ]
+      },
+      "": {
+        "type": "pipeline",
+        "steps": [
+          "shared.rule"
+        ]
+      }
+    },
+    "sourceHash": "adb8a3f491ed3fe60ffb07d2cb0e0abb50e20d13dec7a04b3617ac44f9235f6b"
+  },
+  "operators": [],
+  "input": {
+    "pipelineId": "𐀀",
+    "payload": {
+      "a": 1
+    }
+  },
+  "expected": {
+    "status": "OK",
+    "issues": [],
+    "ruleset": {
+      "specVersion": "1.0.0-rc.5",
+      "sourceHash": "adb8a3f491ed3fe60ffb07d2cb0e0abb50e20d13dec7a04b3617ac44f9235f6b"
+    }
+  }
+}

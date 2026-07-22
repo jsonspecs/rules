@@ -1,92 +1,46 @@
-const pred_equals = require("./predicate/equals");
-const pred_not_equals = require("./predicate/not_equals");
-const pred_not_empty = require("./predicate/not_empty");
-const pred_is_empty = require("./predicate/is_empty");
-const pred_is_boolean = require("./predicate/is_boolean");
-const pred_is_string = require("./predicate/is_string");
-const pred_is_number = require("./predicate/is_number");
-const pred_is_integer = require("./predicate/is_integer");
-const pred_matches_regex = require("./predicate/matches_regex");
-const pred_in_dictionary = require("./predicate/in_dictionary");
-const pred_contains = require("./predicate/contains");
-const pred_greater_than = require("./predicate/greater_than");
-const pred_less_than = require("./predicate/less_than");
+"use strict";
 
-const chk_not_empty = require("./check/not_empty");
-const chk_is_empty = require("./check/is_empty");
-const chk_not_true = require("./check/not_true");
-const chk_is_boolean = require("./check/is_boolean");
-const chk_is_string = require("./check/is_string");
-const chk_is_number = require("./check/is_number");
-const chk_is_integer = require("./check/is_integer");
-const chk_length_equals = require("./check/length_equals");
-const chk_length_max = require("./check/length_max");
-const chk_matches_regex = require("./check/matches_regex");
-const chk_in_dictionary = require("./check/in_dictionary");
-const chk_equals = require("./check/equals");
-const chk_not_equals = require("./check/not_equals");
-const chk_contains = require("./check/contains");
-const chk_greater_than = require("./check/greater_than");
-const chk_less_than = require("./check/less_than");
-const chk_field_less_than_field = require("./check/field_less_than_field");
-const chk_field_greater_than_field = require("./check/field_greater_than_field");
-const chk_any_filled = require("./check/any_filled");
+/**
+ * Сборка единого операторного registry.
+ *
+ * Встроенные имена зарезервированы спецификацией: внешняя зависимость не может
+ * тихо подменить их. Registry является частичной функцией name -> definition;
+ * дубликаты и неполные определения считаются ошибкой конфигурации приложения.
+ */
 
-const pred_field_equals_field = require("./predicate/field_equals_field");
-const pred_field_not_equals_field = require("./predicate/field_not_equals_field");
-const pred_field_less_or_equal_than_field = require("./predicate/field_less_or_equal_than_field");
-const pred_field_greater_or_equal_than_field = require("./predicate/field_greater_or_equal_than_field");
+const { builtIns, BUILT_IN_NAMES } = require("./builtins");
+const { cloneIJson, deepFreeze, isPlainObject } = require("../json/i-json");
 
-const chk_field_equals_field = require("./check/field_equals_field");
-const chk_field_not_equals_field = require("./check/field_not_equals_field");
-const chk_field_less_or_equal_than_field = require("./check/field_less_or_equal_than_field");
-const chk_field_greater_or_equal_than_field = require("./check/field_greater_or_equal_than_field");
+const CUSTOM_CONFIG_KEYS = new Set(["field", "value", "value_field", "dictionary", "inputs", "params"]);
 
-const Operators = {
-  predicate: {
-    equals: pred_equals,
-    not_equals: pred_not_equals,
-    not_empty: pred_not_empty,
-    is_empty: pred_is_empty,
-    is_boolean: pred_is_boolean,
-    is_string: pred_is_string,
-    is_number: pred_is_number,
-    is_integer: pred_is_integer,
-    matches_regex: pred_matches_regex,
-    in_dictionary: pred_in_dictionary,
-    contains: pred_contains,
-    greater_than: pred_greater_than,
-    less_than: pred_less_than,
-    field_equals_field: pred_field_equals_field,
-    field_not_equals_field: pred_field_not_equals_field,
-    field_less_or_equal_than_field: pred_field_less_or_equal_than_field,
-    field_greater_or_equal_than_field: pred_field_greater_or_equal_than_field,
-  },
-  check: {
-    not_empty: chk_not_empty,
-    is_empty: chk_is_empty,
-    not_true: chk_not_true,
-    is_boolean: chk_is_boolean,
-    is_string: chk_is_string,
-    is_number: chk_is_number,
-    is_integer: chk_is_integer,
-    length_equals: chk_length_equals,
-    length_max: chk_length_max,
-    matches_regex: chk_matches_regex,
-    in_dictionary: chk_in_dictionary,
-    equals: chk_equals,
-    not_equals: chk_not_equals,
-    contains: chk_contains,
-    greater_than: chk_greater_than,
-    less_than: chk_less_than,
-    field_less_than_field: chk_field_less_than_field,
-    field_greater_than_field: chk_field_greater_than_field,
-    field_equals_field: chk_field_equals_field,
-    field_not_equals_field: chk_field_not_equals_field,
-    field_less_or_equal_than_field: chk_field_less_or_equal_than_field,
-    field_greater_or_equal_than_field: chk_field_greater_or_equal_than_field,
-    any_filled: chk_any_filled,
-  },
-};
+function createOperatorRegistry(custom = {}) {
+  if (!custom || typeof custom !== "object" || Array.isArray(custom)) throw new TypeError("operators must be an object map");
+  const registry = Object.create(null);
+  for (const [name, definition] of Object.entries(builtIns)) registry[name] = definition;
+  for (const [name, definition] of Object.entries(custom)) {
+    if (!name) throw new TypeError("operator name must be non-empty");
+    if (Object.prototype.hasOwnProperty.call(builtIns, name)) throw new TypeError(`built-in operator cannot be replaced: ${name}`);
+    if (!definition || typeof definition !== "object" || typeof definition.evaluate !== "function")
+      throw new TypeError(`operator ${name} must provide {schema,evaluate}`);
+    if (!definition.schema || typeof definition.schema !== "object") throw new TypeError(`operator ${name} must provide a JSON Schema contract`);
+    const schema = deepFreeze(cloneIJson(definition.schema));
+    assertClosedContract(name, schema);
+    registry[name] = Object.freeze({ schema, evaluate: definition.evaluate });
+  }
+  return Object.freeze(registry);
+}
 
-module.exports = { Operators };
+function assertClosedContract(name, schema) {
+  if (schema.type !== "object" || schema.additionalProperties !== false || !isPlainObject(schema.properties))
+    throw new TypeError(`operator ${name} schema must be a closed object schema`);
+  for (const key of Object.keys(schema.properties)) {
+    if (!CUSTOM_CONFIG_KEYS.has(key)) throw new TypeError(`operator ${name} schema declares unsupported config key ${key}`);
+  }
+  for (const key of ["inputs", "params"]) {
+    const nested = schema.properties[key];
+    if (nested && (nested.type !== "object" || nested.additionalProperties !== false || !isPlainObject(nested.properties)))
+      throw new TypeError(`operator ${name} ${key} schema must declare a closed object`);
+  }
+}
+
+module.exports = { createOperatorRegistry, builtIns, BUILT_IN_NAMES };

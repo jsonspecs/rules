@@ -1,0 +1,34 @@
+{
+  "name": "d10/unknown-operator-with-bad-hash-has-no-operator-identifier",
+  "snapshot": {
+    "format": "jsonspecs-snapshot",
+    "formatVersion": 2,
+    "specVersion": "1.0.0-rc.5",
+    "exports": [
+      "checks.main"
+    ],
+    "artifacts": {
+      "checks.main": {
+        "type": "pipeline",
+        "steps": [
+          "library.c.bad-hash"
+        ]
+      },
+      "library.c.bad-hash": {
+        "type": "rule",
+        "operator": "custom_x",
+        "field": "a",
+        "issue": {
+          "level": "ERROR",
+          "code": "C2",
+          "message": "failed"
+        }
+      }
+    },
+    "sourceHash": "0000000000000000000000000000000000000000000000000000000000000000"
+  },
+  "operators": [],
+  "expected": {
+    "verdict": "reject"
+  }
+}

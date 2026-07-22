@@ -1,0 +1,45 @@
+{
+  "name": "d28/artifact-authoring-order-a",
+  "snapshot": {
+    "format": "jsonspecs-snapshot",
+    "formatVersion": 2,
+    "specVersion": "1.0.0-rc.5",
+    "exports": [
+      "checks.main"
+    ],
+    "artifacts": {
+      "checks.main": {
+        "type": "pipeline",
+        "steps": [
+          "library.d25.rule"
+        ]
+      },
+      "library.d25.rule": {
+        "type": "rule",
+        "operator": "not_empty",
+        "field": "a",
+        "issue": {
+          "level": "ERROR",
+          "code": "D25.1",
+          "message": "failed"
+        }
+      }
+    },
+    "sourceHash": "2e1ea2ae662fdc3d400e1c465d1dda2362599c8e4a26a1047843ae0cd4312d54"
+  },
+  "operators": [],
+  "input": {
+    "pipelineId": "checks.main",
+    "payload": {
+      "a": 1
+    }
+  },
+  "expected": {
+    "status": "OK",
+    "issues": [],
+    "ruleset": {
+      "specVersion": "1.0.0-rc.5",
+      "sourceHash": "2e1ea2ae662fdc3d400e1c465d1dda2362599c8e4a26a1047843ae0cd4312d54"
+    }
+  }
+}

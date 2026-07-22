@@ -1,0 +1,39 @@
+{
+  "name": "d27/reject-invalid-input-path",
+  "snapshot": {
+    "format": "jsonspecs-snapshot",
+    "formatVersion": 2,
+    "specVersion": "1.0.0-rc.5",
+    "exports": [
+      "checks.main"
+    ],
+    "artifacts": {
+      "checks.main": {
+        "type": "pipeline",
+        "steps": [
+          "library.d27.bad-path"
+        ]
+      },
+      "library.d27.bad-path": {
+        "type": "rule",
+        "operator": "conformance.rule.inputs",
+        "inputs": {
+          "missing": "a..b",
+          "nullValue": "presentNull"
+        },
+        "issue": {
+          "level": "ERROR",
+          "code": "D27.X3",
+          "message": "failed"
+        }
+      }
+    },
+    "sourceHash": "d0f0544e34f3f9432a9481dba8cc83f7dca6bec59b83224c223701ff62c4c33d"
+  },
+  "operators": [
+    "conformance.rule.inputs"
+  ],
+  "expected": {
+    "verdict": "reject"
+  }
+}

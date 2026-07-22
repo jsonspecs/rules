@@ -1,0 +1,77 @@
+{
+  "name": "d22/all-pass-evaluates-throw",
+  "snapshot": {
+    "format": "jsonspecs-snapshot",
+    "formatVersion": 2,
+    "specVersion": "1.0.0-rc.5",
+    "exports": [
+      "checks.main"
+    ],
+    "artifacts": {
+      "checks.main": {
+        "type": "pipeline",
+        "steps": [
+          "condition.all-pass-evaluates-throw"
+        ]
+      },
+      "condition.all-pass-evaluates-throw": {
+        "type": "condition",
+        "when": {
+          "all": [
+            "library.d22.all-pass-evaluates-throw.first",
+            "library.d22.all-pass-evaluates-throw.throw"
+          ]
+        },
+        "steps": [
+          "library.d22.all-pass-evaluates-throw.target"
+        ]
+      },
+      "library.d22.all-pass-evaluates-throw.first": {
+        "type": "rule",
+        "operator": "equals",
+        "field": "first",
+        "value": true
+      },
+      "library.d22.all-pass-evaluates-throw.target": {
+        "type": "rule",
+        "operator": "not_empty",
+        "field": "required",
+        "issue": {
+          "level": "ERROR",
+          "code": "D22.all-pass-evaluates-throw",
+          "message": "failed"
+        }
+      },
+      "library.d22.all-pass-evaluates-throw.throw": {
+        "type": "rule",
+        "operator": "conformance.rule.throw"
+      }
+    },
+    "sourceHash": "96aeec4f7c26883550a12011f01a80affddb6b3b4507efb2466130c917773e77"
+  },
+  "operators": [
+    "conformance.rule.throw"
+  ],
+  "input": {
+    "pipelineId": "checks.main",
+    "payload": {
+      "first": true,
+      "required": "ok"
+    }
+  },
+  "expected": {
+    "status": "ABORT",
+    "issues": [],
+    "error": {
+      "code": "OPERATOR_FAULT",
+      "details": {
+        "ruleId": "library.d22.all-pass-evaluates-throw.throw",
+        "operator": "conformance.rule.throw"
+      }
+    },
+    "ruleset": {
+      "specVersion": "1.0.0-rc.5",
+      "sourceHash": "96aeec4f7c26883550a12011f01a80affddb6b3b4507efb2466130c917773e77"
+    }
+  }
+}

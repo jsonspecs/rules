@@ -1,0 +1,37 @@
+{
+  "name": "d11/reject-required-context-field",
+  "snapshot": {
+    "format": "jsonspecs-snapshot",
+    "formatVersion": 2,
+    "specVersion": "1.0.0-rc.5",
+    "exports": [
+      "checks.main"
+    ],
+    "artifacts": {
+      "checks.main": {
+        "type": "pipeline",
+        "required_context": [
+          "currentDate"
+        ],
+        "steps": [
+          "library.x.r"
+        ]
+      },
+      "library.x.r": {
+        "type": "rule",
+        "operator": "not_empty",
+        "field": "a",
+        "issue": {
+          "level": "ERROR",
+          "code": "X2",
+          "message": "failed"
+        }
+      }
+    },
+    "sourceHash": "04d6e721f64f74545270772c02477e5df61111aaf5aa734e9bc2c22e001d6065"
+  },
+  "operators": [],
+  "expected": {
+    "verdict": "reject"
+  }
+}

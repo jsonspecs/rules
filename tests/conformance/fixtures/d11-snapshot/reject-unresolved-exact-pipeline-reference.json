@@ -1,0 +1,40 @@
+{
+  "name": "d11/reject-unresolved-exact-pipeline-reference",
+  "snapshot": {
+    "format": "jsonspecs-snapshot",
+    "formatVersion": 2,
+    "specVersion": "1.0.0-rc.5",
+    "exports": [
+      "checks.main"
+    ],
+    "artifacts": {
+      "checks.inner": {
+        "type": "pipeline",
+        "steps": [
+          "library.x.c3"
+        ]
+      },
+      "checks.main": {
+        "type": "pipeline",
+        "steps": [
+          "inner"
+        ]
+      },
+      "library.x.c3": {
+        "type": "rule",
+        "operator": "not_empty",
+        "field": "a",
+        "issue": {
+          "level": "ERROR",
+          "code": "X9",
+          "message": "failed"
+        }
+      }
+    },
+    "sourceHash": "4da2a116719440abfec1e4812039f3086506a7e5d7943482f5b0cc2d3b8b2ed5"
+  },
+  "operators": [],
+  "expected": {
+    "verdict": "reject"
+  }
+}

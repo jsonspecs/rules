@@ -1,0 +1,44 @@
+{
+  "name": "d11/reject-unreachable-artifact",
+  "snapshot": {
+    "format": "jsonspecs-snapshot",
+    "formatVersion": 2,
+    "specVersion": "1.0.0-rc.5",
+    "exports": [
+      "checks.main"
+    ],
+    "artifacts": {
+      "checks.main": {
+        "type": "pipeline",
+        "steps": [
+          "library.x.ok2"
+        ]
+      },
+      "ghost.rule": {
+        "type": "rule",
+        "operator": "not_empty",
+        "field": "a",
+        "issue": {
+          "level": "ERROR",
+          "code": "X16",
+          "message": "failed"
+        }
+      },
+      "library.x.ok2": {
+        "type": "rule",
+        "operator": "not_empty",
+        "field": "a",
+        "issue": {
+          "level": "ERROR",
+          "code": "X15",
+          "message": "failed"
+        }
+      }
+    },
+    "sourceHash": "445bd1c4e792b52c417a06537f9ed0ec88bca9f5ca2ffe78bb41a5f24ae74348"
+  },
+  "operators": [],
+  "expected": {
+    "verdict": "reject"
+  }
+}

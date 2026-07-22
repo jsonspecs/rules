@@ -1,0 +1,36 @@
+{
+  "name": "d24/reject-value-and-value-field-together",
+  "snapshot": {
+    "format": "jsonspecs-snapshot",
+    "formatVersion": 2,
+    "specVersion": "1.0.0-rc.5",
+    "exports": [
+      "checks.main"
+    ],
+    "artifacts": {
+      "checks.main": {
+        "type": "pipeline",
+        "steps": [
+          "library.d24.both-values"
+        ]
+      },
+      "library.d24.both-values": {
+        "type": "rule",
+        "operator": "equals",
+        "field": "a",
+        "value": 1,
+        "value_field": "b",
+        "issue": {
+          "level": "ERROR",
+          "code": "D24.X2V",
+          "message": "failed"
+        }
+      }
+    },
+    "sourceHash": "301076e90b2519d67053a6f85b4bd1cc671de200e2c4e76493634738ec1990c4"
+  },
+  "operators": [],
+  "expected": {
+    "verdict": "reject"
+  }
+}

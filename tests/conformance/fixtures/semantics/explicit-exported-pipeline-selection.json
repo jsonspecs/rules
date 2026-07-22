@@ -1,0 +1,45 @@
+{
+  "name": "sem/explicit-exported-pipeline-selection",
+  "snapshot": {
+    "format": "jsonspecs-snapshot",
+    "formatVersion": 2,
+    "specVersion": "1.0.0-rc.5",
+    "exports": [
+      "checks.main"
+    ],
+    "artifacts": {
+      "checks.main": {
+        "type": "pipeline",
+        "steps": [
+          "library.se.def"
+        ]
+      },
+      "library.se.def": {
+        "type": "rule",
+        "operator": "not_empty",
+        "field": "a",
+        "issue": {
+          "level": "ERROR",
+          "code": "SE21",
+          "message": "failed"
+        }
+      }
+    },
+    "sourceHash": "6e4467888fa981c8311de8501d12ae4e5e6c5845089a514580359bdf4dd0e9a0"
+  },
+  "operators": [],
+  "input": {
+    "pipelineId": "checks.main",
+    "payload": {
+      "a": 1
+    }
+  },
+  "expected": {
+    "status": "OK",
+    "issues": [],
+    "ruleset": {
+      "specVersion": "1.0.0-rc.5",
+      "sourceHash": "6e4467888fa981c8311de8501d12ae4e5e6c5845089a514580359bdf4dd0e9a0"
+    }
+  }
+}

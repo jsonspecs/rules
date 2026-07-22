@@ -1,0 +1,55 @@
+{
+  "name": "d09/proto-key-rejected",
+  "snapshot": {
+    "format": "jsonspecs-snapshot",
+    "formatVersion": 2,
+    "specVersion": "1.0.0-rc.5",
+    "exports": [
+      "checks.main"
+    ],
+    "artifacts": {
+      "checks.main": {
+        "type": "pipeline",
+        "steps": [
+          "library.g.p"
+        ]
+      },
+      "library.g.p": {
+        "type": "rule",
+        "operator": "not_empty",
+        "field": "ok",
+        "issue": {
+          "level": "ERROR",
+          "code": "G3",
+          "message": "failed"
+        }
+      }
+    },
+    "sourceHash": "eac10a06c6dd14ce959ab44727a5b46e99b8f5151678cd3a02f0c013102639a5"
+  },
+  "operators": [],
+  "input": {
+    "pipelineId": "checks.main",
+    "payload": {
+      "x": {
+        "__proto__": 1
+      },
+      "ok": 1
+    }
+  },
+  "expected": {
+    "status": "ABORT",
+    "issues": [],
+    "error": {
+      "code": "DANGEROUS_PAYLOAD_KEY",
+      "details": {
+        "parentPath": "x",
+        "key": "__proto__"
+      }
+    },
+    "ruleset": {
+      "specVersion": "1.0.0-rc.5",
+      "sourceHash": "eac10a06c6dd14ce959ab44727a5b46e99b8f5151678cd3a02f0c013102639a5"
+    }
+  }
+}

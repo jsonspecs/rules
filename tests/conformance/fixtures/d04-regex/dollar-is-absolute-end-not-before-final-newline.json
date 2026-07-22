@@ -1,0 +1,57 @@
+{
+  "name": "d04/dollar-is-absolute-end-not-before-final-newline",
+  "snapshot": {
+    "format": "jsonspecs-snapshot",
+    "formatVersion": 2,
+    "specVersion": "1.0.0-rc.5",
+    "exports": [
+      "checks.main"
+    ],
+    "artifacts": {
+      "checks.main": {
+        "type": "pipeline",
+        "steps": [
+          "library.r.anchor"
+        ]
+      },
+      "library.r.anchor": {
+        "type": "rule",
+        "operator": "matches_regex",
+        "field": "a",
+        "value": "a$",
+        "issue": {
+          "level": "ERROR",
+          "code": "R14",
+          "message": "failed"
+        }
+      }
+    },
+    "sourceHash": "21972075daf2a1a5c33e4746cf61f92dda10ff76d562fd86266a4753c0665eda"
+  },
+  "operators": [],
+  "input": {
+    "pipelineId": "checks.main",
+    "payload": {
+      "a": "a\n"
+    }
+  },
+  "expected": {
+    "status": "ERROR",
+    "issues": [
+      {
+        "level": "ERROR",
+        "code": "R14",
+        "message": "failed",
+        "field": "a",
+        "ruleId": "library.r.anchor",
+        "pipelineId": "checks.main",
+        "expected": "a$",
+        "actual": "a\n"
+      }
+    ],
+    "ruleset": {
+      "specVersion": "1.0.0-rc.5",
+      "sourceHash": "21972075daf2a1a5c33e4746cf61f92dda10ff76d562fd86266a4753c0665eda"
+    }
+  }
+}

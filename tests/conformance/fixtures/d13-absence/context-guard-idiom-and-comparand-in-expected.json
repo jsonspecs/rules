@@ -1,0 +1,73 @@
+{
+  "name": "d13/context-guard-idiom-and-comparand-in-expected",
+  "snapshot": {
+    "format": "jsonspecs-snapshot",
+    "formatVersion": 2,
+    "specVersion": "1.0.0-rc.5",
+    "exports": [
+      "checks.main"
+    ],
+    "artifacts": {
+      "checks.main": {
+        "type": "pipeline",
+        "steps": [
+          "library.a.cg",
+          "library.a.cd"
+        ]
+      },
+      "library.a.cd": {
+        "type": "rule",
+        "operator": "field_less_or_equal_than_field",
+        "field": "doc.issueDate",
+        "value_field": "$context.currentDate",
+        "issue": {
+          "level": "ERROR",
+          "code": "A8",
+          "message": "failed"
+        }
+      },
+      "library.a.cg": {
+        "type": "rule",
+        "operator": "not_empty",
+        "field": "$context.currentDate",
+        "issue": {
+          "level": "EXCEPTION",
+          "code": "A7",
+          "message": "failed"
+        }
+      }
+    },
+    "sourceHash": "a9743da258b3df5987f573ce19379cbe9118707b4283be4f404ad8bf2f743d97"
+  },
+  "operators": [],
+  "input": {
+    "pipelineId": "checks.main",
+    "payload": {
+      "doc": {
+        "issueDate": "2027-01-01"
+      }
+    },
+    "context": {
+      "currentDate": "2026-07-21"
+    }
+  },
+  "expected": {
+    "status": "ERROR",
+    "issues": [
+      {
+        "level": "ERROR",
+        "code": "A8",
+        "message": "failed",
+        "field": "doc.issueDate",
+        "ruleId": "library.a.cd",
+        "pipelineId": "checks.main",
+        "expected": "2026-07-21",
+        "actual": "2027-01-01"
+      }
+    ],
+    "ruleset": {
+      "specVersion": "1.0.0-rc.5",
+      "sourceHash": "a9743da258b3df5987f573ce19379cbe9118707b4283be4f404ad8bf2f743d97"
+    }
+  }
+}

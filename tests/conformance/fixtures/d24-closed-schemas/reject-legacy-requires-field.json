@@ -1,0 +1,43 @@
+{
+  "name": "d24/reject-legacy-requires-field",
+  "snapshot": {
+    "format": "jsonspecs-snapshot",
+    "formatVersion": 2,
+    "specVersion": "1.0.0-rc.5",
+    "exports": [
+      "checks.main"
+    ],
+    "artifacts": {
+      "checks.main": {
+        "type": "pipeline",
+        "steps": [
+          "library.d24.requires"
+        ]
+      },
+      "library.d24.requires": {
+        "type": "rule",
+        "operator": "conformance.rule.params",
+        "params": {
+          "outcome": "PASS"
+        },
+        "issue": {
+          "level": "ERROR",
+          "code": "D24.X4",
+          "message": "failed"
+        }
+      }
+    },
+    "sourceHash": "0d0bef69a18aff1c12a024d0dce791f8d57cdf6a8becfff3de0d83ba9fc78d9e",
+    "requires": {
+      "operators": [
+        "conformance.rule.params"
+      ]
+    }
+  },
+  "operators": [
+    "conformance.rule.params"
+  ],
+  "expected": {
+    "verdict": "reject"
+  }
+}

@@ -1,0 +1,52 @@
+{
+  "name": "operators/not_in_dictionary-pass",
+  "snapshot": {
+    "format": "jsonspecs-snapshot",
+    "formatVersion": 2,
+    "specVersion": "1.0.0-rc.5",
+    "exports": [
+      "checks.main"
+    ],
+    "artifacts": {
+      "builtin.not_in_dictionary": {
+        "type": "rule",
+        "operator": "not_in_dictionary",
+        "field": "a",
+        "dictionary": "matrix.dictionary",
+        "issue": {
+          "level": "ERROR",
+          "code": "BUILTIN.not_in_dictionary",
+          "message": "failed"
+        }
+      },
+      "checks.main": {
+        "type": "pipeline",
+        "steps": [
+          "builtin.not_in_dictionary"
+        ]
+      },
+      "matrix.dictionary": {
+        "type": "dictionary",
+        "entries": [
+          "A"
+        ]
+      }
+    },
+    "sourceHash": "d9925081f2145a00da48e6781b34a787233dc6c6484cbbb82c9c1e4de14769d1"
+  },
+  "operators": [],
+  "input": {
+    "pipelineId": "checks.main",
+    "payload": {
+      "a": "B"
+    }
+  },
+  "expected": {
+    "status": "OK",
+    "issues": [],
+    "ruleset": {
+      "specVersion": "1.0.0-rc.5",
+      "sourceHash": "d9925081f2145a00da48e6781b34a787233dc6c6484cbbb82c9c1e4de14769d1"
+    }
+  }
+}

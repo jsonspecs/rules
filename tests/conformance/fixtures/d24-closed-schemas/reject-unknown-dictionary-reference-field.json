@@ -1,0 +1,45 @@
+{
+  "name": "d24/reject-unknown-dictionary-reference-field",
+  "snapshot": {
+    "format": "jsonspecs-snapshot",
+    "formatVersion": 2,
+    "specVersion": "1.0.0-rc.5",
+    "exports": [
+      "checks.main"
+    ],
+    "artifacts": {
+      "checks.main": {
+        "type": "pipeline",
+        "steps": [
+          "library.d24.dictref"
+        ]
+      },
+      "dictionary": {
+        "type": "dictionary",
+        "entries": [
+          "X"
+        ]
+      },
+      "library.d24.dictref": {
+        "type": "rule",
+        "operator": "in_dictionary",
+        "field": "a",
+        "dictionary": {
+          "type": "static",
+          "id": "dictionary",
+          "unknown": true
+        },
+        "issue": {
+          "level": "ERROR",
+          "code": "D24.X6",
+          "message": "failed"
+        }
+      }
+    },
+    "sourceHash": "a954427672c7fd64ad88ad05b538456a69c909cbcecbf57a0b439feb1ba65645"
+  },
+  "operators": [],
+  "expected": {
+    "verdict": "reject"
+  }
+}

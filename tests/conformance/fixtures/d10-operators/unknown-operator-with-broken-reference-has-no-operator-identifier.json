@@ -1,0 +1,34 @@
+{
+  "name": "d10/unknown-operator-with-broken-reference-has-no-operator-identifier",
+  "snapshot": {
+    "format": "jsonspecs-snapshot",
+    "formatVersion": 2,
+    "specVersion": "1.0.0-rc.5",
+    "exports": [
+      "checks.main"
+    ],
+    "artifacts": {
+      "checks.main": {
+        "type": "pipeline",
+        "steps": [
+          "missing.rule"
+        ]
+      },
+      "library.c.bad-ref": {
+        "type": "rule",
+        "operator": "custom_x",
+        "field": "a",
+        "issue": {
+          "level": "ERROR",
+          "code": "C3",
+          "message": "failed"
+        }
+      }
+    },
+    "sourceHash": "356779d60b6c145addf26b81752097a3c10bb3f8239a917570c51a4d0564ef25"
+  },
+  "operators": [],
+  "expected": {
+    "verdict": "reject"
+  }
+}

@@ -1,0 +1,45 @@
+{
+  "name": "operators/not_true-pass",
+  "snapshot": {
+    "format": "jsonspecs-snapshot",
+    "formatVersion": 2,
+    "specVersion": "1.0.0-rc.5",
+    "exports": [
+      "checks.main"
+    ],
+    "artifacts": {
+      "builtin.not_true": {
+        "type": "rule",
+        "operator": "not_true",
+        "field": "a",
+        "issue": {
+          "level": "ERROR",
+          "code": "BUILTIN.not_true",
+          "message": "failed"
+        }
+      },
+      "checks.main": {
+        "type": "pipeline",
+        "steps": [
+          "builtin.not_true"
+        ]
+      }
+    },
+    "sourceHash": "e763028bda150c2ad12ede94232fe5bd9c6f849bf3278e510823b5cc303c5871"
+  },
+  "operators": [],
+  "input": {
+    "pipelineId": "checks.main",
+    "payload": {
+      "a": false
+    }
+  },
+  "expected": {
+    "status": "OK",
+    "issues": [],
+    "ruleset": {
+      "specVersion": "1.0.0-rc.5",
+      "sourceHash": "e763028bda150c2ad12ede94232fe5bd9c6f849bf3278e510823b5cc303c5871"
+    }
+  }
+}

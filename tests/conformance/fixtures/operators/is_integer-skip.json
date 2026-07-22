@@ -1,0 +1,43 @@
+{
+  "name": "operators/is_integer-skip",
+  "snapshot": {
+    "format": "jsonspecs-snapshot",
+    "formatVersion": 2,
+    "specVersion": "1.0.0-rc.5",
+    "exports": [
+      "checks.main"
+    ],
+    "artifacts": {
+      "builtin.is_integer": {
+        "type": "rule",
+        "operator": "is_integer",
+        "field": "a",
+        "issue": {
+          "level": "ERROR",
+          "code": "BUILTIN.is_integer",
+          "message": "failed"
+        }
+      },
+      "checks.main": {
+        "type": "pipeline",
+        "steps": [
+          "builtin.is_integer"
+        ]
+      }
+    },
+    "sourceHash": "89d7c03da2bb5ae912c8af3a553123978a6e455536540728c05481ab6eceecd8"
+  },
+  "operators": [],
+  "input": {
+    "pipelineId": "checks.main",
+    "payload": {}
+  },
+  "expected": {
+    "status": "OK",
+    "issues": [],
+    "ruleset": {
+      "specVersion": "1.0.0-rc.5",
+      "sourceHash": "89d7c03da2bb5ae912c8af3a553123978a6e455536540728c05481ab6eceecd8"
+    }
+  }
+}

@@ -1,0 +1,42 @@
+{
+  "name": "d26/reject-duplicate-dictionary-scalar",
+  "snapshot": {
+    "format": "jsonspecs-snapshot",
+    "formatVersion": 2,
+    "specVersion": "1.0.0-rc.5",
+    "exports": [
+      "checks.main"
+    ],
+    "artifacts": {
+      "checks.main": {
+        "type": "pipeline",
+        "steps": [
+          "library.d26.dictionary"
+        ]
+      },
+      "dictionary": {
+        "type": "dictionary",
+        "entries": [
+          "RU",
+          "RU"
+        ]
+      },
+      "library.d26.dictionary": {
+        "type": "rule",
+        "operator": "in_dictionary",
+        "field": "country",
+        "dictionary": "dictionary",
+        "issue": {
+          "level": "ERROR",
+          "code": "D26.X6",
+          "message": "failed"
+        }
+      }
+    },
+    "sourceHash": "3b85e62d62441fc7850f38fd0b067c580c7b40de5c17ba0edefb4e0dbde3a84a"
+  },
+  "operators": [],
+  "expected": {
+    "verdict": "reject"
+  }
+}

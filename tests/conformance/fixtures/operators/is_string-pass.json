@@ -1,0 +1,45 @@
+{
+  "name": "operators/is_string-pass",
+  "snapshot": {
+    "format": "jsonspecs-snapshot",
+    "formatVersion": 2,
+    "specVersion": "1.0.0-rc.5",
+    "exports": [
+      "checks.main"
+    ],
+    "artifacts": {
+      "builtin.is_string": {
+        "type": "rule",
+        "operator": "is_string",
+        "field": "a",
+        "issue": {
+          "level": "ERROR",
+          "code": "BUILTIN.is_string",
+          "message": "failed"
+        }
+      },
+      "checks.main": {
+        "type": "pipeline",
+        "steps": [
+          "builtin.is_string"
+        ]
+      }
+    },
+    "sourceHash": "155bae69dda0287798a6e3d9ee5c22bfdc725fe5d78fa9d6d9a17e365766059c"
+  },
+  "operators": [],
+  "input": {
+    "pipelineId": "checks.main",
+    "payload": {
+      "a": "x"
+    }
+  },
+  "expected": {
+    "status": "OK",
+    "issues": [],
+    "ruleset": {
+      "specVersion": "1.0.0-rc.5",
+      "sourceHash": "155bae69dda0287798a6e3d9ee5c22bfdc725fe5d78fa9d6d9a17e365766059c"
+    }
+  }
+}

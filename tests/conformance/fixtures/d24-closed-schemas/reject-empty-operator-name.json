@@ -1,0 +1,34 @@
+{
+  "name": "d24/reject-empty-operator-name",
+  "snapshot": {
+    "format": "jsonspecs-snapshot",
+    "formatVersion": 2,
+    "specVersion": "1.0.0-rc.5",
+    "exports": [
+      "checks.main"
+    ],
+    "artifacts": {
+      "checks.main": {
+        "type": "pipeline",
+        "steps": [
+          "library.d24.empty-operator"
+        ]
+      },
+      "library.d24.empty-operator": {
+        "type": "rule",
+        "operator": "",
+        "field": "a",
+        "issue": {
+          "level": "ERROR",
+          "code": "D24.X3E",
+          "message": "failed"
+        }
+      }
+    },
+    "sourceHash": "8ff8eb15a6523d4f714673f1267591ce33c3a162a9838af7176e0ee74014b2b6"
+  },
+  "operators": [],
+  "expected": {
+    "verdict": "reject"
+  }
+}

@@ -1,0 +1,78 @@
+{
+  "name": "d20/all-summary-exposes-effective-population",
+  "snapshot": {
+    "format": "jsonspecs-snapshot",
+    "formatVersion": 2,
+    "specVersion": "1.0.0-rc.5",
+    "exports": [
+      "checks.main"
+    ],
+    "artifacts": {
+      "checks.main": {
+        "type": "pipeline",
+        "steps": [
+          "library.d20.all.summary"
+        ]
+      },
+      "library.d20.all.summary": {
+        "type": "rule",
+        "operator": "conformance.rule.tri",
+        "field": "items[*].result",
+        "aggregate": {
+          "mode": "ALL",
+          "issueMode": "SUMMARY"
+        },
+        "issue": {
+          "level": "ERROR",
+          "code": "D20.3",
+          "message": "failed"
+        }
+      }
+    },
+    "sourceHash": "5adaee980a876bd9e616f243d033c6be2f7fc863b57bb45e243f4d5fac52c441"
+  },
+  "operators": [
+    "conformance.rule.tri"
+  ],
+  "input": {
+    "pipelineId": "checks.main",
+    "payload": {
+      "items": [
+        {
+          "result": "PASS"
+        },
+        {
+          "result": "SKIP"
+        },
+        {
+          "result": "FAIL"
+        }
+      ]
+    }
+  },
+  "expected": {
+    "status": "ERROR",
+    "issues": [
+      {
+        "level": "ERROR",
+        "code": "D20.3",
+        "message": "failed",
+        "field": "items[*].result",
+        "ruleId": "library.d20.all.summary",
+        "pipelineId": "checks.main",
+        "details": {
+          "mode": "ALL",
+          "matched": 3,
+          "evaluated": 2,
+          "skipped": 1,
+          "passed": 1,
+          "failed": 1
+        }
+      }
+    ],
+    "ruleset": {
+      "specVersion": "1.0.0-rc.5",
+      "sourceHash": "5adaee980a876bd9e616f243d033c6be2f7fc863b57bb45e243f4d5fac52c441"
+    }
+  }
+}

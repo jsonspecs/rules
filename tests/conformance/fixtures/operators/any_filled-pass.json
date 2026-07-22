@@ -1,0 +1,48 @@
+{
+  "name": "operators/any_filled-pass",
+  "snapshot": {
+    "format": "jsonspecs-snapshot",
+    "formatVersion": 2,
+    "specVersion": "1.0.0-rc.5",
+    "exports": [
+      "checks.main"
+    ],
+    "artifacts": {
+      "builtin.any_filled": {
+        "type": "rule",
+        "operator": "any_filled",
+        "fields": [
+          "a",
+          "b"
+        ],
+        "issue": {
+          "level": "ERROR",
+          "code": "BUILTIN.any_filled",
+          "message": "failed"
+        }
+      },
+      "checks.main": {
+        "type": "pipeline",
+        "steps": [
+          "builtin.any_filled"
+        ]
+      }
+    },
+    "sourceHash": "a589bee81761e5595386a6529b7c76f26f278848d69e2e679a4bd4398c199449"
+  },
+  "operators": [],
+  "input": {
+    "pipelineId": "checks.main",
+    "payload": {
+      "b": "x"
+    }
+  },
+  "expected": {
+    "status": "OK",
+    "issues": [],
+    "ruleset": {
+      "specVersion": "1.0.0-rc.5",
+      "sourceHash": "a589bee81761e5595386a6529b7c76f26f278848d69e2e679a4bd4398c199449"
+    }
+  }
+}

@@ -1,0 +1,63 @@
+{
+  "name": "d10/conformance-rule-invalid-result-in-when-contract-violation",
+  "snapshot": {
+    "format": "jsonspecs-snapshot",
+    "formatVersion": 2,
+    "specVersion": "1.0.0-rc.5",
+    "exports": [
+      "checks.main"
+    ],
+    "artifacts": {
+      "checks.main": {
+        "type": "pipeline",
+        "steps": [
+          "library.co.cond"
+        ]
+      },
+      "library.co.after": {
+        "type": "rule",
+        "operator": "not_empty",
+        "field": "b",
+        "issue": {
+          "level": "ERROR",
+          "code": "CO2",
+          "message": "failed"
+        }
+      },
+      "library.co.cond": {
+        "type": "condition",
+        "when": "library.co.r",
+        "steps": [
+          "library.co.after"
+        ]
+      },
+      "library.co.r": {
+        "type": "rule",
+        "operator": "conformance.rule.invalid_result"
+      }
+    },
+    "sourceHash": "40e36fed342e11a8ef85ac1e01f4ca1b95ecb7afb07b5842b0b38d20b273c971"
+  },
+  "operators": [
+    "conformance.rule.invalid_result"
+  ],
+  "input": {
+    "pipelineId": "checks.main",
+    "payload": {}
+  },
+  "expected": {
+    "status": "ABORT",
+    "issues": [],
+    "error": {
+      "code": "OPERATOR_CONTRACT_VIOLATION",
+      "details": {
+        "ruleId": "library.co.r",
+        "operator": "conformance.rule.invalid_result"
+      }
+    },
+    "ruleset": {
+      "specVersion": "1.0.0-rc.5",
+      "sourceHash": "40e36fed342e11a8ef85ac1e01f4ca1b95ecb7afb07b5842b0b38d20b273c971"
+    }
+  }
+}

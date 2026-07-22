@@ -1,0 +1,8 @@
+{
+  "name": "d28/reject-duplicate-json-member",
+  "snapshotText": "{\"format\":\"jsonspecs-snapshot\",\"format\":\"jsonspecs-snapshot\",\"formatVersion\":2,\"specVersion\":\"1.0.0-rc.5\",\"exports\":[\"checks.main\"],\"artifacts\":{\"checks.main\":{\"type\":\"pipeline\",\"steps\":[\"library.d28.duplicate\"]},\"library.d28.duplicate\":{\"type\":\"rule\",\"operator\":\"not_empty\",\"field\":\"a\",\"issue\":{\"level\":\"ERROR\",\"code\":\"D28.X2\",\"message\":\"failed\"}}},\"sourceHash\":\"7155cc8b646e71d02384efc9d0f8722f1db01586ac5e75b3aa4e62317af8ce03\"}",
+  "operators": [],
+  "expected": {
+    "verdict": "reject"
+  }
+}

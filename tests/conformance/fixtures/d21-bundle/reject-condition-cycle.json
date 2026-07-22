@@ -1,0 +1,55 @@
+{
+  "name": "d21/reject-condition-cycle",
+  "snapshot": {
+    "format": "jsonspecs-snapshot",
+    "formatVersion": 2,
+    "specVersion": "1.0.0-rc.5",
+    "exports": [
+      "checks.main"
+    ],
+    "artifacts": {
+      "c1": {
+        "type": "condition",
+        "when": "library.d21.guard",
+        "steps": [
+          "c2"
+        ]
+      },
+      "c2": {
+        "type": "condition",
+        "when": "library.d21.guard",
+        "steps": [
+          "c1"
+        ]
+      },
+      "checks.main": {
+        "type": "pipeline",
+        "steps": [
+          "c1",
+          "library.d21.hit"
+        ]
+      },
+      "library.d21.guard": {
+        "type": "rule",
+        "operator": "equals",
+        "field": "go",
+        "value": true
+      },
+      "library.d21.hit": {
+        "type": "rule",
+        "operator": "not_empty",
+        "field": "a",
+        "issue": {
+          "level": "ERROR",
+          "code": "D21.X8",
+          "message": "failed"
+        }
+      }
+    },
+    "sourceHash": "33cfc9e03d5ed4afbed3003c611bcb180b0f032fca8aef82c9c88c63aa4f873f"
+  },
+  "operators": [],
+  "expected": {
+    "verdict": "reject"
+  }
+}

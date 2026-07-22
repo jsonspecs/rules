@@ -1,0 +1,57 @@
+{
+  "name": "d04/digit-class-is-ascii-only",
+  "snapshot": {
+    "format": "jsonspecs-snapshot",
+    "formatVersion": 2,
+    "specVersion": "1.0.0-rc.5",
+    "exports": [
+      "checks.main"
+    ],
+    "artifacts": {
+      "checks.main": {
+        "type": "pipeline",
+        "steps": [
+          "library.r.d2"
+        ]
+      },
+      "library.r.d2": {
+        "type": "rule",
+        "operator": "matches_regex",
+        "field": "a",
+        "value": "^\\d+$",
+        "issue": {
+          "level": "ERROR",
+          "code": "R11",
+          "message": "failed"
+        }
+      }
+    },
+    "sourceHash": "ea40f1aded9575e608bf53c48295d66c0b17edc1a2edd7f51cc8dae35f8fdb91"
+  },
+  "operators": [],
+  "input": {
+    "pipelineId": "checks.main",
+    "payload": {
+      "a": "٣"
+    }
+  },
+  "expected": {
+    "status": "ERROR",
+    "issues": [
+      {
+        "level": "ERROR",
+        "code": "R11",
+        "message": "failed",
+        "field": "a",
+        "ruleId": "library.r.d2",
+        "pipelineId": "checks.main",
+        "expected": "^\\d+$",
+        "actual": "٣"
+      }
+    ],
+    "ruleset": {
+      "specVersion": "1.0.0-rc.5",
+      "sourceHash": "ea40f1aded9575e608bf53c48295d66c0b17edc1a2edd7f51cc8dae35f8fdb91"
+    }
+  }
+}

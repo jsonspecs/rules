@@ -1,0 +1,76 @@
+{
+  "name": "d19/same-rule-creates-exception-issue-in-step",
+  "snapshot": {
+    "format": "jsonspecs-snapshot",
+    "formatVersion": 2,
+    "specVersion": "1.0.0-rc.5",
+    "exports": [
+      "checks.guard",
+      "checks.hard"
+    ],
+    "artifacts": {
+      "checks.guard": {
+        "type": "pipeline",
+        "steps": [
+          "library.d19.condition"
+        ]
+      },
+      "checks.hard": {
+        "type": "pipeline",
+        "steps": [
+          "library.d19.reusable"
+        ]
+      },
+      "library.d19.condition": {
+        "type": "condition",
+        "when": "library.d19.reusable",
+        "steps": [
+          "library.d19.target"
+        ]
+      },
+      "library.d19.reusable": {
+        "type": "rule",
+        "operator": "not_empty",
+        "field": "trigger",
+        "issue": {
+          "level": "EXCEPTION",
+          "code": "D19.1",
+          "message": "failed"
+        }
+      },
+      "library.d19.target": {
+        "type": "rule",
+        "operator": "not_empty",
+        "field": "required",
+        "issue": {
+          "level": "ERROR",
+          "code": "D19.2",
+          "message": "failed"
+        }
+      }
+    },
+    "sourceHash": "c2a33cd3d52b51fb80e3ceef11bb65287e7f71f29a9c692888df9d5ea68f8b57"
+  },
+  "operators": [],
+  "input": {
+    "pipelineId": "checks.hard",
+    "payload": {}
+  },
+  "expected": {
+    "status": "EXCEPTION",
+    "issues": [
+      {
+        "level": "EXCEPTION",
+        "code": "D19.1",
+        "message": "failed",
+        "field": "trigger",
+        "ruleId": "library.d19.reusable",
+        "pipelineId": "checks.hard"
+      }
+    ],
+    "ruleset": {
+      "specVersion": "1.0.0-rc.5",
+      "sourceHash": "c2a33cd3d52b51fb80e3ceef11bb65287e7f71f29a9c692888df9d5ea68f8b57"
+    }
+  }
+}

@@ -1,0 +1,57 @@
+{
+  "name": "operators/length_equals-fail",
+  "snapshot": {
+    "format": "jsonspecs-snapshot",
+    "formatVersion": 2,
+    "specVersion": "1.0.0-rc.5",
+    "exports": [
+      "checks.main"
+    ],
+    "artifacts": {
+      "builtin.length_equals": {
+        "type": "rule",
+        "operator": "length_equals",
+        "field": "a",
+        "value": 2,
+        "issue": {
+          "level": "ERROR",
+          "code": "BUILTIN.length_equals",
+          "message": "failed"
+        }
+      },
+      "checks.main": {
+        "type": "pipeline",
+        "steps": [
+          "builtin.length_equals"
+        ]
+      }
+    },
+    "sourceHash": "ac5ce8399f8369884af6474ce5b794cf2b97424a732432de70d19240b9b71620"
+  },
+  "operators": [],
+  "input": {
+    "pipelineId": "checks.main",
+    "payload": {
+      "a": "a"
+    }
+  },
+  "expected": {
+    "status": "ERROR",
+    "issues": [
+      {
+        "level": "ERROR",
+        "code": "BUILTIN.length_equals",
+        "message": "failed",
+        "field": "a",
+        "ruleId": "builtin.length_equals",
+        "pipelineId": "checks.main",
+        "expected": 2,
+        "actual": "a"
+      }
+    ],
+    "ruleset": {
+      "specVersion": "1.0.0-rc.5",
+      "sourceHash": "ac5ce8399f8369884af6474ce5b794cf2b97424a732432de70d19240b9b71620"
+    }
+  }
+}

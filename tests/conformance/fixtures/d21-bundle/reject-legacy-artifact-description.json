@@ -1,0 +1,35 @@
+{
+  "name": "d21/reject-legacy-artifact-description",
+  "snapshot": {
+    "format": "jsonspecs-snapshot",
+    "formatVersion": 2,
+    "specVersion": "1.0.0-rc.5",
+    "exports": [
+      "checks.main"
+    ],
+    "artifacts": {
+      "checks.main": {
+        "type": "pipeline",
+        "steps": [
+          "library.d21.desc"
+        ]
+      },
+      "library.d21.desc": {
+        "type": "rule",
+        "operator": "not_empty",
+        "field": "a",
+        "issue": {
+          "level": "ERROR",
+          "code": "D21.X6",
+          "message": "failed"
+        },
+        "description": "authoring only"
+      }
+    },
+    "sourceHash": "0925de776a21cc40aa4547b9336d43e1b9d6af8675c6b614e05c449b8e17493b"
+  },
+  "operators": [],
+  "expected": {
+    "verdict": "reject"
+  }
+}

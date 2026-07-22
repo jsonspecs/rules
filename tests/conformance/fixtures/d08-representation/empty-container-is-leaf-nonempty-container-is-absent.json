@@ -1,0 +1,68 @@
+{
+  "name": "d08/empty-container-is-leaf-nonempty-container-is-absent",
+  "snapshot": {
+    "format": "jsonspecs-snapshot",
+    "formatVersion": 2,
+    "specVersion": "1.0.0-rc.5",
+    "exports": [
+      "checks.main"
+    ],
+    "artifacts": {
+      "checks.main": {
+        "type": "pipeline",
+        "steps": [
+          "library.p.ec",
+          "library.p.cc"
+        ]
+      },
+      "library.p.cc": {
+        "type": "rule",
+        "operator": "not_empty",
+        "field": "b",
+        "issue": {
+          "level": "ERROR",
+          "code": "P6",
+          "message": "failed"
+        }
+      },
+      "library.p.ec": {
+        "type": "rule",
+        "operator": "not_empty",
+        "field": "a",
+        "issue": {
+          "level": "ERROR",
+          "code": "P5",
+          "message": "failed"
+        }
+      }
+    },
+    "sourceHash": "3320302e84ff7b71519f5c648fc8fb958f318e6b45842de250d73589e54c8b6e"
+  },
+  "operators": [],
+  "input": {
+    "pipelineId": "checks.main",
+    "payload": {
+      "a": [],
+      "b": [
+        1
+      ]
+    }
+  },
+  "expected": {
+    "status": "ERROR",
+    "issues": [
+      {
+        "level": "ERROR",
+        "code": "P6",
+        "message": "failed",
+        "field": "b",
+        "ruleId": "library.p.cc",
+        "pipelineId": "checks.main"
+      }
+    ],
+    "ruleset": {
+      "specVersion": "1.0.0-rc.5",
+      "sourceHash": "3320302e84ff7b71519f5c648fc8fb958f318e6b45842de250d73589e54c8b6e"
+    }
+  }
+}

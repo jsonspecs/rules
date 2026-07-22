@@ -1,0 +1,59 @@
+{
+  "name": "d02/code-points-surrogate-and-cyrillic",
+  "snapshot": {
+    "format": "jsonspecs-snapshot",
+    "formatVersion": 2,
+    "specVersion": "1.0.0-rc.5",
+    "exports": [
+      "checks.main"
+    ],
+    "artifacts": {
+      "checks.main": {
+        "type": "pipeline",
+        "steps": [
+          "library.l.max",
+          "library.l.eq"
+        ]
+      },
+      "library.l.eq": {
+        "type": "rule",
+        "operator": "length_equals",
+        "field": "name",
+        "value": 4,
+        "issue": {
+          "level": "ERROR",
+          "code": "L2",
+          "message": "failed"
+        }
+      },
+      "library.l.max": {
+        "type": "rule",
+        "operator": "length_max",
+        "field": "emoji",
+        "value": 1,
+        "issue": {
+          "level": "ERROR",
+          "code": "L1",
+          "message": "failed"
+        }
+      }
+    },
+    "sourceHash": "e363d5cbe28208a486c6894fa94b2144466188270e7f74e6496c9d576a33f6b7"
+  },
+  "operators": [],
+  "input": {
+    "pipelineId": "checks.main",
+    "payload": {
+      "emoji": "😀",
+      "name": "Пётр"
+    }
+  },
+  "expected": {
+    "status": "OK",
+    "issues": [],
+    "ruleset": {
+      "specVersion": "1.0.0-rc.5",
+      "sourceHash": "e363d5cbe28208a486c6894fa94b2144466188270e7f74e6496c9d576a33f6b7"
+    }
+  }
+}

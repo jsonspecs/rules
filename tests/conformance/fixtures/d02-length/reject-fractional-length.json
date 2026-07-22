@@ -1,0 +1,35 @@
+{
+  "name": "d02/reject-fractional-length",
+  "snapshot": {
+    "format": "jsonspecs-snapshot",
+    "formatVersion": 2,
+    "specVersion": "1.0.0-rc.5",
+    "exports": [
+      "checks.main"
+    ],
+    "artifacts": {
+      "checks.main": {
+        "type": "pipeline",
+        "steps": [
+          "library.length.fraction"
+        ]
+      },
+      "library.length.fraction": {
+        "type": "rule",
+        "operator": "length_equals",
+        "field": "a",
+        "value": 1.5,
+        "issue": {
+          "level": "ERROR",
+          "code": "L.X2",
+          "message": "failed"
+        }
+      }
+    },
+    "sourceHash": "d4007fa464b4a5259c469fd7d79cf11fad9532d60f596e0a6c7aeb79a476b3ce"
+  },
+  "operators": [],
+  "expected": {
+    "verdict": "reject"
+  }
+}

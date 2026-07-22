@@ -1,0 +1,35 @@
+{
+  "name": "d29/reject-legacy-pipeline-strict",
+  "snapshot": {
+    "format": "jsonspecs-snapshot",
+    "formatVersion": 2,
+    "specVersion": "1.0.0-rc.5",
+    "exports": [
+      "checks.main"
+    ],
+    "artifacts": {
+      "checks.main": {
+        "type": "pipeline",
+        "steps": [
+          "library.d29.strict"
+        ],
+        "strict": false
+      },
+      "library.d29.strict": {
+        "type": "rule",
+        "operator": "not_empty",
+        "field": "a",
+        "issue": {
+          "level": "ERROR",
+          "code": "D29.X1",
+          "message": "failed"
+        }
+      }
+    },
+    "sourceHash": "890dea46010b19f948977d8c8b9ac7ddea2e2f56ac14fd5682c2975df451cffc"
+  },
+  "operators": [],
+  "expected": {
+    "verdict": "reject"
+  }
+}

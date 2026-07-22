@@ -1,0 +1,94 @@
+{
+  "name": "d05/wildcard-gaps-ascending-numeric",
+  "snapshot": {
+    "format": "jsonspecs-snapshot",
+    "formatVersion": 2,
+    "specVersion": "1.0.0-rc.5",
+    "exports": [
+      "checks.main"
+    ],
+    "artifacts": {
+      "checks.main": {
+        "type": "pipeline",
+        "steps": [
+          "library.o.each"
+        ]
+      },
+      "library.o.each": {
+        "type": "rule",
+        "operator": "greater_than",
+        "field": "x[*].v",
+        "value": 10,
+        "aggregate": {
+          "mode": "ALL",
+          "issueMode": "EACH"
+        },
+        "issue": {
+          "level": "ERROR",
+          "code": "O1",
+          "message": "failed"
+        }
+      }
+    },
+    "sourceHash": "1afcb25bd0e67e1d9103f45849d4c9814fbc1c3ecdf0e163792b5620e9b64c47"
+  },
+  "operators": [],
+  "input": {
+    "pipelineId": "checks.main",
+    "payload": {
+      "x": [
+        {
+          "v": 2
+        },
+        {},
+        {
+          "v": 3
+        },
+        {},
+        {},
+        {
+          "v": 1
+        }
+      ]
+    }
+  },
+  "expected": {
+    "status": "ERROR",
+    "issues": [
+      {
+        "level": "ERROR",
+        "code": "O1",
+        "message": "failed",
+        "field": "x[0].v",
+        "ruleId": "library.o.each",
+        "pipelineId": "checks.main",
+        "expected": 10,
+        "actual": 2
+      },
+      {
+        "level": "ERROR",
+        "code": "O1",
+        "message": "failed",
+        "field": "x[2].v",
+        "ruleId": "library.o.each",
+        "pipelineId": "checks.main",
+        "expected": 10,
+        "actual": 3
+      },
+      {
+        "level": "ERROR",
+        "code": "O1",
+        "message": "failed",
+        "field": "x[5].v",
+        "ruleId": "library.o.each",
+        "pipelineId": "checks.main",
+        "expected": 10,
+        "actual": 1
+      }
+    ],
+    "ruleset": {
+      "specVersion": "1.0.0-rc.5",
+      "sourceHash": "1afcb25bd0e67e1d9103f45849d4c9814fbc1c3ecdf0e163792b5620e9b64c47"
+    }
+  }
+}

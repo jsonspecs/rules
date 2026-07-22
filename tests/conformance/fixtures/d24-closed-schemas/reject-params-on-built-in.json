@@ -1,0 +1,37 @@
+{
+  "name": "d24/reject-params-on-built-in",
+  "snapshot": {
+    "format": "jsonspecs-snapshot",
+    "formatVersion": 2,
+    "specVersion": "1.0.0-rc.5",
+    "exports": [
+      "checks.main"
+    ],
+    "artifacts": {
+      "checks.main": {
+        "type": "pipeline",
+        "steps": [
+          "library.d24.builtin"
+        ]
+      },
+      "library.d24.builtin": {
+        "type": "rule",
+        "operator": "not_empty",
+        "field": "a",
+        "params": {
+          "outcome": "PASS"
+        },
+        "issue": {
+          "level": "ERROR",
+          "code": "D24.X3",
+          "message": "failed"
+        }
+      }
+    },
+    "sourceHash": "84b2aa25c8b1f793c4e9d0a2ee3fb0bcd7cd47859669825bb309a4bdad701b68"
+  },
+  "operators": [],
+  "expected": {
+    "verdict": "reject"
+  }
+}

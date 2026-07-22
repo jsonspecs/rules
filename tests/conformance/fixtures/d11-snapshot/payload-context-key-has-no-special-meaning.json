@@ -1,0 +1,56 @@
+{
+  "name": "d11/payload-context-key-has-no-special-meaning",
+  "snapshot": {
+    "format": "jsonspecs-snapshot",
+    "formatVersion": 2,
+    "specVersion": "1.0.0-rc.5",
+    "exports": [
+      "checks.main"
+    ],
+    "artifacts": {
+      "checks.main": {
+        "type": "pipeline",
+        "steps": [
+          "library.x.ctx"
+        ]
+      },
+      "library.x.ctx": {
+        "type": "rule",
+        "operator": "not_empty",
+        "field": "$context.currentDate",
+        "issue": {
+          "level": "EXCEPTION",
+          "code": "CTX.CURRENT_DATE.REQUIRED",
+          "message": "failed"
+        }
+      }
+    },
+    "sourceHash": "0d68b2c4622fc696649de431f4689bb0bb0b27ca485b17c2db636e9160b43b2e"
+  },
+  "operators": [],
+  "input": {
+    "pipelineId": "checks.main",
+    "payload": {
+      "__context": {
+        "currentDate": "2026-01-01"
+      }
+    }
+  },
+  "expected": {
+    "status": "EXCEPTION",
+    "issues": [
+      {
+        "level": "EXCEPTION",
+        "code": "CTX.CURRENT_DATE.REQUIRED",
+        "message": "failed",
+        "field": "$context.currentDate",
+        "ruleId": "library.x.ctx",
+        "pipelineId": "checks.main"
+      }
+    ],
+    "ruleset": {
+      "specVersion": "1.0.0-rc.5",
+      "sourceHash": "0d68b2c4622fc696649de431f4689bb0bb0b27ca485b17c2db636e9160b43b2e"
+    }
+  }
+}

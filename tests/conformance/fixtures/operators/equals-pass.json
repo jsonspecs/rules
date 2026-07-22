@@ -1,0 +1,46 @@
+{
+  "name": "operators/equals-pass",
+  "snapshot": {
+    "format": "jsonspecs-snapshot",
+    "formatVersion": 2,
+    "specVersion": "1.0.0-rc.5",
+    "exports": [
+      "checks.main"
+    ],
+    "artifacts": {
+      "builtin.equals": {
+        "type": "rule",
+        "operator": "equals",
+        "field": "a",
+        "value": 1,
+        "issue": {
+          "level": "ERROR",
+          "code": "BUILTIN.equals",
+          "message": "failed"
+        }
+      },
+      "checks.main": {
+        "type": "pipeline",
+        "steps": [
+          "builtin.equals"
+        ]
+      }
+    },
+    "sourceHash": "2d36182d4a20b526786846eecf93a81d1a691a7514008c616a11740e2ef35399"
+  },
+  "operators": [],
+  "input": {
+    "pipelineId": "checks.main",
+    "payload": {
+      "a": 1
+    }
+  },
+  "expected": {
+    "status": "OK",
+    "issues": [],
+    "ruleset": {
+      "specVersion": "1.0.0-rc.5",
+      "sourceHash": "2d36182d4a20b526786846eecf93a81d1a691a7514008c616a11740e2ef35399"
+    }
+  }
+}

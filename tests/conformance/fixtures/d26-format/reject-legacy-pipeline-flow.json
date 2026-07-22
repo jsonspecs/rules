@@ -1,0 +1,34 @@
+{
+  "name": "d26/reject-legacy-pipeline-flow",
+  "snapshot": {
+    "format": "jsonspecs-snapshot",
+    "formatVersion": 2,
+    "specVersion": "1.0.0-rc.5",
+    "exports": [
+      "checks.main"
+    ],
+    "artifacts": {
+      "checks.main": {
+        "type": "pipeline",
+        "flow": [
+          "library.d26.flow"
+        ]
+      },
+      "library.d26.flow": {
+        "type": "rule",
+        "operator": "not_empty",
+        "field": "a",
+        "issue": {
+          "level": "ERROR",
+          "code": "D26.X5",
+          "message": "failed"
+        }
+      }
+    },
+    "sourceHash": "29912b3022198eef648289aa80df9408a4b18363c1b68f38ac179c2a0fbad939"
+  },
+  "operators": [],
+  "expected": {
+    "verdict": "reject"
+  }
+}

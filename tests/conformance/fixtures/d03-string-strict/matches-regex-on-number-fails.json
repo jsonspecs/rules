@@ -1,0 +1,57 @@
+{
+  "name": "d03/matches-regex-on-number-fails",
+  "snapshot": {
+    "format": "jsonspecs-snapshot",
+    "formatVersion": 2,
+    "specVersion": "1.0.0-rc.5",
+    "exports": [
+      "checks.main"
+    ],
+    "artifacts": {
+      "checks.main": {
+        "type": "pipeline",
+        "steps": [
+          "library.s.rx"
+        ]
+      },
+      "library.s.rx": {
+        "type": "rule",
+        "operator": "matches_regex",
+        "field": "a",
+        "value": "^\\d+$",
+        "issue": {
+          "level": "ERROR",
+          "code": "S1",
+          "message": "failed"
+        }
+      }
+    },
+    "sourceHash": "6be7f22afd769c633b1899dfd930dc3cf1707db588192139d2a226557977ac3b"
+  },
+  "operators": [],
+  "input": {
+    "pipelineId": "checks.main",
+    "payload": {
+      "a": 123
+    }
+  },
+  "expected": {
+    "status": "ERROR",
+    "issues": [
+      {
+        "level": "ERROR",
+        "code": "S1",
+        "message": "failed",
+        "field": "a",
+        "ruleId": "library.s.rx",
+        "pipelineId": "checks.main",
+        "expected": "^\\d+$",
+        "actual": 123
+      }
+    ],
+    "ruleset": {
+      "specVersion": "1.0.0-rc.5",
+      "sourceHash": "6be7f22afd769c633b1899dfd930dc3cf1707db588192139d2a226557977ac3b"
+    }
+  }
+}

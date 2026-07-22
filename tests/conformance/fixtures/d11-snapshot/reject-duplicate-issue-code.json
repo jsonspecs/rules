@@ -1,0 +1,45 @@
+{
+  "name": "d11/reject-duplicate-issue-code",
+  "snapshot": {
+    "format": "jsonspecs-snapshot",
+    "formatVersion": 2,
+    "specVersion": "1.0.0-rc.5",
+    "exports": [
+      "checks.main"
+    ],
+    "artifacts": {
+      "checks.main": {
+        "type": "pipeline",
+        "steps": [
+          "library.x.d1",
+          "library.x.d2"
+        ]
+      },
+      "library.x.d1": {
+        "type": "rule",
+        "operator": "not_empty",
+        "field": "a",
+        "issue": {
+          "level": "ERROR",
+          "code": "DUP",
+          "message": "failed"
+        }
+      },
+      "library.x.d2": {
+        "type": "rule",
+        "operator": "not_empty",
+        "field": "b",
+        "issue": {
+          "level": "ERROR",
+          "code": "DUP",
+          "message": "failed"
+        }
+      }
+    },
+    "sourceHash": "0322dba159bc8705fa398ef3d991581d9577cc9fad3651d7f6f95d89c5bca537"
+  },
+  "operators": [],
+  "expected": {
+    "verdict": "reject"
+  }
+}

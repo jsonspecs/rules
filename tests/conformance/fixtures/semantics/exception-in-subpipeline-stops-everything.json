@@ -1,0 +1,69 @@
+{
+  "name": "sem/exception-in-subpipeline-stops-everything",
+  "snapshot": {
+    "format": "jsonspecs-snapshot",
+    "formatVersion": 2,
+    "specVersion": "1.0.0-rc.5",
+    "exports": [
+      "checks.main"
+    ],
+    "artifacts": {
+      "checks.inner": {
+        "type": "pipeline",
+        "steps": [
+          "library.se.x"
+        ]
+      },
+      "checks.main": {
+        "type": "pipeline",
+        "steps": [
+          "checks.inner",
+          "library.se.after"
+        ]
+      },
+      "library.se.after": {
+        "type": "rule",
+        "operator": "not_empty",
+        "field": "b",
+        "issue": {
+          "level": "ERROR",
+          "code": "SE6",
+          "message": "failed"
+        }
+      },
+      "library.se.x": {
+        "type": "rule",
+        "operator": "not_empty",
+        "field": "a",
+        "issue": {
+          "level": "EXCEPTION",
+          "code": "SE5",
+          "message": "failed"
+        }
+      }
+    },
+    "sourceHash": "69f9ecce83d83452c1ee646e1fd6151427565de7179b2dbc31222f782a266148"
+  },
+  "operators": [],
+  "input": {
+    "pipelineId": "checks.main",
+    "payload": {}
+  },
+  "expected": {
+    "status": "EXCEPTION",
+    "issues": [
+      {
+        "level": "EXCEPTION",
+        "code": "SE5",
+        "message": "failed",
+        "field": "a",
+        "ruleId": "library.se.x",
+        "pipelineId": "checks.inner"
+      }
+    ],
+    "ruleset": {
+      "specVersion": "1.0.0-rc.5",
+      "sourceHash": "69f9ecce83d83452c1ee646e1fd6151427565de7179b2dbc31222f782a266148"
+    }
+  }
+}

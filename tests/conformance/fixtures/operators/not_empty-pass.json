@@ -1,0 +1,45 @@
+{
+  "name": "operators/not_empty-pass",
+  "snapshot": {
+    "format": "jsonspecs-snapshot",
+    "formatVersion": 2,
+    "specVersion": "1.0.0-rc.5",
+    "exports": [
+      "checks.main"
+    ],
+    "artifacts": {
+      "builtin.not_empty": {
+        "type": "rule",
+        "operator": "not_empty",
+        "field": "a",
+        "issue": {
+          "level": "ERROR",
+          "code": "BUILTIN.not_empty",
+          "message": "failed"
+        }
+      },
+      "checks.main": {
+        "type": "pipeline",
+        "steps": [
+          "builtin.not_empty"
+        ]
+      }
+    },
+    "sourceHash": "19e1c8e55ebd2078e4812dc60913d67551ff68a2abe9f8141fa434a6974a53b8"
+  },
+  "operators": [],
+  "input": {
+    "pipelineId": "checks.main",
+    "payload": {
+      "a": "x"
+    }
+  },
+  "expected": {
+    "status": "OK",
+    "issues": [],
+    "ruleset": {
+      "specVersion": "1.0.0-rc.5",
+      "sourceHash": "19e1c8e55ebd2078e4812dc60913d67551ff68a2abe9f8141fa434a6974a53b8"
+    }
+  }
+}

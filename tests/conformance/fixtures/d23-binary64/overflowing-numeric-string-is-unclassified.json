@@ -1,0 +1,57 @@
+{
+  "name": "d23/overflowing-numeric-string-is-unclassified",
+  "snapshot": {
+    "format": "jsonspecs-snapshot",
+    "formatVersion": 2,
+    "specVersion": "1.0.0-rc.5",
+    "exports": [
+      "checks.main"
+    ],
+    "artifacts": {
+      "checks.main": {
+        "type": "pipeline",
+        "steps": [
+          "library.d23.string"
+        ]
+      },
+      "library.d23.string": {
+        "type": "rule",
+        "operator": "greater_than",
+        "field": "a",
+        "value": 0,
+        "issue": {
+          "level": "ERROR",
+          "code": "D23.3",
+          "message": "failed"
+        }
+      }
+    },
+    "sourceHash": "348e943d4590bfcf9e3c5af8920365d8e37f888a68a8b824eb152e4eed3adc7c"
+  },
+  "operators": [],
+  "input": {
+    "pipelineId": "checks.main",
+    "payload": {
+      "a": "1e400"
+    }
+  },
+  "expected": {
+    "status": "ERROR",
+    "issues": [
+      {
+        "level": "ERROR",
+        "code": "D23.3",
+        "message": "failed",
+        "field": "a",
+        "ruleId": "library.d23.string",
+        "pipelineId": "checks.main",
+        "expected": 0,
+        "actual": "1e400"
+      }
+    ],
+    "ruleset": {
+      "specVersion": "1.0.0-rc.5",
+      "sourceHash": "348e943d4590bfcf9e3c5af8920365d8e37f888a68a8b824eb152e4eed3adc7c"
+    }
+  }
+}

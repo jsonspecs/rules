@@ -1,0 +1,57 @@
+{
+  "name": "d02/length-max-exceeded-issue-shape",
+  "snapshot": {
+    "format": "jsonspecs-snapshot",
+    "formatVersion": 2,
+    "specVersion": "1.0.0-rc.5",
+    "exports": [
+      "checks.main"
+    ],
+    "artifacts": {
+      "checks.main": {
+        "type": "pipeline",
+        "steps": [
+          "library.l.max2"
+        ]
+      },
+      "library.l.max2": {
+        "type": "rule",
+        "operator": "length_max",
+        "field": "name",
+        "value": 3,
+        "issue": {
+          "level": "ERROR",
+          "code": "L3",
+          "message": "failed"
+        }
+      }
+    },
+    "sourceHash": "d25e4f40e57eaa5c10fa375d456601a54cf7c94f6fca317f0d58124f22183a07"
+  },
+  "operators": [],
+  "input": {
+    "pipelineId": "checks.main",
+    "payload": {
+      "name": "Пётр"
+    }
+  },
+  "expected": {
+    "status": "ERROR",
+    "issues": [
+      {
+        "level": "ERROR",
+        "code": "L3",
+        "message": "failed",
+        "field": "name",
+        "ruleId": "library.l.max2",
+        "pipelineId": "checks.main",
+        "expected": 3,
+        "actual": "Пётр"
+      }
+    ],
+    "ruleset": {
+      "specVersion": "1.0.0-rc.5",
+      "sourceHash": "d25e4f40e57eaa5c10fa375d456601a54cf7c94f6fca317f0d58124f22183a07"
+    }
+  }
+}

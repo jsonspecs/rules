@@ -1,0 +1,39 @@
+{
+  "name": "d24/reject-standard-field-not-accepted-by-params-operator",
+  "snapshot": {
+    "format": "jsonspecs-snapshot",
+    "formatVersion": 2,
+    "specVersion": "1.0.0-rc.5",
+    "exports": [
+      "checks.main"
+    ],
+    "artifacts": {
+      "checks.main": {
+        "type": "pipeline",
+        "steps": [
+          "library.d24.params.field"
+        ]
+      },
+      "library.d24.params.field": {
+        "type": "rule",
+        "operator": "conformance.rule.params",
+        "field": "a",
+        "params": {
+          "outcome": "PASS"
+        },
+        "issue": {
+          "level": "ERROR",
+          "code": "D24.X2F",
+          "message": "failed"
+        }
+      }
+    },
+    "sourceHash": "57b1a5057c3808db7df5b75c0033de2e9d85b070ed4841a1f10e061949eb3c4a"
+  },
+  "operators": [
+    "conformance.rule.params"
+  ],
+  "expected": {
+    "verdict": "reject"
+  }
+}

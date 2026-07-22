@@ -1,0 +1,47 @@
+{
+  "name": "d24/custom-params-schema-valid-and-delivered",
+  "snapshot": {
+    "format": "jsonspecs-snapshot",
+    "formatVersion": 2,
+    "specVersion": "1.0.0-rc.5",
+    "exports": [
+      "checks.main"
+    ],
+    "artifacts": {
+      "checks.main": {
+        "type": "pipeline",
+        "steps": [
+          "library.d24.params"
+        ]
+      },
+      "library.d24.params": {
+        "type": "rule",
+        "operator": "conformance.rule.params",
+        "params": {
+          "outcome": "PASS"
+        },
+        "issue": {
+          "level": "ERROR",
+          "code": "D24.1",
+          "message": "failed"
+        }
+      }
+    },
+    "sourceHash": "4a7948810d9172df160f46aa8da507e2040f7662e3edcc9fd706fdafd66436c6"
+  },
+  "operators": [
+    "conformance.rule.params"
+  ],
+  "input": {
+    "pipelineId": "checks.main",
+    "payload": {}
+  },
+  "expected": {
+    "status": "OK",
+    "issues": [],
+    "ruleset": {
+      "specVersion": "1.0.0-rc.5",
+      "sourceHash": "4a7948810d9172df160f46aa8da507e2040f7662e3edcc9fd706fdafd66436c6"
+    }
+  }
+}

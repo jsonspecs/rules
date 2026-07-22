@@ -1,0 +1,52 @@
+{
+  "name": "sem/warning-only-status",
+  "snapshot": {
+    "format": "jsonspecs-snapshot",
+    "formatVersion": 2,
+    "specVersion": "1.0.0-rc.5",
+    "exports": [
+      "checks.main"
+    ],
+    "artifacts": {
+      "checks.main": {
+        "type": "pipeline",
+        "steps": [
+          "library.se.w"
+        ]
+      },
+      "library.se.w": {
+        "type": "rule",
+        "operator": "not_empty",
+        "field": "a",
+        "issue": {
+          "level": "WARNING",
+          "code": "SE7",
+          "message": "failed"
+        }
+      }
+    },
+    "sourceHash": "b6026edf2ff7c6e2d0d961bd0d74b9db9eb48a9bd2321ab3cfd7f5f95277136b"
+  },
+  "operators": [],
+  "input": {
+    "pipelineId": "checks.main",
+    "payload": {}
+  },
+  "expected": {
+    "status": "OK_WITH_WARNINGS",
+    "issues": [
+      {
+        "level": "WARNING",
+        "code": "SE7",
+        "message": "failed",
+        "field": "a",
+        "ruleId": "library.se.w",
+        "pipelineId": "checks.main"
+      }
+    ],
+    "ruleset": {
+      "specVersion": "1.0.0-rc.5",
+      "sourceHash": "b6026edf2ff7c6e2d0d961bd0d74b9db9eb48a9bd2321ab3cfd7f5f95277136b"
+    }
+  }
+}

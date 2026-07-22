@@ -1,0 +1,38 @@
+{
+  "name": "d27/reject-missing-required-input-name",
+  "snapshot": {
+    "format": "jsonspecs-snapshot",
+    "formatVersion": 2,
+    "specVersion": "1.0.0-rc.5",
+    "exports": [
+      "checks.main"
+    ],
+    "artifacts": {
+      "checks.main": {
+        "type": "pipeline",
+        "steps": [
+          "library.d27.missing-name"
+        ]
+      },
+      "library.d27.missing-name": {
+        "type": "rule",
+        "operator": "conformance.rule.inputs",
+        "inputs": {
+          "missing": "absent.path"
+        },
+        "issue": {
+          "level": "ERROR",
+          "code": "D27.X1",
+          "message": "failed"
+        }
+      }
+    },
+    "sourceHash": "bfaa05b1ce356f5afa4b91177547d0271cccbcfd152616907a48c5f24f635a3e"
+  },
+  "operators": [
+    "conformance.rule.inputs"
+  ],
+  "expected": {
+    "verdict": "reject"
+  }
+}

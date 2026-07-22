@@ -1,0 +1,34 @@
+{
+  "name": "d11/reject-path-empty-segment",
+  "snapshot": {
+    "format": "jsonspecs-snapshot",
+    "formatVersion": 2,
+    "specVersion": "1.0.0-rc.5",
+    "exports": [
+      "checks.main"
+    ],
+    "artifacts": {
+      "checks.main": {
+        "type": "pipeline",
+        "steps": [
+          "library.x.p1"
+        ]
+      },
+      "library.x.p1": {
+        "type": "rule",
+        "operator": "not_empty",
+        "field": "a..b",
+        "issue": {
+          "level": "ERROR",
+          "code": "X17",
+          "message": "failed"
+        }
+      }
+    },
+    "sourceHash": "e46a92f74113ccdcf3d096dfe0d214814dcc7682d50964bfd8612f6a8efddbee"
+  },
+  "operators": [],
+  "expected": {
+    "verdict": "reject"
+  }
+}

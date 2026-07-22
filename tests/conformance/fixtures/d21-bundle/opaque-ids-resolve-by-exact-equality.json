@@ -1,0 +1,45 @@
+{
+  "name": "d21/opaque-ids-resolve-by-exact-equality",
+  "snapshot": {
+    "format": "jsonspecs-snapshot",
+    "formatVersion": 2,
+    "specVersion": "1.0.0-rc.5",
+    "exports": [
+      "pipeline"
+    ],
+    "artifacts": {
+      "pipeline": {
+        "type": "pipeline",
+        "steps": [
+          "rule"
+        ]
+      },
+      "rule": {
+        "type": "rule",
+        "operator": "not_empty",
+        "field": "a",
+        "issue": {
+          "level": "ERROR",
+          "code": "D21.1",
+          "message": "failed"
+        }
+      }
+    },
+    "sourceHash": "b4261cde81f5234bcb53e903402b90fdc1f6e21c7a5b8072dffed7e0b17f4397"
+  },
+  "operators": [],
+  "input": {
+    "pipelineId": "pipeline",
+    "payload": {
+      "a": 1
+    }
+  },
+  "expected": {
+    "status": "OK",
+    "issues": [],
+    "ruleset": {
+      "specVersion": "1.0.0-rc.5",
+      "sourceHash": "b4261cde81f5234bcb53e903402b90fdc1f6e21c7a5b8072dffed7e0b17f4397"
+    }
+  }
+}

@@ -1,0 +1,60 @@
+{
+  "name": "sem/author-meta-passthrough-verbatim",
+  "snapshot": {
+    "format": "jsonspecs-snapshot",
+    "formatVersion": 2,
+    "specVersion": "1.0.0-rc.5",
+    "exports": [
+      "checks.main"
+    ],
+    "artifacts": {
+      "checks.main": {
+        "type": "pipeline",
+        "steps": [
+          "library.se.meta"
+        ]
+      },
+      "library.se.meta": {
+        "type": "rule",
+        "operator": "not_empty",
+        "field": "a",
+        "issue": {
+          "level": "ERROR",
+          "code": "SE18",
+          "message": "failed",
+          "meta": {
+            "ui": "form1",
+            "docLink": "https://intra/reg/17"
+          }
+        }
+      }
+    },
+    "sourceHash": "dc9da1cea2d0276a55a6367b35d57ab66cbfd23bd89a8ecfd7e570097b17fcf8"
+  },
+  "operators": [],
+  "input": {
+    "pipelineId": "checks.main",
+    "payload": {}
+  },
+  "expected": {
+    "status": "ERROR",
+    "issues": [
+      {
+        "level": "ERROR",
+        "code": "SE18",
+        "message": "failed",
+        "field": "a",
+        "ruleId": "library.se.meta",
+        "pipelineId": "checks.main",
+        "meta": {
+          "ui": "form1",
+          "docLink": "https://intra/reg/17"
+        }
+      }
+    ],
+    "ruleset": {
+      "specVersion": "1.0.0-rc.5",
+      "sourceHash": "dc9da1cea2d0276a55a6367b35d57ab66cbfd23bd89a8ecfd7e570097b17fcf8"
+    }
+  }
+}

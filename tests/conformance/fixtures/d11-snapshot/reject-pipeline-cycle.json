@@ -1,0 +1,40 @@
+{
+  "name": "d11/reject-pipeline-cycle",
+  "snapshot": {
+    "format": "jsonspecs-snapshot",
+    "formatVersion": 2,
+    "specVersion": "1.0.0-rc.5",
+    "exports": [
+      "checks.a"
+    ],
+    "artifacts": {
+      "checks.a": {
+        "type": "pipeline",
+        "steps": [
+          "checks.b"
+        ]
+      },
+      "checks.b": {
+        "type": "pipeline",
+        "steps": [
+          "checks.a"
+        ]
+      },
+      "library.x.c2": {
+        "type": "rule",
+        "operator": "not_empty",
+        "field": "a",
+        "issue": {
+          "level": "ERROR",
+          "code": "X8",
+          "message": "failed"
+        }
+      }
+    },
+    "sourceHash": "929d1bad02e4bf998531f544f09ff201512bfacc4e9b4f33b17351082c5e4b55"
+  },
+  "operators": [],
+  "expected": {
+    "verdict": "reject"
+  }
+}

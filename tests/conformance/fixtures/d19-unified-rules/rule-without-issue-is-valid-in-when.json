@@ -1,0 +1,67 @@
+{
+  "name": "d19/rule-without-issue-is-valid-in-when",
+  "snapshot": {
+    "format": "jsonspecs-snapshot",
+    "formatVersion": 2,
+    "specVersion": "1.0.0-rc.5",
+    "exports": [
+      "checks.main"
+    ],
+    "artifacts": {
+      "checks.main": {
+        "type": "pipeline",
+        "steps": [
+          "library.d19.noissue.condition"
+        ]
+      },
+      "library.d19.hit": {
+        "type": "rule",
+        "operator": "not_empty",
+        "field": "required",
+        "issue": {
+          "level": "ERROR",
+          "code": "D19.3",
+          "message": "failed"
+        }
+      },
+      "library.d19.noissue": {
+        "type": "rule",
+        "operator": "length_equals",
+        "field": "kind",
+        "value": 2
+      },
+      "library.d19.noissue.condition": {
+        "type": "condition",
+        "when": "library.d19.noissue",
+        "steps": [
+          "library.d19.hit"
+        ]
+      }
+    },
+    "sourceHash": "89a88e4eff447f3ff8a06482b201f4e913ce729384a7ace568076b0a5b236a19"
+  },
+  "operators": [],
+  "input": {
+    "pipelineId": "checks.main",
+    "payload": {
+      "kind": "AB"
+    }
+  },
+  "expected": {
+    "status": "ERROR",
+    "issues": [
+      {
+        "level": "ERROR",
+        "code": "D19.3",
+        "message": "failed",
+        "field": "required",
+        "ruleId": "library.d19.hit",
+        "pipelineId": "checks.main"
+      }
+    ],
+    "ruleset": {
+      "specVersion": "1.0.0-rc.5",
+      "sourceHash": "89a88e4eff447f3ff8a06482b201f4e913ce729384a7ace568076b0a5b236a19"
+    }
+  }
+}

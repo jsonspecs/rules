@@ -1,0 +1,57 @@
+{
+  "name": "d08/any-filled-field-null-no-expected-actual",
+  "snapshot": {
+    "format": "jsonspecs-snapshot",
+    "formatVersion": 2,
+    "specVersion": "1.0.0-rc.5",
+    "exports": [
+      "checks.main"
+    ],
+    "artifacts": {
+      "checks.main": {
+        "type": "pipeline",
+        "steps": [
+          "library.p.any"
+        ]
+      },
+      "library.p.any": {
+        "type": "rule",
+        "operator": "any_filled",
+        "fields": [
+          "phone",
+          "email"
+        ],
+        "issue": {
+          "level": "ERROR",
+          "code": "P4",
+          "message": "failed"
+        }
+      }
+    },
+    "sourceHash": "fa1a9fec6750423683026a26a1485816e053022ac004e6259c7186b8dcdb7f46"
+  },
+  "operators": [],
+  "input": {
+    "pipelineId": "checks.main",
+    "payload": {
+      "other": 1
+    }
+  },
+  "expected": {
+    "status": "ERROR",
+    "issues": [
+      {
+        "level": "ERROR",
+        "code": "P4",
+        "message": "failed",
+        "field": null,
+        "ruleId": "library.p.any",
+        "pipelineId": "checks.main"
+      }
+    ],
+    "ruleset": {
+      "specVersion": "1.0.0-rc.5",
+      "sourceHash": "fa1a9fec6750423683026a26a1485816e053022ac004e6259c7186b8dcdb7f46"
+    }
+  }
+}

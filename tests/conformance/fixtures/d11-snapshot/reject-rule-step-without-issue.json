@@ -1,0 +1,29 @@
+{
+  "name": "d11/reject-rule-step-without-issue",
+  "snapshot": {
+    "format": "jsonspecs-snapshot",
+    "formatVersion": 2,
+    "specVersion": "1.0.0-rc.5",
+    "exports": [
+      "checks.main"
+    ],
+    "artifacts": {
+      "checks.main": {
+        "type": "pipeline",
+        "steps": [
+          "library.x.pp"
+        ]
+      },
+      "library.x.pp": {
+        "type": "rule",
+        "operator": "not_empty",
+        "field": "a"
+      }
+    },
+    "sourceHash": "d9849f73a9ebb102ca015e7ced9500fae45f4b7d7e9f508ec014237dffb550c4"
+  },
+  "operators": [],
+  "expected": {
+    "verdict": "reject"
+  }
+}

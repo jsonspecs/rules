@@ -1,0 +1,52 @@
+{
+  "name": "d08/absent-field-no-actual-key",
+  "snapshot": {
+    "format": "jsonspecs-snapshot",
+    "formatVersion": 2,
+    "specVersion": "1.0.0-rc.5",
+    "exports": [
+      "checks.main"
+    ],
+    "artifacts": {
+      "checks.main": {
+        "type": "pipeline",
+        "steps": [
+          "library.p.req"
+        ]
+      },
+      "library.p.req": {
+        "type": "rule",
+        "operator": "not_empty",
+        "field": "a",
+        "issue": {
+          "level": "ERROR",
+          "code": "P1",
+          "message": "failed"
+        }
+      }
+    },
+    "sourceHash": "acbb45aae6a9caeb55f1d6f5c4402f8414fd80d70fe9530d384721da642103be"
+  },
+  "operators": [],
+  "input": {
+    "pipelineId": "checks.main",
+    "payload": {}
+  },
+  "expected": {
+    "status": "ERROR",
+    "issues": [
+      {
+        "level": "ERROR",
+        "code": "P1",
+        "message": "failed",
+        "field": "a",
+        "ruleId": "library.p.req",
+        "pipelineId": "checks.main"
+      }
+    ],
+    "ruleset": {
+      "specVersion": "1.0.0-rc.5",
+      "sourceHash": "acbb45aae6a9caeb55f1d6f5c4402f8414fd80d70fe9530d384721da642103be"
+    }
+  }
+}

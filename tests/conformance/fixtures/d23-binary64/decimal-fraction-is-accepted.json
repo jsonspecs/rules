@@ -1,0 +1,46 @@
+{
+  "name": "d23/decimal-fraction-is-accepted",
+  "snapshot": {
+    "format": "jsonspecs-snapshot",
+    "formatVersion": 2,
+    "specVersion": "1.0.0-rc.5",
+    "exports": [
+      "checks.main"
+    ],
+    "artifacts": {
+      "checks.main": {
+        "type": "pipeline",
+        "steps": [
+          "library.d23.fraction"
+        ]
+      },
+      "library.d23.fraction": {
+        "type": "rule",
+        "operator": "equals",
+        "field": "a",
+        "value": 0.1,
+        "issue": {
+          "level": "ERROR",
+          "code": "D23.1",
+          "message": "failed"
+        }
+      }
+    },
+    "sourceHash": "5c1d0855738c88d8d140965a298c08b6ce27af4f00c0005fc3a331de631083c4"
+  },
+  "operators": [],
+  "input": {
+    "pipelineId": "checks.main",
+    "payload": {
+      "a": 0.1
+    }
+  },
+  "expected": {
+    "status": "OK",
+    "issues": [],
+    "ruleset": {
+      "specVersion": "1.0.0-rc.5",
+      "sourceHash": "5c1d0855738c88d8d140965a298c08b6ce27af4f00c0005fc3a331de631083c4"
+    }
+  }
+}

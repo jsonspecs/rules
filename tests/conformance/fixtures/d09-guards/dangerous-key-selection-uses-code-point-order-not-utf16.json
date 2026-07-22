@@ -1,0 +1,58 @@
+{
+  "name": "d09/dangerous-key-selection-uses-code-point-order-not-utf16",
+  "snapshot": {
+    "format": "jsonspecs-snapshot",
+    "formatVersion": 2,
+    "specVersion": "1.0.0-rc.5",
+    "exports": [
+      "checks.main"
+    ],
+    "artifacts": {
+      "checks.main": {
+        "type": "pipeline",
+        "steps": [
+          "library.g.r"
+        ]
+      },
+      "library.g.r": {
+        "type": "rule",
+        "operator": "not_empty",
+        "field": "ok",
+        "issue": {
+          "level": "ERROR",
+          "code": "G1",
+          "message": "failed"
+        }
+      }
+    },
+    "sourceHash": "70d4955f40ca4e848a51417e12682ebe43a9f4536df541c271eac94c3dcddae9"
+  },
+  "operators": [],
+  "input": {
+    "pipelineId": "checks.main",
+    "payload": {
+      "𐀀": {
+        "constructor": 1
+      },
+      "": {
+        "constructor": 2
+      },
+      "ok": 1
+    }
+  },
+  "expected": {
+    "status": "ABORT",
+    "issues": [],
+    "error": {
+      "code": "DANGEROUS_PAYLOAD_KEY",
+      "details": {
+        "parentPath": "",
+        "key": "constructor"
+      }
+    },
+    "ruleset": {
+      "specVersion": "1.0.0-rc.5",
+      "sourceHash": "70d4955f40ca4e848a51417e12682ebe43a9f4536df541c271eac94c3dcddae9"
+    }
+  }
+}

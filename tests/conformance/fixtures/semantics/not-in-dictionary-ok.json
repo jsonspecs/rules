@@ -1,0 +1,52 @@
+{
+  "name": "sem/not-in-dictionary-ok",
+  "snapshot": {
+    "format": "jsonspecs-snapshot",
+    "formatVersion": 2,
+    "specVersion": "1.0.0-rc.5",
+    "exports": [
+      "checks.main"
+    ],
+    "artifacts": {
+      "checks.main": {
+        "type": "pipeline",
+        "steps": [
+          "library.se.ni"
+        ]
+      },
+      "library.dict.blocked": {
+        "type": "dictionary",
+        "entries": [
+          "RU"
+        ]
+      },
+      "library.se.ni": {
+        "type": "rule",
+        "operator": "not_in_dictionary",
+        "field": "a",
+        "dictionary": "library.dict.blocked",
+        "issue": {
+          "level": "ERROR",
+          "code": "SE12",
+          "message": "failed"
+        }
+      }
+    },
+    "sourceHash": "c63354509a9588108bbe796c167f5eaa1d753930f190cc66ed2370421581048e"
+  },
+  "operators": [],
+  "input": {
+    "pipelineId": "checks.main",
+    "payload": {
+      "a": "DE"
+    }
+  },
+  "expected": {
+    "status": "OK",
+    "issues": [],
+    "ruleset": {
+      "specVersion": "1.0.0-rc.5",
+      "sourceHash": "c63354509a9588108bbe796c167f5eaa1d753930f190cc66ed2370421581048e"
+    }
+  }
+}

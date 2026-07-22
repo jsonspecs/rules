@@ -1,0 +1,57 @@
+{
+  "name": "d01/invalid-calendar-date-undetermined-fails",
+  "snapshot": {
+    "format": "jsonspecs-snapshot",
+    "formatVersion": 2,
+    "specVersion": "1.0.0-rc.5",
+    "exports": [
+      "checks.main"
+    ],
+    "artifacts": {
+      "checks.main": {
+        "type": "pipeline",
+        "steps": [
+          "library.n.gt3"
+        ]
+      },
+      "library.n.gt3": {
+        "type": "rule",
+        "operator": "greater_than",
+        "field": "a",
+        "value": "2026-01-01",
+        "issue": {
+          "level": "ERROR",
+          "code": "N5",
+          "message": "failed"
+        }
+      }
+    },
+    "sourceHash": "4caa79a0b6ca03e9391fdb0abc948829881f2268e530f1d107b3bfb5cee675fd"
+  },
+  "operators": [],
+  "input": {
+    "pipelineId": "checks.main",
+    "payload": {
+      "a": "2026-02-30"
+    }
+  },
+  "expected": {
+    "status": "ERROR",
+    "issues": [
+      {
+        "level": "ERROR",
+        "code": "N5",
+        "message": "failed",
+        "field": "a",
+        "ruleId": "library.n.gt3",
+        "pipelineId": "checks.main",
+        "expected": "2026-01-01",
+        "actual": "2026-02-30"
+      }
+    ],
+    "ruleset": {
+      "specVersion": "1.0.0-rc.5",
+      "sourceHash": "4caa79a0b6ca03e9391fdb0abc948829881f2268e530f1d107b3bfb5cee675fd"
+    }
+  }
+}

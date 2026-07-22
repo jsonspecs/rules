@@ -1,0 +1,77 @@
+{
+  "name": "d22/any-fail-evaluates-throw",
+  "snapshot": {
+    "format": "jsonspecs-snapshot",
+    "formatVersion": 2,
+    "specVersion": "1.0.0-rc.5",
+    "exports": [
+      "checks.main"
+    ],
+    "artifacts": {
+      "checks.main": {
+        "type": "pipeline",
+        "steps": [
+          "condition.any-fail-evaluates-throw"
+        ]
+      },
+      "condition.any-fail-evaluates-throw": {
+        "type": "condition",
+        "when": {
+          "any": [
+            "library.d22.any-fail-evaluates-throw.first",
+            "library.d22.any-fail-evaluates-throw.throw"
+          ]
+        },
+        "steps": [
+          "library.d22.any-fail-evaluates-throw.target"
+        ]
+      },
+      "library.d22.any-fail-evaluates-throw.first": {
+        "type": "rule",
+        "operator": "equals",
+        "field": "first",
+        "value": true
+      },
+      "library.d22.any-fail-evaluates-throw.target": {
+        "type": "rule",
+        "operator": "not_empty",
+        "field": "required",
+        "issue": {
+          "level": "ERROR",
+          "code": "D22.any-fail-evaluates-throw",
+          "message": "failed"
+        }
+      },
+      "library.d22.any-fail-evaluates-throw.throw": {
+        "type": "rule",
+        "operator": "conformance.rule.throw"
+      }
+    },
+    "sourceHash": "c5cb6df6464f6be62d90d1bf05970c7f319b2031abc117f08bb979e28ea0b15f"
+  },
+  "operators": [
+    "conformance.rule.throw"
+  ],
+  "input": {
+    "pipelineId": "checks.main",
+    "payload": {
+      "first": false,
+      "required": "ok"
+    }
+  },
+  "expected": {
+    "status": "ABORT",
+    "issues": [],
+    "error": {
+      "code": "OPERATOR_FAULT",
+      "details": {
+        "ruleId": "library.d22.any-fail-evaluates-throw.throw",
+        "operator": "conformance.rule.throw"
+      }
+    },
+    "ruleset": {
+      "specVersion": "1.0.0-rc.5",
+      "sourceHash": "c5cb6df6464f6be62d90d1bf05970c7f319b2031abc117f08bb979e28ea0b15f"
+    }
+  }
+}

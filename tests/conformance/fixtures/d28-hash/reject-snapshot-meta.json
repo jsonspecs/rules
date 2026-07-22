@@ -1,0 +1,37 @@
+{
+  "name": "d28/reject-snapshot-meta",
+  "snapshot": {
+    "format": "jsonspecs-snapshot",
+    "formatVersion": 2,
+    "specVersion": "1.0.0-rc.5",
+    "exports": [
+      "checks.main"
+    ],
+    "artifacts": {
+      "checks.main": {
+        "type": "pipeline",
+        "steps": [
+          "library.d28.meta"
+        ]
+      },
+      "library.d28.meta": {
+        "type": "rule",
+        "operator": "not_empty",
+        "field": "a",
+        "issue": {
+          "level": "ERROR",
+          "code": "D28.X1",
+          "message": "failed"
+        }
+      }
+    },
+    "sourceHash": "42e70248a4d42e0bb5f7e85446d6d4fd9ec07c8fd65b56d58713ae7ce22f54c4",
+    "meta": {
+      "projectId": "legacy"
+    }
+  },
+  "operators": [],
+  "expected": {
+    "verdict": "reject"
+  }
+}

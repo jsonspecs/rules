@@ -1,0 +1,35 @@
+{
+  "name": "d02/reject-negative-length",
+  "snapshot": {
+    "format": "jsonspecs-snapshot",
+    "formatVersion": 2,
+    "specVersion": "1.0.0-rc.5",
+    "exports": [
+      "checks.main"
+    ],
+    "artifacts": {
+      "checks.main": {
+        "type": "pipeline",
+        "steps": [
+          "library.length.negative"
+        ]
+      },
+      "library.length.negative": {
+        "type": "rule",
+        "operator": "length_max",
+        "field": "a",
+        "value": -1,
+        "issue": {
+          "level": "ERROR",
+          "code": "L.X1",
+          "message": "failed"
+        }
+      }
+    },
+    "sourceHash": "a5e70a59e692b15e83e53d3457a2581e69626d12d58ea69c0967fd9a32b72b13"
+  },
+  "operators": [],
+  "expected": {
+    "verdict": "reject"
+  }
+}

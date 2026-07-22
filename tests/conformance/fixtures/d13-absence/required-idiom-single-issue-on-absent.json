@@ -1,0 +1,64 @@
+{
+  "name": "d13/required-idiom-single-issue-on-absent",
+  "snapshot": {
+    "format": "jsonspecs-snapshot",
+    "formatVersion": 2,
+    "specVersion": "1.0.0-rc.5",
+    "exports": [
+      "checks.main"
+    ],
+    "artifacts": {
+      "checks.main": {
+        "type": "pipeline",
+        "steps": [
+          "library.a.req",
+          "library.a.fmt"
+        ]
+      },
+      "library.a.fmt": {
+        "type": "rule",
+        "operator": "matches_regex",
+        "field": "inn",
+        "value": "^\\d{12}$",
+        "issue": {
+          "level": "ERROR",
+          "code": "A3",
+          "message": "failed"
+        }
+      },
+      "library.a.req": {
+        "type": "rule",
+        "operator": "not_empty",
+        "field": "inn",
+        "issue": {
+          "level": "ERROR",
+          "code": "A2",
+          "message": "failed"
+        }
+      }
+    },
+    "sourceHash": "1a30ce7e69c4611f83bb6c365ed39a2ccd3e612b47dcb895ac833dd722c4dae4"
+  },
+  "operators": [],
+  "input": {
+    "pipelineId": "checks.main",
+    "payload": {}
+  },
+  "expected": {
+    "status": "ERROR",
+    "issues": [
+      {
+        "level": "ERROR",
+        "code": "A2",
+        "message": "failed",
+        "field": "inn",
+        "ruleId": "library.a.req",
+        "pipelineId": "checks.main"
+      }
+    ],
+    "ruleset": {
+      "specVersion": "1.0.0-rc.5",
+      "sourceHash": "1a30ce7e69c4611f83bb6c365ed39a2ccd3e612b47dcb895ac833dd722c4dae4"
+    }
+  }
+}

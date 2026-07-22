@@ -1,0 +1,36 @@
+{
+  "name": "d24/reject-operand-on-throw-conformance-operator",
+  "snapshot": {
+    "format": "jsonspecs-snapshot",
+    "formatVersion": 2,
+    "specVersion": "1.0.0-rc.5",
+    "exports": [
+      "checks.main"
+    ],
+    "artifacts": {
+      "checks.main": {
+        "type": "pipeline",
+        "steps": [
+          "library.d24.throw-field"
+        ]
+      },
+      "library.d24.throw-field": {
+        "type": "rule",
+        "operator": "conformance.rule.throw",
+        "field": "a",
+        "issue": {
+          "level": "ERROR",
+          "code": "D24.X2T",
+          "message": "failed"
+        }
+      }
+    },
+    "sourceHash": "794b6010609b9e4f0b0906dadba02e2496ff34ed3e179d1ce1e0096596921aa7"
+  },
+  "operators": [
+    "conformance.rule.throw"
+  ],
+  "expected": {
+    "verdict": "reject"
+  }
+}

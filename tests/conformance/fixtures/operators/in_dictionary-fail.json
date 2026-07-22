@@ -1,0 +1,63 @@
+{
+  "name": "operators/in_dictionary-fail",
+  "snapshot": {
+    "format": "jsonspecs-snapshot",
+    "formatVersion": 2,
+    "specVersion": "1.0.0-rc.5",
+    "exports": [
+      "checks.main"
+    ],
+    "artifacts": {
+      "builtin.in_dictionary": {
+        "type": "rule",
+        "operator": "in_dictionary",
+        "field": "a",
+        "dictionary": "matrix.dictionary",
+        "issue": {
+          "level": "ERROR",
+          "code": "BUILTIN.in_dictionary",
+          "message": "failed"
+        }
+      },
+      "checks.main": {
+        "type": "pipeline",
+        "steps": [
+          "builtin.in_dictionary"
+        ]
+      },
+      "matrix.dictionary": {
+        "type": "dictionary",
+        "entries": [
+          "A"
+        ]
+      }
+    },
+    "sourceHash": "65656d58b02d67e2d85b05e598638e2bd8c6ce954940365f0791a701580ea438"
+  },
+  "operators": [],
+  "input": {
+    "pipelineId": "checks.main",
+    "payload": {
+      "a": "B"
+    }
+  },
+  "expected": {
+    "status": "ERROR",
+    "issues": [
+      {
+        "level": "ERROR",
+        "code": "BUILTIN.in_dictionary",
+        "message": "failed",
+        "field": "a",
+        "ruleId": "builtin.in_dictionary",
+        "pipelineId": "checks.main",
+        "expected": "matrix.dictionary",
+        "actual": "B"
+      }
+    ],
+    "ruleset": {
+      "specVersion": "1.0.0-rc.5",
+      "sourceHash": "65656d58b02d67e2d85b05e598638e2bd8c6ce954940365f0791a701580ea438"
+    }
+  }
+}

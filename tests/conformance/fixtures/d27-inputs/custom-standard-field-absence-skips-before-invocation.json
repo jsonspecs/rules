@@ -1,0 +1,45 @@
+{
+  "name": "d27/custom-standard-field-absence-skips-before-invocation",
+  "snapshot": {
+    "format": "jsonspecs-snapshot",
+    "formatVersion": 2,
+    "specVersion": "1.0.0-rc.5",
+    "exports": [
+      "checks.main"
+    ],
+    "artifacts": {
+      "checks.main": {
+        "type": "pipeline",
+        "steps": [
+          "library.d27.standard-absence"
+        ]
+      },
+      "library.d27.standard-absence": {
+        "type": "rule",
+        "operator": "conformance.rule.tri",
+        "field": "absent",
+        "issue": {
+          "level": "ERROR",
+          "code": "D27.2",
+          "message": "failed"
+        }
+      }
+    },
+    "sourceHash": "2a9e666d52a0ad9e4407016ea6c3f5ec1f9a83be4b4a40f42cd1a3ffa44f8d3c"
+  },
+  "operators": [
+    "conformance.rule.tri"
+  ],
+  "input": {
+    "pipelineId": "checks.main",
+    "payload": {}
+  },
+  "expected": {
+    "status": "OK",
+    "issues": [],
+    "ruleset": {
+      "specVersion": "1.0.0-rc.5",
+      "sourceHash": "2a9e666d52a0ad9e4407016ea6c3f5ec1f9a83be4b4a40f42cd1a3ffa44f8d3c"
+    }
+  }
+}

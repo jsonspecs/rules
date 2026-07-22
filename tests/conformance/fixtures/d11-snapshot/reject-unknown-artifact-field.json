@@ -1,0 +1,35 @@
+{
+  "name": "d11/reject-unknown-artifact-field",
+  "snapshot": {
+    "format": "jsonspecs-snapshot",
+    "formatVersion": 2,
+    "specVersion": "1.0.0-rc.5",
+    "exports": [
+      "checks.main"
+    ],
+    "artifacts": {
+      "checks.main": {
+        "type": "pipeline",
+        "steps": [
+          "library.x.u"
+        ]
+      },
+      "library.x.u": {
+        "type": "rule",
+        "operator": "not_empty",
+        "field": "a",
+        "issue": {
+          "level": "ERROR",
+          "code": "X3",
+          "message": "failed"
+        },
+        "note": "oops"
+      }
+    },
+    "sourceHash": "918aba51216117d9f1120ebc823958b57b0ea606b10d9e953cefb9d0f19a61d2"
+  },
+  "operators": [],
+  "expected": {
+    "verdict": "reject"
+  }
+}

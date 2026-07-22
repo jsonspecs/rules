@@ -1,0 +1,35 @@
+{
+  "name": "d24/reject-missing-field-on-tri-conformance-operator",
+  "snapshot": {
+    "format": "jsonspecs-snapshot",
+    "formatVersion": 2,
+    "specVersion": "1.0.0-rc.5",
+    "exports": [
+      "checks.main"
+    ],
+    "artifacts": {
+      "checks.main": {
+        "type": "pipeline",
+        "steps": [
+          "library.d24.tri-no-field"
+        ]
+      },
+      "library.d24.tri-no-field": {
+        "type": "rule",
+        "operator": "conformance.rule.tri",
+        "issue": {
+          "level": "ERROR",
+          "code": "D24.X2TR",
+          "message": "failed"
+        }
+      }
+    },
+    "sourceHash": "705a5224ace37e6d0b2e7a844b5265a3bc13ea7b45e54a2c6d2ab5064260c5bf"
+  },
+  "operators": [
+    "conformance.rule.tri"
+  ],
+  "expected": {
+    "verdict": "reject"
+  }
+}

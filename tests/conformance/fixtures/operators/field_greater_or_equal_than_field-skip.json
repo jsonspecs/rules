@@ -1,0 +1,44 @@
+{
+  "name": "operators/field_greater_or_equal_than_field-skip",
+  "snapshot": {
+    "format": "jsonspecs-snapshot",
+    "formatVersion": 2,
+    "specVersion": "1.0.0-rc.5",
+    "exports": [
+      "checks.main"
+    ],
+    "artifacts": {
+      "builtin.field_greater_or_equal_than_field": {
+        "type": "rule",
+        "operator": "field_greater_or_equal_than_field",
+        "field": "a",
+        "value_field": "b",
+        "issue": {
+          "level": "ERROR",
+          "code": "BUILTIN.field_greater_or_equal_than_field",
+          "message": "failed"
+        }
+      },
+      "checks.main": {
+        "type": "pipeline",
+        "steps": [
+          "builtin.field_greater_or_equal_than_field"
+        ]
+      }
+    },
+    "sourceHash": "7f3886a9d2c97d394b0e394c2f2a8d1ae480d56f8030f64ceb7e57348c29fe91"
+  },
+  "operators": [],
+  "input": {
+    "pipelineId": "checks.main",
+    "payload": {}
+  },
+  "expected": {
+    "status": "OK",
+    "issues": [],
+    "ruleset": {
+      "specVersion": "1.0.0-rc.5",
+      "sourceHash": "7f3886a9d2c97d394b0e394c2f2a8d1ae480d56f8030f64ceb7e57348c29fe91"
+    }
+  }
+}

@@ -1,0 +1,51 @@
+{
+  "name": "d10/conformance-rule-throw-in-step-operator-fault",
+  "snapshot": {
+    "format": "jsonspecs-snapshot",
+    "formatVersion": 2,
+    "specVersion": "1.0.0-rc.5",
+    "exports": [
+      "checks.main"
+    ],
+    "artifacts": {
+      "checks.main": {
+        "type": "pipeline",
+        "steps": [
+          "library.co.r"
+        ]
+      },
+      "library.co.r": {
+        "type": "rule",
+        "operator": "conformance.rule.throw",
+        "issue": {
+          "level": "ERROR",
+          "code": "CO1",
+          "message": "failed"
+        }
+      }
+    },
+    "sourceHash": "7f091eb5f3b248103596381e34a5286c114ffd2e93e463c75b8717a87d965a01"
+  },
+  "operators": [
+    "conformance.rule.throw"
+  ],
+  "input": {
+    "pipelineId": "checks.main",
+    "payload": {}
+  },
+  "expected": {
+    "status": "ABORT",
+    "issues": [],
+    "error": {
+      "code": "OPERATOR_FAULT",
+      "details": {
+        "ruleId": "library.co.r",
+        "operator": "conformance.rule.throw"
+      }
+    },
+    "ruleset": {
+      "specVersion": "1.0.0-rc.5",
+      "sourceHash": "7f091eb5f3b248103596381e34a5286c114ffd2e93e463c75b8717a87d965a01"
+    }
+  }
+}

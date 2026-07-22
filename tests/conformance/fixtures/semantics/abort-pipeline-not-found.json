@@ -1,0 +1,51 @@
+{
+  "name": "sem/abort-pipeline-not-found",
+  "snapshot": {
+    "format": "jsonspecs-snapshot",
+    "formatVersion": 2,
+    "specVersion": "1.0.0-rc.5",
+    "exports": [
+      "checks.main"
+    ],
+    "artifacts": {
+      "checks.main": {
+        "type": "pipeline",
+        "steps": [
+          "library.se.ab"
+        ]
+      },
+      "library.se.ab": {
+        "type": "rule",
+        "operator": "not_empty",
+        "field": "a",
+        "issue": {
+          "level": "ERROR",
+          "code": "SE19",
+          "message": "failed"
+        }
+      }
+    },
+    "sourceHash": "8184776dcc2984cfc48a4e9021166ce76f02ffe15339d036e5592262c7c9f0a6"
+  },
+  "operators": [],
+  "input": {
+    "pipelineId": "checks.nope",
+    "payload": {
+      "a": 1
+    }
+  },
+  "expected": {
+    "status": "ABORT",
+    "issues": [],
+    "error": {
+      "code": "PIPELINE_NOT_FOUND",
+      "details": {
+        "pipelineId": "checks.nope"
+      }
+    },
+    "ruleset": {
+      "specVersion": "1.0.0-rc.5",
+      "sourceHash": "8184776dcc2984cfc48a4e9021166ce76f02ffe15339d036e5592262c7c9f0a6"
+    }
+  }
+}

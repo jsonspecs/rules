@@ -1,48 +1,89 @@
-export type DiagnosticLevel = "error" | "warning";
-export interface Diagnostic { code: string; level: DiagnosticLevel; message: string; phase: string; artifactId: string | null; pipelineId?: string | null; ruleId?: string | null; path: string | null; location: string | null; details?: Record<string, unknown> | null; }
-export interface Issue { kind: "ISSUE"; level: "WARNING" | "ERROR" | "EXCEPTION"; code: string; message?: string; field: string | null; ruleId: string; pipelineId: string; stepId?: string; expected?: unknown; actual?: unknown; meta?: Record<string, unknown>; }
-export type TraceMode = false | "basic" | "verbose";
-export type TraceStep = "pipeline.start" | "pipeline.finish" | "pipeline.abort" | "pipeline.strict" | "rule.start" | "rule.finish" | "condition.evaluate" | "predicate.aggregate" | "check.aggregate" | "context.required" | "operator.trace";
-export interface TraceEntry { kind: "TRACE"; artifactType: "jsonspecs"; step: TraceStep; artifactId: string | null; outcome: string | null; at: string; details?: unknown; }
-export interface RuntimeErrorShape { code: string; message: string; details: Record<string, unknown> | null; }
-export interface RulesetProvenance { sourceHash: string; engineVersion: string; rulesetVersion?: string; projectId?: string; }
-export interface PipelineResult { status: "OK" | "OK_WITH_WARNINGS" | "ERROR" | "EXCEPTION" | "ABORT"; control: "CONTINUE" | "STOP"; issues: Issue[]; ruleset?: RulesetProvenance; trace?: TraceEntry[]; error?: RuntimeErrorShape; }
-export interface OperatorContext { payload: Record<string, unknown>; payloadKeys: string[]; get(path: string): { ok: true; value: unknown } | { ok: false; value: undefined }; has(path: string): boolean; getDictionary(id: string): Record<string, unknown> | null; trace?(message: string, details?: Record<string, unknown>): void; }
-export interface CheckResult { status: "OK" | "FAIL" | "EXCEPTION"; error?: Error; field?: string; actual?: unknown; meta?: Record<string, unknown>; failures?: Array<{ field: string; actual?: unknown; meta?: Record<string, unknown> }>; }
-export interface PredicateResult { status: "TRUE" | "FALSE" | "UNDEFINED" | "EXCEPTION"; error?: Error; }
-export type CheckOperator = (rule: Record<string, any>, ctx: OperatorContext) => CheckResult;
-export type PredicateOperator = (rule: Record<string, any>, ctx: OperatorContext) => PredicateResult;
-export interface OperatorPack { check: Record<string, CheckOperator>; predicate: Record<string, PredicateOperator>; meta?: Record<string, unknown>; }
-export interface PreparedArtifact { readonly kind: "prepared-jsonspecs"; readonly artifactType: "jsonspecs"; readonly version: string; readonly sourceHash: string; readonly diagnostics: readonly Diagnostic[]; }
-export interface CompileOptions { sources?: ReadonlyMap<string, string | { file: string; line?: number; column?: number }>; }
-export interface RunOptions { trace?: boolean | "basic" | "verbose"; traceRedactor?: (value: unknown, mode: Exclude<TraceMode, false>) => unknown; debug?: boolean; }
-export interface EvaluationInput { pipelineId?: string; payload: Record<string, unknown>; context?: Record<string, unknown>; }
-export interface Inspector { listArtifacts(filter?: { type?: string }): ReadonlyArray<Record<string, unknown>>; getArtifact(id: string): Readonly<Record<string, any>> | null; listEntrypoints(): ReadonlyArray<Record<string, unknown>>; getPipelineSteps(id: string): unknown[] | null; getConditionModel(id: string): Record<string, any> | null; listDictionaries(): ReadonlyArray<Record<string, unknown>>; getDictionary(id: string): Readonly<Record<string, unknown>> | null; stats(): { artifacts: number; byType: Readonly<Record<string, number>>; entrypointCount: number }; }
-export interface Engine { compile(artifacts: Record<string, any>[], options?: CompileOptions): PreparedArtifact; validate(artifacts: Record<string, any>[], options?: CompileOptions): { ok: boolean; diagnostics: Diagnostic[] }; compileSnapshot(snapshot: Snapshot, options?: CompileOptions): PreparedArtifact; inspect(artifact: PreparedArtifact): Inspector; runPipeline(artifact: PreparedArtifact, input: EvaluationInput, options?: RunOptions): PipelineResult; /** @deprecated */ runPipeline(artifact: PreparedArtifact, pipelineId: string, payload: Record<string, unknown>, options?: RunOptions): PipelineResult; }
-export interface Snapshot { format: "jsonspecs-snapshot"; formatVersion: 1; sourceHash: string; engine: { minVersion: string }; artifacts: Record<string, any>[]; meta?: { projectId?: string; projectTitle?: string; description?: string; rulesetVersion?: string }; }
-export function createEngine(options: { operators: OperatorPack }): Engine;
-export const Operators: OperatorPack;
-export function validate(artifacts: Record<string, any>[], options?: CompileOptions & { operators?: OperatorPack }): { ok: boolean; diagnostics: Diagnostic[] };
-export function compileSnapshot(snapshot: Snapshot, options?: CompileOptions & { operators?: OperatorPack }): PreparedArtifact;
-export function inspect(artifact: PreparedArtifact): Inspector;
-export function computeSourceHash(artifacts: Record<string, any>[]): string;
-export function formatDiagnostics(diagnostics: Diagnostic[]): string;
-export function formatRuntimeError(error: RuntimeErrorShape): string;
-export function deepGet(obj: Record<string, unknown>, path: string): { ok: true; value: unknown } | { ok: false; value: undefined };
-export class CompilationError extends Error { readonly errors: string[]; readonly diagnostics: Diagnostic[]; constructor(diagnostics: Array<string | Diagnostic>); }
-export class RuntimeError extends Error { readonly code: string; readonly details: Record<string, unknown> | null; constructor(input: RuntimeErrorShape); }
+export type OperatorOutcome = "PASS" | "FAIL" | "SKIP";
+export interface OperatorDefinition {
+  /** Closed JSON Schema (draft-07) for field/fields/value/value_field/dictionary/inputs/params. */
+  readonly schema: Readonly<Record<string, unknown>>;
+  readonly evaluate: (invocation: Readonly<Record<string, unknown>>) => OperatorOutcome;
+}
+export type OperatorRegistry = Record<string, OperatorDefinition>;
 
-declare const jsonspecs: {
+export interface Snapshot {
+  format: "jsonspecs-snapshot";
+  formatVersion: 2;
+  specVersion: "1.0.0-rc.5";
+  sourceHash: string;
+  exports: string[];
+  artifacts: Record<string, Record<string, unknown>>;
+}
+export interface Diagnostic { code: string; message: string; path?: string; artifactId?: string; }
+export interface Issue {
+  level: "WARNING" | "ERROR" | "EXCEPTION";
+  code: string;
+  message: string;
+  field: string | null;
+  ruleId: string;
+  pipelineId: string;
+  expected?: unknown;
+  actual?: unknown;
+  details?: Record<string, unknown>;
+  meta?: Record<string, unknown>;
+}
+export interface PipelineResult {
+  status: "OK" | "OK_WITH_WARNINGS" | "ERROR" | "EXCEPTION" | "ABORT";
+  issues: Issue[];
+  ruleset: { specVersion: string; sourceHash: string };
+  error?: { code: string; details: Record<string, unknown> };
+}
+export interface EvaluationInput { pipelineId: string; payload: Record<string, unknown>; context?: Record<string, unknown>; }
+export interface PreparedSnapshot {
+  readonly kind: "prepared-jsonspecs";
+  readonly artifactType: "jsonspecs-rules";
+  readonly formatVersion: 2;
+  readonly specVersion: string;
+  readonly sourceHash: string;
+}
+export interface ValidationResult { ok: boolean; diagnostics: Diagnostic[]; identifier?: "OPERATOR_NOT_FOUND"; prepared?: PreparedSnapshot; }
+export interface Inspector {
+  listArtifacts(filter?: { type?: string }): ReadonlyArray<{ id: string; type: string }>;
+  getArtifact(id: string): Readonly<Record<string, unknown>> | null;
+  listExports(): readonly string[];
+  getPipelineSteps(id: string): readonly string[] | null;
+  stats(): { artifacts: number; byType: Readonly<Record<string, number>>; exportCount: number };
+}
+export interface Engine {
+  compileSnapshot(snapshot: Snapshot): PreparedSnapshot;
+  compileSnapshotText(text: string): PreparedSnapshot;
+  validate(snapshot: Snapshot): ValidationResult;
+  runPipeline(prepared: PreparedSnapshot, input: EvaluationInput): PipelineResult;
+  inspect(prepared: PreparedSnapshot): Inspector;
+}
+
+export class CompilationError extends Error {
+  readonly diagnostics: Diagnostic[];
+  readonly errors: string[];
+  readonly identifier?: "OPERATOR_NOT_FOUND";
+}
+export function createEngine(options?: { operators?: OperatorRegistry }): Engine;
+export const builtInOperators: Readonly<OperatorRegistry>;
+export function compileSnapshot(snapshot: Snapshot): PreparedSnapshot;
+export function compileSnapshotText(text: string): PreparedSnapshot;
+export function validate(snapshot: Snapshot): ValidationResult;
+export function runPipeline(prepared: PreparedSnapshot, input: EvaluationInput): PipelineResult;
+export function inspect(prepared: PreparedSnapshot): Inspector;
+export function computeSourceHash(snapshot: Omit<Snapshot, "sourceHash"> | Snapshot): string;
+export function formatDiagnostics(diagnostics: Diagnostic[]): string;
+export function formatRuntimeError(error?: { code: string; details: Record<string, unknown> }): string;
+
+declare const api: {
   createEngine: typeof createEngine;
-  Operators: typeof Operators;
-  validate: typeof validate;
+  builtInOperators: typeof builtInOperators;
+  CompilationError: typeof CompilationError;
   compileSnapshot: typeof compileSnapshot;
+  compileSnapshotText: typeof compileSnapshotText;
+  validate: typeof validate;
+  runPipeline: typeof runPipeline;
   inspect: typeof inspect;
   computeSourceHash: typeof computeSourceHash;
   formatDiagnostics: typeof formatDiagnostics;
   formatRuntimeError: typeof formatRuntimeError;
-  deepGet: typeof deepGet;
-  CompilationError: typeof CompilationError;
-  RuntimeError: typeof RuntimeError;
 };
-export default jsonspecs;
+export default api;

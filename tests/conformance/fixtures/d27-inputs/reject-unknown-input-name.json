@@ -1,0 +1,40 @@
+{
+  "name": "d27/reject-unknown-input-name",
+  "snapshot": {
+    "format": "jsonspecs-snapshot",
+    "formatVersion": 2,
+    "specVersion": "1.0.0-rc.5",
+    "exports": [
+      "checks.main"
+    ],
+    "artifacts": {
+      "checks.main": {
+        "type": "pipeline",
+        "steps": [
+          "library.d27.unknown-name"
+        ]
+      },
+      "library.d27.unknown-name": {
+        "type": "rule",
+        "operator": "conformance.rule.inputs",
+        "inputs": {
+          "missing": "absent.path",
+          "nullValue": "presentNull",
+          "extra": "x"
+        },
+        "issue": {
+          "level": "ERROR",
+          "code": "D27.X2",
+          "message": "failed"
+        }
+      }
+    },
+    "sourceHash": "6d2c06dbf15d49a4822cc46e15341d83b315596d9076d8a283acf5166e1dc0ea"
+  },
+  "operators": [
+    "conformance.rule.inputs"
+  ],
+  "expected": {
+    "verdict": "reject"
+  }
+}

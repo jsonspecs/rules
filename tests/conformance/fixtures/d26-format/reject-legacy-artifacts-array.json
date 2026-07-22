@@ -1,0 +1,36 @@
+{
+  "name": "d26/reject-legacy-artifacts-array",
+  "snapshot": {
+    "format": "jsonspecs-snapshot",
+    "formatVersion": 2,
+    "specVersion": "1.0.0-rc.5",
+    "exports": [
+      "checks.main"
+    ],
+    "artifacts": [
+      {
+        "id": "checks.main",
+        "type": "pipeline",
+        "steps": [
+          "library.d26.array"
+        ]
+      },
+      {
+        "id": "library.d26.array",
+        "type": "rule",
+        "operator": "not_empty",
+        "field": "a",
+        "issue": {
+          "level": "ERROR",
+          "code": "D26.X1",
+          "message": "failed"
+        }
+      }
+    ],
+    "sourceHash": "cbe21073721b468d1f89c497b0b57c16d45c5b41aec2bb3a9e784a04d012d6f1"
+  },
+  "operators": [],
+  "expected": {
+    "verdict": "reject"
+  }
+}

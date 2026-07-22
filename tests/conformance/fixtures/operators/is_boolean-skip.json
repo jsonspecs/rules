@@ -1,0 +1,43 @@
+{
+  "name": "operators/is_boolean-skip",
+  "snapshot": {
+    "format": "jsonspecs-snapshot",
+    "formatVersion": 2,
+    "specVersion": "1.0.0-rc.5",
+    "exports": [
+      "checks.main"
+    ],
+    "artifacts": {
+      "builtin.is_boolean": {
+        "type": "rule",
+        "operator": "is_boolean",
+        "field": "a",
+        "issue": {
+          "level": "ERROR",
+          "code": "BUILTIN.is_boolean",
+          "message": "failed"
+        }
+      },
+      "checks.main": {
+        "type": "pipeline",
+        "steps": [
+          "builtin.is_boolean"
+        ]
+      }
+    },
+    "sourceHash": "d267efa2b14f26caca38d71a1d7ad20f206662bb1ba3431b2ba0e48bc7806c3c"
+  },
+  "operators": [],
+  "input": {
+    "pipelineId": "checks.main",
+    "payload": {}
+  },
+  "expected": {
+    "status": "OK",
+    "issues": [],
+    "ruleset": {
+      "specVersion": "1.0.0-rc.5",
+      "sourceHash": "d267efa2b14f26caca38d71a1d7ad20f206662bb1ba3431b2ba0e48bc7806c3c"
+    }
+  }
+}

@@ -1,0 +1,51 @@
+{
+  "name": "d10/conformance-rule-invalid-result-in-step-contract-violation",
+  "snapshot": {
+    "format": "jsonspecs-snapshot",
+    "formatVersion": 2,
+    "specVersion": "1.0.0-rc.5",
+    "exports": [
+      "checks.main"
+    ],
+    "artifacts": {
+      "checks.main": {
+        "type": "pipeline",
+        "steps": [
+          "library.co.r"
+        ]
+      },
+      "library.co.r": {
+        "type": "rule",
+        "operator": "conformance.rule.invalid_result",
+        "issue": {
+          "level": "ERROR",
+          "code": "CO1",
+          "message": "failed"
+        }
+      }
+    },
+    "sourceHash": "97d160bdd55896e9925a919b464b3555a79ed78b017423357da334afa5006cde"
+  },
+  "operators": [
+    "conformance.rule.invalid_result"
+  ],
+  "input": {
+    "pipelineId": "checks.main",
+    "payload": {}
+  },
+  "expected": {
+    "status": "ABORT",
+    "issues": [],
+    "error": {
+      "code": "OPERATOR_CONTRACT_VIOLATION",
+      "details": {
+        "ruleId": "library.co.r",
+        "operator": "conformance.rule.invalid_result"
+      }
+    },
+    "ruleset": {
+      "specVersion": "1.0.0-rc.5",
+      "sourceHash": "97d160bdd55896e9925a919b464b3555a79ed78b017423357da334afa5006cde"
+    }
+  }
+}

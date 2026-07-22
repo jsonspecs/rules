@@ -1,0 +1,32 @@
+{
+  "name": "d21/reject-empty-exports",
+  "snapshot": {
+    "format": "jsonspecs-snapshot",
+    "formatVersion": 2,
+    "specVersion": "1.0.0-rc.5",
+    "exports": [],
+    "artifacts": {
+      "checks.main": {
+        "type": "pipeline",
+        "steps": [
+          "library.d21.empty"
+        ]
+      },
+      "library.d21.empty": {
+        "type": "rule",
+        "operator": "not_empty",
+        "field": "a",
+        "issue": {
+          "level": "ERROR",
+          "code": "D21.X2",
+          "message": "failed"
+        }
+      }
+    },
+    "sourceHash": "0f9a3a4a6b44caf6f81e4bed0a67669a0c13944efe56170c1764193df9748586"
+  },
+  "operators": [],
+  "expected": {
+    "verdict": "reject"
+  }
+}

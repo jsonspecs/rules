@@ -1,0 +1,70 @@
+{
+  "name": "d22/any-pass-does-not-evaluate-throw",
+  "snapshot": {
+    "format": "jsonspecs-snapshot",
+    "formatVersion": 2,
+    "specVersion": "1.0.0-rc.5",
+    "exports": [
+      "checks.main"
+    ],
+    "artifacts": {
+      "checks.main": {
+        "type": "pipeline",
+        "steps": [
+          "condition.any-pass-does-not-evaluate-throw"
+        ]
+      },
+      "condition.any-pass-does-not-evaluate-throw": {
+        "type": "condition",
+        "when": {
+          "any": [
+            "library.d22.any-pass-does-not-evaluate-throw.first",
+            "library.d22.any-pass-does-not-evaluate-throw.throw"
+          ]
+        },
+        "steps": [
+          "library.d22.any-pass-does-not-evaluate-throw.target"
+        ]
+      },
+      "library.d22.any-pass-does-not-evaluate-throw.first": {
+        "type": "rule",
+        "operator": "equals",
+        "field": "first",
+        "value": true
+      },
+      "library.d22.any-pass-does-not-evaluate-throw.target": {
+        "type": "rule",
+        "operator": "not_empty",
+        "field": "required",
+        "issue": {
+          "level": "ERROR",
+          "code": "D22.any-pass-does-not-evaluate-throw",
+          "message": "failed"
+        }
+      },
+      "library.d22.any-pass-does-not-evaluate-throw.throw": {
+        "type": "rule",
+        "operator": "conformance.rule.throw"
+      }
+    },
+    "sourceHash": "e780bb8085126f4fea1f1df5518f94af1dfacfbcc334cd1acec8d9a60687030c"
+  },
+  "operators": [
+    "conformance.rule.throw"
+  ],
+  "input": {
+    "pipelineId": "checks.main",
+    "payload": {
+      "first": true,
+      "required": "ok"
+    }
+  },
+  "expected": {
+    "status": "OK",
+    "issues": [],
+    "ruleset": {
+      "specVersion": "1.0.0-rc.5",
+      "sourceHash": "e780bb8085126f4fea1f1df5518f94af1dfacfbcc334cd1acec8d9a60687030c"
+    }
+  }
+}

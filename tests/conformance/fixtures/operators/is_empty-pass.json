@@ -1,0 +1,43 @@
+{
+  "name": "operators/is_empty-pass",
+  "snapshot": {
+    "format": "jsonspecs-snapshot",
+    "formatVersion": 2,
+    "specVersion": "1.0.0-rc.5",
+    "exports": [
+      "checks.main"
+    ],
+    "artifacts": {
+      "builtin.is_empty": {
+        "type": "rule",
+        "operator": "is_empty",
+        "field": "a",
+        "issue": {
+          "level": "ERROR",
+          "code": "BUILTIN.is_empty",
+          "message": "failed"
+        }
+      },
+      "checks.main": {
+        "type": "pipeline",
+        "steps": [
+          "builtin.is_empty"
+        ]
+      }
+    },
+    "sourceHash": "457b55c11fedfca018b644b5b37be81d7d7bcb8f19e249409cfbae2fe47dd14b"
+  },
+  "operators": [],
+  "input": {
+    "pipelineId": "checks.main",
+    "payload": {}
+  },
+  "expected": {
+    "status": "OK",
+    "issues": [],
+    "ruleset": {
+      "specVersion": "1.0.0-rc.5",
+      "sourceHash": "457b55c11fedfca018b644b5b37be81d7d7bcb8f19e249409cfbae2fe47dd14b"
+    }
+  }
+}

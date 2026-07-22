@@ -1,0 +1,77 @@
+{
+  "name": "sem/dictionary-scalar-entry",
+  "snapshot": {
+    "format": "jsonspecs-snapshot",
+    "formatVersion": 2,
+    "specVersion": "1.0.0-rc.5",
+    "exports": [
+      "checks.main"
+    ],
+    "artifacts": {
+      "checks.main": {
+        "type": "pipeline",
+        "steps": [
+          "library.se.di1",
+          "library.se.di2"
+        ]
+      },
+      "library.dict.countries": {
+        "type": "dictionary",
+        "entries": [
+          "RU",
+          "Россия"
+        ]
+      },
+      "library.se.di1": {
+        "type": "rule",
+        "operator": "in_dictionary",
+        "field": "a",
+        "dictionary": "library.dict.countries",
+        "issue": {
+          "level": "ERROR",
+          "code": "SE10",
+          "message": "failed"
+        }
+      },
+      "library.se.di2": {
+        "type": "rule",
+        "operator": "in_dictionary",
+        "field": "b",
+        "dictionary": "library.dict.countries",
+        "issue": {
+          "level": "ERROR",
+          "code": "SE11",
+          "message": "failed"
+        }
+      }
+    },
+    "sourceHash": "eaee8e091db961c2c74b92ee4854ffdd43e89091821744b16b43f79e31711ac9"
+  },
+  "operators": [],
+  "input": {
+    "pipelineId": "checks.main",
+    "payload": {
+      "a": "Россия",
+      "b": "DE"
+    }
+  },
+  "expected": {
+    "status": "ERROR",
+    "issues": [
+      {
+        "level": "ERROR",
+        "code": "SE11",
+        "message": "failed",
+        "field": "b",
+        "ruleId": "library.se.di2",
+        "pipelineId": "checks.main",
+        "expected": "library.dict.countries",
+        "actual": "DE"
+      }
+    ],
+    "ruleset": {
+      "specVersion": "1.0.0-rc.5",
+      "sourceHash": "eaee8e091db961c2c74b92ee4854ffdd43e89091821744b16b43f79e31711ac9"
+    }
+  }
+}

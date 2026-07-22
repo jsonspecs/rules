@@ -1,0 +1,47 @@
+{
+  "name": "operators/field_greater_than_field-pass",
+  "snapshot": {
+    "format": "jsonspecs-snapshot",
+    "formatVersion": 2,
+    "specVersion": "1.0.0-rc.5",
+    "exports": [
+      "checks.main"
+    ],
+    "artifacts": {
+      "builtin.field_greater_than_field": {
+        "type": "rule",
+        "operator": "field_greater_than_field",
+        "field": "a",
+        "value_field": "b",
+        "issue": {
+          "level": "ERROR",
+          "code": "BUILTIN.field_greater_than_field",
+          "message": "failed"
+        }
+      },
+      "checks.main": {
+        "type": "pipeline",
+        "steps": [
+          "builtin.field_greater_than_field"
+        ]
+      }
+    },
+    "sourceHash": "6a0def828d7936b08699df816ff7473f536ec523525c573fdb011b2c6d014033"
+  },
+  "operators": [],
+  "input": {
+    "pipelineId": "checks.main",
+    "payload": {
+      "a": 2,
+      "b": 1
+    }
+  },
+  "expected": {
+    "status": "OK",
+    "issues": [],
+    "ruleset": {
+      "specVersion": "1.0.0-rc.5",
+      "sourceHash": "6a0def828d7936b08699df816ff7473f536ec523525c573fdb011b2c6d014033"
+    }
+  }
+}

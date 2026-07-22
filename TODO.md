@@ -1,113 +1,12 @@
-# TODO
+# Backlog after 3.0.0
 
-Отложенные доработки для `@jsonspecs/rules`, к которым можно вернуться, если у библиотеки появится новый внешний потребитель и она начнёт использоваться как общее подключаемое ядро.
+These items are deliberately outside the RC.5 normative result and do not block
+3.0.0:
 
-## 1. Compile-time normalization во внутренние структуры
-
-**Когда возвращаться:**
-
-- библиотеку начнут встраивать другие команды в свои сервисы;
-- snapshot правил заметно вырастет по размеру или ветвистости;
-- `runPipeline()` станет hot path;
-- появятся жалобы на latency, GC или сложность расследований.
-
-**Зачем это нужно:**
-
-- перенести интерпретацию сырых JSON-артефактов из runtime в compile-time;
-- уменьшить количество runtime lookup/parse/check операций;
-- снизить аллокации и нагрузку на GC;
-- усилить внутренние инварианты compiled snapshot;
-- упростить и сделать предсказуемее код рантайма.
-
-**Идея доработки:**
-
-- оставить raw JSON-артефакты только на входе `compile()`;
-- внутри compiled bundle хранить уже нормализованную runtime-модель;
-- для `rule`, `condition`, `pipeline`, `dictionary` подготовить внутренние структуры с уже разрешёнными полями, оператором, aggregate-настройками и шаблонами issue.
-
-**Почему не делаем сейчас:**
-
-- пока это преждевременное усложнение;
-- текущий подход `deepClone + deepFreeze` уже решает критичную проблему detach/immutability;
-- сначала важнее correctness, parity и стабильность контракта.
-
-## 2. Production-mode without freeze
-
-**Когда возвращаться:**
-
-- если compile начнёт вызываться часто;
-- если появятся измеримые накладные расходы от `deepFreeze`;
-- если для части потребителей будет важнее скорость компиляции, чем максимальная защитность compiled bundle.
-
-**Зачем это нужно:**
-
-- уменьшить стоимость compile-time обработки;
-- снизить количество проходов по object graph;
-- дать более лёгкий режим для production-сценариев с частой компиляцией.
-
-**Идея доработки:**
-
-- добавить опцию режима компиляции, например:
-  - `safe` = `deepClone + deepFreeze`
-  - `fast` = только `deepClone`
-- сохранить detach от исходных artifacts в обоих режимах;
-- использовать `freeze` как дополнительную защиту, а не как единственный механизм корректности.
-
-**Почему не делаем сейчас:**
-
-- сейчас надёжность важнее микропроизводительности;
-- библиотека пока не имеет внешних потребителей;
-- нет подтверждённых метрик, что `freeze` реально стал bottleneck.
-
-## 3. Cross-phase diagnostic aggregation
-
-Текущий контракт компилятора намеренно **phase-fail-fast**: каждая фаза
-собирает все свои ошибки, но первая неуспешная фаза останавливает
-последующие. `validate()` поэтому возвращает диагностики только первой
-неуспешной фазы.
-
-**Когда возвращаться:**
-
-- если IDE/Studio потребует одновременный список ошибок из нескольких фаз;
-- если появится безопасная модель partial registry, позволяющая запускать
-  зависимые фазы после ошибок registry/schema.
-
-**Почему не делаем сейчас:**
-
-- reference- и DAG-диагностики после ошибок registry/schema могут быть шумом;
-- текущее поведение детерминировано и зафиксировано в `SPEC.md`.
-
-## 4. Compiler context without module-level state
-
-`setContext()/clearContext()` остаются внутренним P2-долгом. Контекст исходников стоит
-передавать явно через фазы компиляции, если компилятор станет
-реентерантным, асинхронным или будет вызываться в одном процессе с независимыми
-наборами `sources`. Сейчас фазы синхронны, а `finally` гарантирует очистку контекста.
-
-## 5. Более точный каталог schema diagnostics
-
-Сейчас межартефактные фазы уже имеют специфичные коды (`DUPLICATE_ARTIFACT_ID`,
-`ARTIFACT_REF_NOT_FOUND`, `PIPELINE_CYCLE`, `DUPLICATE_CHECK_CODE`,
-`UNKNOWN_OPERATOR`), но большая часть schema validation намеренно схлопнута в
-`SCHEMA_VALIDATION_ERROR`.
-
-Первый кандидат на выделение — dangerous path segment:
-
-- `field: "__proto__.x"`;
-- `value_field: "$context.constructor.x"`;
-- `fields[]` / `paths[]` в `any_filled`.
-
-Compile-time проверка уже есть, но diagnostic code пока общий. Для симметрии с
-runtime-кодами payload safety стоит вернуть отдельный `DANGEROUS_PATH_SEGMENT`.
-
-## 6. Trace limits для HTTP-adapters
-
-Core trace остаётся управляемым через `trace: false | "basic" | "verbose"` и
-`traceRedactor`, но публичные HTTP-adapters должны иметь собственный потолок:
-
-- максимум trace entries;
-- максимум serialized response size;
-- явный marker, что trace был усечён.
-
-Это не обязанность core API, но важно для сервисов, которые дают `basic` trace
-наружу.
+1. Add an optional non-normative trace stream without adding fields to the result.
+2. Publish a separate fv1 -> fv2 migration command in `@jsonspecs/cli`.
+3. Add shared golden vectors and package provenance conventions for external
+   cross-runtime operator packs.
+4. Calibrate fixed `maxIssues`/`maxNodes` defense-in-depth limits against production
+   workloads before proposing them to the specification.
+5. Add a Java-vs-Node live-stand comparison before the final spec `1.0.0` tag.

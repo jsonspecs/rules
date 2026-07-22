@@ -1,0 +1,44 @@
+{
+  "name": "d11/reject-issue-mode-without-issue",
+  "snapshot": {
+    "format": "jsonspecs-snapshot",
+    "formatVersion": 2,
+    "specVersion": "1.0.0-rc.5",
+    "exports": [
+      "checks.main"
+    ],
+    "artifacts": {
+      "checks.main": {
+        "type": "pipeline",
+        "steps": [
+          "library.d20.ok"
+        ]
+      },
+      "library.d20.bad3": {
+        "type": "rule",
+        "operator": "greater_than",
+        "field": "x[*].v",
+        "value": 1,
+        "aggregate": {
+          "mode": "ALL",
+          "issueMode": "EACH"
+        }
+      },
+      "library.d20.ok": {
+        "type": "rule",
+        "operator": "not_empty",
+        "field": "a",
+        "issue": {
+          "level": "ERROR",
+          "code": "D20.X3",
+          "message": "failed"
+        }
+      }
+    },
+    "sourceHash": "dac8b3fb1d3fc43be3271fe403dde34241f6b5d5c9a413217df6636cb934ebc3"
+  },
+  "operators": [],
+  "expected": {
+    "verdict": "reject"
+  }
+}

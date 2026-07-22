@@ -1,21 +1,22 @@
 "use strict";
 
+/** CommonJS-точка входа: только semver-стабильная публичная поверхность. */
+
 const { createEngine } = require("./src/engine");
-const { Operators } = require("./src/operators/index");
-const { deepGet } = require("./src/utils");
-const { CompilationError, RuntimeError } = require("./src/compiler/compilation-error");
-const { validate, inspect, compileSnapshot, computeSourceHash, formatDiagnostics, formatRuntimeError } = require("./src/public-api");
+const { builtIns } = require("./src/operators");
+const { CompilationError } = require("./src/errors");
+const api = require("./src/public-api");
 
 module.exports = {
   createEngine,
-  Operators,
-  deepGet,
+  builtInOperators: builtIns,
   CompilationError,
-  RuntimeError,
-  validate: (artifacts, options = {}) => validate(artifacts, { ...options, operators: options.operators || Operators }),
-  compileSnapshot: (snapshot, options = {}) => compileSnapshot(snapshot, { ...options, operators: options.operators || Operators }),
-  inspect,
-  computeSourceHash,
-  formatDiagnostics,
-  formatRuntimeError,
+  compileSnapshot: api.compileSnapshot,
+  compileSnapshotText: api.compileSnapshotText,
+  validate: api.validate,
+  runPipeline: api.runPipeline,
+  inspect: api.inspect,
+  computeSourceHash: api.computeSourceHash,
+  formatDiagnostics: api.formatDiagnostics,
+  formatRuntimeError: api.formatRuntimeError,
 };

@@ -1,0 +1,35 @@
+{
+  "name": "d24/reject-unknown-snapshot-field",
+  "snapshot": {
+    "format": "jsonspecs-snapshot",
+    "formatVersion": 2,
+    "specVersion": "1.0.0-rc.5",
+    "exports": [
+      "checks.main"
+    ],
+    "artifacts": {
+      "checks.main": {
+        "type": "pipeline",
+        "steps": [
+          "library.d24.envelope"
+        ]
+      },
+      "library.d24.envelope": {
+        "type": "rule",
+        "operator": "not_empty",
+        "field": "a",
+        "issue": {
+          "level": "ERROR",
+          "code": "D24.X1",
+          "message": "failed"
+        }
+      }
+    },
+    "sourceHash": "7fc7d784237ed1d816538ade6fd5ff30fcb8ab1b6aaa8407b20f69f3aa576c50",
+    "unknown": true
+  },
+  "operators": [],
+  "expected": {
+    "verdict": "reject"
+  }
+}

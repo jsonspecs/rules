@@ -1,0 +1,63 @@
+{
+  "name": "d10/conformance-rule-throw-in-when-operator-fault",
+  "snapshot": {
+    "format": "jsonspecs-snapshot",
+    "formatVersion": 2,
+    "specVersion": "1.0.0-rc.5",
+    "exports": [
+      "checks.main"
+    ],
+    "artifacts": {
+      "checks.main": {
+        "type": "pipeline",
+        "steps": [
+          "library.co.cond"
+        ]
+      },
+      "library.co.after": {
+        "type": "rule",
+        "operator": "not_empty",
+        "field": "b",
+        "issue": {
+          "level": "ERROR",
+          "code": "CO2",
+          "message": "failed"
+        }
+      },
+      "library.co.cond": {
+        "type": "condition",
+        "when": "library.co.r",
+        "steps": [
+          "library.co.after"
+        ]
+      },
+      "library.co.r": {
+        "type": "rule",
+        "operator": "conformance.rule.throw"
+      }
+    },
+    "sourceHash": "7b62655ea6560abe8d3480a3a2e1f293d696b73486025c42af106bb41ac9de73"
+  },
+  "operators": [
+    "conformance.rule.throw"
+  ],
+  "input": {
+    "pipelineId": "checks.main",
+    "payload": {}
+  },
+  "expected": {
+    "status": "ABORT",
+    "issues": [],
+    "error": {
+      "code": "OPERATOR_FAULT",
+      "details": {
+        "ruleId": "library.co.r",
+        "operator": "conformance.rule.throw"
+      }
+    },
+    "ruleset": {
+      "specVersion": "1.0.0-rc.5",
+      "sourceHash": "7b62655ea6560abe8d3480a3a2e1f293d696b73486025c42af106bb41ac9de73"
+    }
+  }
+}

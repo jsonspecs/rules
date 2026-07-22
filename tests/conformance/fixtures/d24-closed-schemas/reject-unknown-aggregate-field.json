@@ -1,0 +1,40 @@
+{
+  "name": "d24/reject-unknown-aggregate-field",
+  "snapshot": {
+    "format": "jsonspecs-snapshot",
+    "formatVersion": 2,
+    "specVersion": "1.0.0-rc.5",
+    "exports": [
+      "checks.main"
+    ],
+    "artifacts": {
+      "checks.main": {
+        "type": "pipeline",
+        "steps": [
+          "library.d24.aggregate"
+        ]
+      },
+      "library.d24.aggregate": {
+        "type": "rule",
+        "operator": "greater_than",
+        "field": "x[*].v",
+        "value": 1,
+        "aggregate": {
+          "mode": "ALL",
+          "issueMode": "EACH",
+          "unknown": true
+        },
+        "issue": {
+          "level": "ERROR",
+          "code": "D24.X5",
+          "message": "failed"
+        }
+      }
+    },
+    "sourceHash": "983687d593ce939eb7ac41bc5d26463ebdef366a53d35fdc203232d69692b720"
+  },
+  "operators": [],
+  "expected": {
+    "verdict": "reject"
+  }
+}

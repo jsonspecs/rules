@@ -1,0 +1,35 @@
+{
+  "name": "d26/reject-repeated-id-in-artifact-value",
+  "snapshot": {
+    "format": "jsonspecs-snapshot",
+    "formatVersion": 2,
+    "specVersion": "1.0.0-rc.5",
+    "exports": [
+      "checks.main"
+    ],
+    "artifacts": {
+      "checks.main": {
+        "type": "pipeline",
+        "steps": [
+          "library.d26.id"
+        ]
+      },
+      "library.d26.id": {
+        "type": "rule",
+        "operator": "not_empty",
+        "field": "a",
+        "issue": {
+          "level": "ERROR",
+          "code": "D26.X2",
+          "message": "failed"
+        },
+        "id": "library.d26.id"
+      }
+    },
+    "sourceHash": "cc416702aa287da64ffacac9d7da195c3f8669e72b9c789893cae5e6a688c981"
+  },
+  "operators": [],
+  "expected": {
+    "verdict": "reject"
+  }
+}

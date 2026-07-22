@@ -1,0 +1,52 @@
+{
+  "name": "d24/reject-unknown-when-field",
+  "snapshot": {
+    "format": "jsonspecs-snapshot",
+    "formatVersion": 2,
+    "specVersion": "1.0.0-rc.5",
+    "exports": [
+      "checks.main"
+    ],
+    "artifacts": {
+      "checks.main": {
+        "type": "pipeline",
+        "steps": [
+          "condition"
+        ]
+      },
+      "condition": {
+        "type": "condition",
+        "when": {
+          "all": [
+            "library.d24.when.p"
+          ],
+          "unknown": true
+        },
+        "steps": [
+          "library.d24.when.hit"
+        ]
+      },
+      "library.d24.when.hit": {
+        "type": "rule",
+        "operator": "not_empty",
+        "field": "a",
+        "issue": {
+          "level": "ERROR",
+          "code": "D24.X8",
+          "message": "failed"
+        }
+      },
+      "library.d24.when.p": {
+        "type": "rule",
+        "operator": "equals",
+        "field": "go",
+        "value": true
+      }
+    },
+    "sourceHash": "c279f102e46351141ee08caa49af1f495ab7b2f4b81b74095f843ecf84cfc0cd"
+  },
+  "operators": [],
+  "expected": {
+    "verdict": "reject"
+  }
+}

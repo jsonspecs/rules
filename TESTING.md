@@ -1,59 +1,18 @@
-# Testing guide
-
-## Current gates
-
-Run before release:
+# Testing
 
 ```bash
-npm test
-npm run test:smoke
-npm run test:pack
-npm run test:perf
+npm test                  # package API tests
+npm run test:conformance  # all 267 jsonspecs/spec RC.5 fixtures
+npm run test:smoke        # executable README flow
+npm run test:perf         # broad compile/runtime budgets
+npm run test:pack         # install the actual npm tarball through CJS and ESM
 ```
 
-What they cover today:
+`tests/conformance/spec-commit.txt` pins the exact specification commit. Updating
+the fixture tree and this pin is one reviewed change; hand-editing expected results
+inside this repository is forbidden. The specification text remains the arbiter if
+an implementation and a fixture disagree.
 
-- compiler phases and structured diagnostics;
-- safe JSON boundary for artifacts and payloads;
-- opaque prepared artifacts and introspection;
-- runtime status/control contract;
-- grouped wildcard `any_filled`;
-- aggregate modes including `MIN`/`MAX`;
-- trace modes, redaction, and redactor failure containment;
-- snapshot hash and SemVer compatibility;
-- JSON Schema parity fixtures;
-- CommonJS and ESM packed-consumer smoke tests;
-- large-payload, wildcard, issue-growth, and synthetic large-ruleset performance smoke checks.
-
-## Release publishing
-
-The npm packages trust the GitHub Actions workflow `.github/workflows/release.yml`
-from `jsonspecs/rules` for `npm publish`. The release job runs on a GitHub-hosted
-runner with `id-token: write`, uses Node 24 and npm 11.18.0, publishes
-`@jsonspecs/rules` first and then the `jsonspecs` compatibility package directly
-under the `latest` dist-tag. It does not use a long-lived npm token. Trusted
-publishing generates provenance automatically; `--provenance` is not required.
-
-Configure npm packages `@jsonspecs/rules` and `jsonspecs` with owner/repo
-`jsonspecs/rules`, workflow filename `release.yml`, allowed action
-`npm publish`, and no environment.
-
-## Recommended additions
-
-### P1
-
-- Compile-time diagnostic code test for dangerous path segments:
-  - `field: "__proto__.x"`;
-  - `value_field: "$context.constructor.x"`;
-  - `fields[]` / `paths[]` in `any_filled`.
-- TypeScript contract smoke that imports `index.d.ts` from the packed package and compiles sample CJS/ESM consumers.
-- Executable README examples so public snippets cannot drift from the current `runPipeline(prepared, input, options)` API.
-- JSON Schema parity fixtures for every artifact family and every aggregate mode.
-- Operator contract tests for custom operators returning non-JSON-safe `actual`, `meta`, and `failures`.
-
-### P2
-
-- Property-style matrix for all built-in operators across absent/null/empty/string/number/date inputs.
-- Snapshot compatibility fixtures for prerelease/build metadata edge cases.
-- Introspection immutability tests for all `inspect()` collections.
-- Trace event snapshot tests for nested condition/pipeline combinations.
+Before publishing, `prepublishOnly` runs unit, conformance, package, and performance
+checks. CI should additionally run `npm audit --omit=dev`, `npm pack --dry-run`, and
+verify a clean worktree after all generated checks.

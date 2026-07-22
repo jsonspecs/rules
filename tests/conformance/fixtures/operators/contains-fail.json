@@ -1,0 +1,57 @@
+{
+  "name": "operators/contains-fail",
+  "snapshot": {
+    "format": "jsonspecs-snapshot",
+    "formatVersion": 2,
+    "specVersion": "1.0.0-rc.5",
+    "exports": [
+      "checks.main"
+    ],
+    "artifacts": {
+      "builtin.contains": {
+        "type": "rule",
+        "operator": "contains",
+        "field": "a",
+        "value": "x",
+        "issue": {
+          "level": "ERROR",
+          "code": "BUILTIN.contains",
+          "message": "failed"
+        }
+      },
+      "checks.main": {
+        "type": "pipeline",
+        "steps": [
+          "builtin.contains"
+        ]
+      }
+    },
+    "sourceHash": "0e66986ef55e7d0c5a9f8aafe0b119810644d5db79d787b24d42125e993e7e07"
+  },
+  "operators": [],
+  "input": {
+    "pipelineId": "checks.main",
+    "payload": {
+      "a": "ay"
+    }
+  },
+  "expected": {
+    "status": "ERROR",
+    "issues": [
+      {
+        "level": "ERROR",
+        "code": "BUILTIN.contains",
+        "message": "failed",
+        "field": "a",
+        "ruleId": "builtin.contains",
+        "pipelineId": "checks.main",
+        "expected": "x",
+        "actual": "ay"
+      }
+    ],
+    "ruleset": {
+      "specVersion": "1.0.0-rc.5",
+      "sourceHash": "0e66986ef55e7d0c5a9f8aafe0b119810644d5db79d787b24d42125e993e7e07"
+    }
+  }
+}

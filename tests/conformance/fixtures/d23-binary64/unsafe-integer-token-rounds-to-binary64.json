@@ -1,0 +1,46 @@
+{
+  "name": "d23/unsafe-integer-token-rounds-to-binary64",
+  "snapshot": {
+    "format": "jsonspecs-snapshot",
+    "formatVersion": 2,
+    "specVersion": "1.0.0-rc.5",
+    "exports": [
+      "checks.main"
+    ],
+    "artifacts": {
+      "checks.main": {
+        "type": "pipeline",
+        "steps": [
+          "library.d23.round"
+        ]
+      },
+      "library.d23.round": {
+        "type": "rule",
+        "operator": "equals",
+        "field": "a",
+        "value": 9007199254740992,
+        "issue": {
+          "level": "ERROR",
+          "code": "D23.2",
+          "message": "failed"
+        }
+      }
+    },
+    "sourceHash": "eb9ee72495d08666c6d1a28f88a68908195dc05500fc65ee9d3ff65543faf994"
+  },
+  "operators": [],
+  "input": {
+    "pipelineId": "checks.main",
+    "payload": {
+      "a": 9007199254740993
+    }
+  },
+  "expected": {
+    "status": "OK",
+    "issues": [],
+    "ruleset": {
+      "specVersion": "1.0.0-rc.5",
+      "sourceHash": "eb9ee72495d08666c6d1a28f88a68908195dc05500fc65ee9d3ff65543faf994"
+    }
+  }
+}

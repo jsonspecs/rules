@@ -1,0 +1,46 @@
+{
+  "name": "d04/unanchored-search-semantics",
+  "snapshot": {
+    "format": "jsonspecs-snapshot",
+    "formatVersion": 2,
+    "specVersion": "1.0.0-rc.5",
+    "exports": [
+      "checks.main"
+    ],
+    "artifacts": {
+      "checks.main": {
+        "type": "pipeline",
+        "steps": [
+          "library.r.s"
+        ]
+      },
+      "library.r.s": {
+        "type": "rule",
+        "operator": "matches_regex",
+        "field": "a",
+        "value": "\\d",
+        "issue": {
+          "level": "ERROR",
+          "code": "R12",
+          "message": "failed"
+        }
+      }
+    },
+    "sourceHash": "14d4212a00d549ae44bab3d8bc9075c992ba95d5bd1951e4a83becc4144156c4"
+  },
+  "operators": [],
+  "input": {
+    "pipelineId": "checks.main",
+    "payload": {
+      "a": "ab7cd"
+    }
+  },
+  "expected": {
+    "status": "OK",
+    "issues": [],
+    "ruleset": {
+      "specVersion": "1.0.0-rc.5",
+      "sourceHash": "14d4212a00d549ae44bab3d8bc9075c992ba95d5bd1951e4a83becc4144156c4"
+    }
+  }
+}

@@ -1,0 +1,88 @@
+{
+  "name": "d20/each-exception-materializes-all-current-rule-issues-before-stop",
+  "snapshot": {
+    "format": "jsonspecs-snapshot",
+    "formatVersion": 2,
+    "specVersion": "1.0.0-rc.5",
+    "exports": [
+      "checks.main"
+    ],
+    "artifacts": {
+      "checks.main": {
+        "type": "pipeline",
+        "steps": [
+          "library.d20.exception-each",
+          "library.d20.after-exception"
+        ]
+      },
+      "library.d20.after-exception": {
+        "type": "rule",
+        "operator": "not_empty",
+        "field": "required",
+        "issue": {
+          "level": "ERROR",
+          "code": "D20.9",
+          "message": "failed"
+        }
+      },
+      "library.d20.exception-each": {
+        "type": "rule",
+        "operator": "conformance.rule.tri",
+        "field": "items[*].result",
+        "aggregate": {
+          "mode": "ALL",
+          "issueMode": "EACH"
+        },
+        "issue": {
+          "level": "EXCEPTION",
+          "code": "D20.8",
+          "message": "failed"
+        }
+      }
+    },
+    "sourceHash": "cd2c578a28dbe4b3ea8467505626b28efc7d4b5f2dfe3d51edd5e9ad7551960f"
+  },
+  "operators": [
+    "conformance.rule.tri"
+  ],
+  "input": {
+    "pipelineId": "checks.main",
+    "payload": {
+      "items": [
+        {
+          "result": "FAIL"
+        },
+        {
+          "result": "FAIL"
+        }
+      ]
+    }
+  },
+  "expected": {
+    "status": "EXCEPTION",
+    "issues": [
+      {
+        "level": "EXCEPTION",
+        "code": "D20.8",
+        "message": "failed",
+        "field": "items[0].result",
+        "ruleId": "library.d20.exception-each",
+        "pipelineId": "checks.main",
+        "actual": "FAIL"
+      },
+      {
+        "level": "EXCEPTION",
+        "code": "D20.8",
+        "message": "failed",
+        "field": "items[1].result",
+        "ruleId": "library.d20.exception-each",
+        "pipelineId": "checks.main",
+        "actual": "FAIL"
+      }
+    ],
+    "ruleset": {
+      "specVersion": "1.0.0-rc.5",
+      "sourceHash": "cd2c578a28dbe4b3ea8467505626b28efc7d4b5f2dfe3d51edd5e9ad7551960f"
+    }
+  }
+}

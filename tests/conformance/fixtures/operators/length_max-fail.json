@@ -1,0 +1,57 @@
+{
+  "name": "operators/length_max-fail",
+  "snapshot": {
+    "format": "jsonspecs-snapshot",
+    "formatVersion": 2,
+    "specVersion": "1.0.0-rc.5",
+    "exports": [
+      "checks.main"
+    ],
+    "artifacts": {
+      "builtin.length_max": {
+        "type": "rule",
+        "operator": "length_max",
+        "field": "a",
+        "value": 2,
+        "issue": {
+          "level": "ERROR",
+          "code": "BUILTIN.length_max",
+          "message": "failed"
+        }
+      },
+      "checks.main": {
+        "type": "pipeline",
+        "steps": [
+          "builtin.length_max"
+        ]
+      }
+    },
+    "sourceHash": "f9d38e196982d2280870b477b29ca83eb00351d0b7bf404300f80e3e9cdfdfe1"
+  },
+  "operators": [],
+  "input": {
+    "pipelineId": "checks.main",
+    "payload": {
+      "a": "abc"
+    }
+  },
+  "expected": {
+    "status": "ERROR",
+    "issues": [
+      {
+        "level": "ERROR",
+        "code": "BUILTIN.length_max",
+        "message": "failed",
+        "field": "a",
+        "ruleId": "builtin.length_max",
+        "pipelineId": "checks.main",
+        "expected": 2,
+        "actual": "abc"
+      }
+    ],
+    "ruleset": {
+      "specVersion": "1.0.0-rc.5",
+      "sourceHash": "f9d38e196982d2280870b477b29ca83eb00351d0b7bf404300f80e3e9cdfdfe1"
+    }
+  }
+}

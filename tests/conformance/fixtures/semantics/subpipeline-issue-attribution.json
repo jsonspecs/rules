@@ -1,0 +1,58 @@
+{
+  "name": "sem/subpipeline-issue-attribution",
+  "snapshot": {
+    "format": "jsonspecs-snapshot",
+    "formatVersion": 2,
+    "specVersion": "1.0.0-rc.5",
+    "exports": [
+      "checks.main"
+    ],
+    "artifacts": {
+      "checks.inner": {
+        "type": "pipeline",
+        "steps": [
+          "library.se.sub"
+        ]
+      },
+      "checks.main": {
+        "type": "pipeline",
+        "steps": [
+          "checks.inner"
+        ]
+      },
+      "library.se.sub": {
+        "type": "rule",
+        "operator": "not_empty",
+        "field": "a",
+        "issue": {
+          "level": "ERROR",
+          "code": "SE22",
+          "message": "failed"
+        }
+      }
+    },
+    "sourceHash": "dde5bc3f29fd96a8849d52e7f4ae63d9f49290d8a7fbf45f588b20b16f3d140d"
+  },
+  "operators": [],
+  "input": {
+    "pipelineId": "checks.main",
+    "payload": {}
+  },
+  "expected": {
+    "status": "ERROR",
+    "issues": [
+      {
+        "level": "ERROR",
+        "code": "SE22",
+        "message": "failed",
+        "field": "a",
+        "ruleId": "library.se.sub",
+        "pipelineId": "checks.inner"
+      }
+    ],
+    "ruleset": {
+      "specVersion": "1.0.0-rc.5",
+      "sourceHash": "dde5bc3f29fd96a8849d52e7f4ae63d9f49290d8a7fbf45f588b20b16f3d140d"
+    }
+  }
+}

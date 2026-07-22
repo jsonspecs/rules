@@ -1,0 +1,57 @@
+{
+  "name": "operators/matches_regex-fail",
+  "snapshot": {
+    "format": "jsonspecs-snapshot",
+    "formatVersion": 2,
+    "specVersion": "1.0.0-rc.5",
+    "exports": [
+      "checks.main"
+    ],
+    "artifacts": {
+      "builtin.matches_regex": {
+        "type": "rule",
+        "operator": "matches_regex",
+        "field": "a",
+        "value": "^x$",
+        "issue": {
+          "level": "ERROR",
+          "code": "BUILTIN.matches_regex",
+          "message": "failed"
+        }
+      },
+      "checks.main": {
+        "type": "pipeline",
+        "steps": [
+          "builtin.matches_regex"
+        ]
+      }
+    },
+    "sourceHash": "e9345b93b9889119dfe0c5554deabc3a2dc3f39452a0c7596344f488518fda9c"
+  },
+  "operators": [],
+  "input": {
+    "pipelineId": "checks.main",
+    "payload": {
+      "a": "y"
+    }
+  },
+  "expected": {
+    "status": "ERROR",
+    "issues": [
+      {
+        "level": "ERROR",
+        "code": "BUILTIN.matches_regex",
+        "message": "failed",
+        "field": "a",
+        "ruleId": "builtin.matches_regex",
+        "pipelineId": "checks.main",
+        "expected": "^x$",
+        "actual": "y"
+      }
+    ],
+    "ruleset": {
+      "specVersion": "1.0.0-rc.5",
+      "sourceHash": "e9345b93b9889119dfe0c5554deabc3a2dc3f39452a0c7596344f488518fda9c"
+    }
+  }
+}

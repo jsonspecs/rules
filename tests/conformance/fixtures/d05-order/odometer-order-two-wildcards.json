@@ -1,0 +1,99 @@
+{
+  "name": "d05/odometer-order-two-wildcards",
+  "snapshot": {
+    "format": "jsonspecs-snapshot",
+    "formatVersion": 2,
+    "specVersion": "1.0.0-rc.5",
+    "exports": [
+      "checks.main"
+    ],
+    "artifacts": {
+      "checks.main": {
+        "type": "pipeline",
+        "steps": [
+          "library.o.odo"
+        ]
+      },
+      "library.o.odo": {
+        "type": "rule",
+        "operator": "greater_than",
+        "field": "m[*].n[*].v",
+        "value": 10,
+        "aggregate": {
+          "mode": "ALL",
+          "issueMode": "EACH"
+        },
+        "issue": {
+          "level": "ERROR",
+          "code": "O2",
+          "message": "failed"
+        }
+      }
+    },
+    "sourceHash": "9458a0d8216880db94d58c0680afc3740f4fd411a60cf8e91e40ef3b0833a12d"
+  },
+  "operators": [],
+  "input": {
+    "pipelineId": "checks.main",
+    "payload": {
+      "m": [
+        {
+          "n": [
+            {
+              "v": 1
+            },
+            {
+              "v": 2
+            }
+          ]
+        },
+        {
+          "n": [
+            {
+              "v": 3
+            }
+          ]
+        }
+      ]
+    }
+  },
+  "expected": {
+    "status": "ERROR",
+    "issues": [
+      {
+        "level": "ERROR",
+        "code": "O2",
+        "message": "failed",
+        "field": "m[0].n[0].v",
+        "ruleId": "library.o.odo",
+        "pipelineId": "checks.main",
+        "expected": 10,
+        "actual": 1
+      },
+      {
+        "level": "ERROR",
+        "code": "O2",
+        "message": "failed",
+        "field": "m[0].n[1].v",
+        "ruleId": "library.o.odo",
+        "pipelineId": "checks.main",
+        "expected": 10,
+        "actual": 2
+      },
+      {
+        "level": "ERROR",
+        "code": "O2",
+        "message": "failed",
+        "field": "m[1].n[0].v",
+        "ruleId": "library.o.odo",
+        "pipelineId": "checks.main",
+        "expected": 10,
+        "actual": 3
+      }
+    ],
+    "ruleset": {
+      "specVersion": "1.0.0-rc.5",
+      "sourceHash": "9458a0d8216880db94d58c0680afc3740f4fd411a60cf8e91e40ef3b0833a12d"
+    }
+  }
+}

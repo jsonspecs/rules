@@ -1,0 +1,38 @@
+{
+  "name": "d29/reject-legacy-max-aggregate",
+  "snapshot": {
+    "format": "jsonspecs-snapshot",
+    "formatVersion": 2,
+    "specVersion": "1.0.0-rc.5",
+    "exports": [
+      "checks.main"
+    ],
+    "artifacts": {
+      "checks.main": {
+        "type": "pipeline",
+        "steps": [
+          "library.d29.max"
+        ]
+      },
+      "library.d29.max": {
+        "type": "rule",
+        "operator": "greater_than",
+        "field": "x[*].v",
+        "value": 1,
+        "aggregate": {
+          "mode": "MAX"
+        },
+        "issue": {
+          "level": "ERROR",
+          "code": "D29.X3",
+          "message": "failed"
+        }
+      }
+    },
+    "sourceHash": "6c2384a08411112fd13f81279ba1fea9b760450c3d45939965a149b32fb5e899"
+  },
+  "operators": [],
+  "expected": {
+    "verdict": "reject"
+  }
+}

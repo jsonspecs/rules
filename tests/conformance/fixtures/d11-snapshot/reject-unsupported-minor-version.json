@@ -1,0 +1,34 @@
+{
+  "name": "d11/reject-unsupported-minor-version",
+  "snapshot": {
+    "format": "jsonspecs-snapshot",
+    "formatVersion": 2,
+    "specVersion": "1.999.0",
+    "exports": [
+      "checks.main"
+    ],
+    "artifacts": {
+      "checks.main": {
+        "type": "pipeline",
+        "steps": [
+          "library.x.mv"
+        ]
+      },
+      "library.x.mv": {
+        "type": "rule",
+        "operator": "not_empty",
+        "field": "a",
+        "issue": {
+          "level": "ERROR",
+          "code": "X13",
+          "message": "failed"
+        }
+      }
+    },
+    "sourceHash": "1aa8dbceed403a537c26a73e7dc7acc92f89baf359006036b25d1dadd723af84"
+  },
+  "operators": [],
+  "expected": {
+    "verdict": "reject"
+  }
+}

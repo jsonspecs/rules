@@ -1,0 +1,66 @@
+{
+  "name": "sem/aggregate-on-empty-fail-summary",
+  "snapshot": {
+    "format": "jsonspecs-snapshot",
+    "formatVersion": 2,
+    "specVersion": "1.0.0-rc.5",
+    "exports": [
+      "checks.main"
+    ],
+    "artifacts": {
+      "checks.main": {
+        "type": "pipeline",
+        "steps": [
+          "library.se.oe2"
+        ]
+      },
+      "library.se.oe2": {
+        "type": "rule",
+        "operator": "greater_than",
+        "field": "x[*].v",
+        "value": 10,
+        "aggregate": {
+          "mode": "ALL",
+          "issueMode": "EACH",
+          "onEmpty": "FAIL"
+        },
+        "issue": {
+          "level": "ERROR",
+          "code": "SE17",
+          "message": "failed"
+        }
+      }
+    },
+    "sourceHash": "98fba8af61900c1664ca92ccd0fb44bb9381bc5c25ab0635311a028af8962810"
+  },
+  "operators": [],
+  "input": {
+    "pipelineId": "checks.main",
+    "payload": {}
+  },
+  "expected": {
+    "status": "ERROR",
+    "issues": [
+      {
+        "level": "ERROR",
+        "code": "SE17",
+        "message": "failed",
+        "field": "x[*].v",
+        "ruleId": "library.se.oe2",
+        "pipelineId": "checks.main",
+        "details": {
+          "mode": "ALL",
+          "matched": 0,
+          "evaluated": 0,
+          "skipped": 0,
+          "passed": 0,
+          "failed": 0
+        }
+      }
+    ],
+    "ruleset": {
+      "specVersion": "1.0.0-rc.5",
+      "sourceHash": "98fba8af61900c1664ca92ccd0fb44bb9381bc5c25ab0635311a028af8962810"
+    }
+  }
+}

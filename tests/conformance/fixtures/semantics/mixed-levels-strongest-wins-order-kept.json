@@ -1,0 +1,71 @@
+{
+  "name": "sem/mixed-levels-strongest-wins-order-kept",
+  "snapshot": {
+    "format": "jsonspecs-snapshot",
+    "formatVersion": 2,
+    "specVersion": "1.0.0-rc.5",
+    "exports": [
+      "checks.main"
+    ],
+    "artifacts": {
+      "checks.main": {
+        "type": "pipeline",
+        "steps": [
+          "library.se.w2",
+          "library.se.e3"
+        ]
+      },
+      "library.se.e3": {
+        "type": "rule",
+        "operator": "not_empty",
+        "field": "b",
+        "issue": {
+          "level": "ERROR",
+          "code": "SE9",
+          "message": "failed"
+        }
+      },
+      "library.se.w2": {
+        "type": "rule",
+        "operator": "not_empty",
+        "field": "a",
+        "issue": {
+          "level": "WARNING",
+          "code": "SE8",
+          "message": "failed"
+        }
+      }
+    },
+    "sourceHash": "1a5ae002efeb6b178cce9f2cf2e7d3729d8b8fda27eff32f6d21e864bbd947de"
+  },
+  "operators": [],
+  "input": {
+    "pipelineId": "checks.main",
+    "payload": {}
+  },
+  "expected": {
+    "status": "ERROR",
+    "issues": [
+      {
+        "level": "WARNING",
+        "code": "SE8",
+        "message": "failed",
+        "field": "a",
+        "ruleId": "library.se.w2",
+        "pipelineId": "checks.main"
+      },
+      {
+        "level": "ERROR",
+        "code": "SE9",
+        "message": "failed",
+        "field": "b",
+        "ruleId": "library.se.e3",
+        "pipelineId": "checks.main"
+      }
+    ],
+    "ruleset": {
+      "specVersion": "1.0.0-rc.5",
+      "sourceHash": "1a5ae002efeb6b178cce9f2cf2e7d3729d8b8fda27eff32f6d21e864bbd947de"
+    }
+  }
+}

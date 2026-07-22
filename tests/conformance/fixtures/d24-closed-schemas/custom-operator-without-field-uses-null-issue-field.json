@@ -1,0 +1,56 @@
+{
+  "name": "d24/custom-operator-without-field-uses-null-issue-field",
+  "snapshot": {
+    "format": "jsonspecs-snapshot",
+    "formatVersion": 2,
+    "specVersion": "1.0.0-rc.5",
+    "exports": [
+      "checks.main"
+    ],
+    "artifacts": {
+      "checks.main": {
+        "type": "pipeline",
+        "steps": [
+          "library.d24.params.fail"
+        ]
+      },
+      "library.d24.params.fail": {
+        "type": "rule",
+        "operator": "conformance.rule.params",
+        "params": {
+          "outcome": "FAIL"
+        },
+        "issue": {
+          "level": "ERROR",
+          "code": "D24.2",
+          "message": "failed"
+        }
+      }
+    },
+    "sourceHash": "4f29c0431a755bcdcfb91e1994aa6208248faf5d06812c1cdc7ed1a6c0acb3f0"
+  },
+  "operators": [
+    "conformance.rule.params"
+  ],
+  "input": {
+    "pipelineId": "checks.main",
+    "payload": {}
+  },
+  "expected": {
+    "status": "ERROR",
+    "issues": [
+      {
+        "level": "ERROR",
+        "code": "D24.2",
+        "message": "failed",
+        "field": null,
+        "ruleId": "library.d24.params.fail",
+        "pipelineId": "checks.main"
+      }
+    ],
+    "ruleset": {
+      "specVersion": "1.0.0-rc.5",
+      "sourceHash": "4f29c0431a755bcdcfb91e1994aa6208248faf5d06812c1cdc7ed1a6c0acb3f0"
+    }
+  }
+}

@@ -1,0 +1,37 @@
+{
+  "name": "d11/reject-any-filled-paths-alias",
+  "snapshot": {
+    "format": "jsonspecs-snapshot",
+    "formatVersion": 2,
+    "specVersion": "1.0.0-rc.5",
+    "exports": [
+      "checks.main"
+    ],
+    "artifacts": {
+      "checks.main": {
+        "type": "pipeline",
+        "steps": [
+          "library.x.af"
+        ]
+      },
+      "library.x.af": {
+        "type": "rule",
+        "operator": "any_filled",
+        "issue": {
+          "level": "ERROR",
+          "code": "X1",
+          "message": "failed"
+        },
+        "paths": [
+          "a",
+          "b"
+        ]
+      }
+    },
+    "sourceHash": "f23dde29a7415199fb85430c6beb27ba61fa4959951fc92e71e3f99d795e4a5e"
+  },
+  "operators": [],
+  "expected": {
+    "verdict": "reject"
+  }
+}

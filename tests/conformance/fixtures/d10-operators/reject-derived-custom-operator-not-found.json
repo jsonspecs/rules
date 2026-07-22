@@ -1,0 +1,35 @@
+{
+  "name": "d10/reject-derived-custom-operator-not-found",
+  "snapshot": {
+    "format": "jsonspecs-snapshot",
+    "formatVersion": 2,
+    "specVersion": "1.0.0-rc.5",
+    "exports": [
+      "checks.main"
+    ],
+    "artifacts": {
+      "checks.main": {
+        "type": "pipeline",
+        "steps": [
+          "library.c.u"
+        ]
+      },
+      "library.c.u": {
+        "type": "rule",
+        "operator": "custom_x",
+        "field": "a",
+        "issue": {
+          "level": "ERROR",
+          "code": "C1",
+          "message": "failed"
+        }
+      }
+    },
+    "sourceHash": "e922bc0575dd7b862937ff659d403f99f856bea60231e121fdf39d4875fb4447"
+  },
+  "operators": [],
+  "expected": {
+    "verdict": "reject",
+    "identifier": "OPERATOR_NOT_FOUND"
+  }
+}

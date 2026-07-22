@@ -1,0 +1,41 @@
+{
+  "name": "d10/unknown-operator-contract-specific-shape-still-not-found",
+  "snapshot": {
+    "format": "jsonspecs-snapshot",
+    "formatVersion": 2,
+    "specVersion": "1.0.0-rc.5",
+    "exports": [
+      "checks.main"
+    ],
+    "artifacts": {
+      "checks.main": {
+        "type": "pipeline",
+        "steps": [
+          "library.c.unknown-shape"
+        ]
+      },
+      "library.c.unknown-shape": {
+        "type": "rule",
+        "operator": "custom_x",
+        "field": "a",
+        "inputs": {
+          "unknownName": "b"
+        },
+        "params": {
+          "unknownSetting": true
+        },
+        "issue": {
+          "level": "ERROR",
+          "code": "C1S",
+          "message": "failed"
+        }
+      }
+    },
+    "sourceHash": "5a92cf1e1285ccd53352845d4bce519c9de2d3f28d9aed0718331bba11d23ad1"
+  },
+  "operators": [],
+  "expected": {
+    "verdict": "reject",
+    "identifier": "OPERATOR_NOT_FOUND"
+  }
+}

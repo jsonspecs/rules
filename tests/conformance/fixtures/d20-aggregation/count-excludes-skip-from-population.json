@@ -1,0 +1,81 @@
+{
+  "name": "d20/count-excludes-skip-from-population",
+  "snapshot": {
+    "format": "jsonspecs-snapshot",
+    "formatVersion": 2,
+    "specVersion": "1.0.0-rc.5",
+    "exports": [
+      "checks.main"
+    ],
+    "artifacts": {
+      "checks.main": {
+        "type": "pipeline",
+        "steps": [
+          "library.d20.count"
+        ]
+      },
+      "library.d20.count": {
+        "type": "rule",
+        "operator": "conformance.rule.tri",
+        "field": "items[*].result",
+        "aggregate": {
+          "mode": "COUNT",
+          "op": ">=",
+          "value": 2
+        },
+        "issue": {
+          "level": "ERROR",
+          "code": "D20.4",
+          "message": "failed"
+        }
+      }
+    },
+    "sourceHash": "d023048d67a64b63da1ee1c722ec771466e35d237cad322f5d261770fcc9e44b"
+  },
+  "operators": [
+    "conformance.rule.tri"
+  ],
+  "input": {
+    "pipelineId": "checks.main",
+    "payload": {
+      "items": [
+        {
+          "result": "PASS"
+        },
+        {
+          "result": "SKIP"
+        },
+        {
+          "result": "FAIL"
+        }
+      ]
+    }
+  },
+  "expected": {
+    "status": "ERROR",
+    "issues": [
+      {
+        "level": "ERROR",
+        "code": "D20.4",
+        "message": "failed",
+        "field": "items[*].result",
+        "ruleId": "library.d20.count",
+        "pipelineId": "checks.main",
+        "details": {
+          "mode": "COUNT",
+          "op": ">=",
+          "value": 2,
+          "matched": 3,
+          "evaluated": 2,
+          "skipped": 1,
+          "passed": 1,
+          "failed": 1
+        }
+      }
+    ],
+    "ruleset": {
+      "specVersion": "1.0.0-rc.5",
+      "sourceHash": "d023048d67a64b63da1ee1c722ec771466e35d237cad322f5d261770fcc9e44b"
+    }
+  }
+}

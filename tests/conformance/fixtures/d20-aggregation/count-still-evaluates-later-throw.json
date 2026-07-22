@@ -1,0 +1,66 @@
+{
+  "name": "d20/count-still-evaluates-later-throw",
+  "snapshot": {
+    "format": "jsonspecs-snapshot",
+    "formatVersion": 2,
+    "specVersion": "1.0.0-rc.5",
+    "exports": [
+      "checks.main"
+    ],
+    "artifacts": {
+      "checks.main": {
+        "type": "pipeline",
+        "steps": [
+          "library.d20.count-still-evaluates-later-throw"
+        ]
+      },
+      "library.d20.count-still-evaluates-later-throw": {
+        "type": "rule",
+        "operator": "conformance.rule.tri",
+        "field": "items[*].result",
+        "aggregate": {
+          "mode": "COUNT",
+          "op": ">=",
+          "value": 1
+        },
+        "issue": {
+          "level": "ERROR",
+          "code": "D20.count-still-evaluates-later-throw",
+          "message": "failed"
+        }
+      }
+    },
+    "sourceHash": "3f187ac5e2331a15bb946ddc5492c987a45cf390b157f2181d40be2cbd0f3837"
+  },
+  "operators": [
+    "conformance.rule.tri"
+  ],
+  "input": {
+    "pipelineId": "checks.main",
+    "payload": {
+      "items": [
+        {
+          "result": "PASS"
+        },
+        {
+          "result": "THROW"
+        }
+      ]
+    }
+  },
+  "expected": {
+    "status": "ABORT",
+    "issues": [],
+    "error": {
+      "code": "OPERATOR_FAULT",
+      "details": {
+        "ruleId": "library.d20.count-still-evaluates-later-throw",
+        "operator": "conformance.rule.tri"
+      }
+    },
+    "ruleset": {
+      "specVersion": "1.0.0-rc.5",
+      "sourceHash": "3f187ac5e2331a15bb946ddc5492c987a45cf390b157f2181d40be2cbd0f3837"
+    }
+  }
+}

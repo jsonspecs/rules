@@ -1,0 +1,57 @@
+{
+  "name": "operators/greater_than-fail",
+  "snapshot": {
+    "format": "jsonspecs-snapshot",
+    "formatVersion": 2,
+    "specVersion": "1.0.0-rc.5",
+    "exports": [
+      "checks.main"
+    ],
+    "artifacts": {
+      "builtin.greater_than": {
+        "type": "rule",
+        "operator": "greater_than",
+        "field": "a",
+        "value": 1,
+        "issue": {
+          "level": "ERROR",
+          "code": "BUILTIN.greater_than",
+          "message": "failed"
+        }
+      },
+      "checks.main": {
+        "type": "pipeline",
+        "steps": [
+          "builtin.greater_than"
+        ]
+      }
+    },
+    "sourceHash": "c8c84afb73123a31d381601afd1d6156afc34153cb7ee63f989fcc6046de69cc"
+  },
+  "operators": [],
+  "input": {
+    "pipelineId": "checks.main",
+    "payload": {
+      "a": 1
+    }
+  },
+  "expected": {
+    "status": "ERROR",
+    "issues": [
+      {
+        "level": "ERROR",
+        "code": "BUILTIN.greater_than",
+        "message": "failed",
+        "field": "a",
+        "ruleId": "builtin.greater_than",
+        "pipelineId": "checks.main",
+        "expected": 1,
+        "actual": 1
+      }
+    ],
+    "ruleset": {
+      "specVersion": "1.0.0-rc.5",
+      "sourceHash": "c8c84afb73123a31d381601afd1d6156afc34153cb7ee63f989fcc6046de69cc"
+    }
+  }
+}

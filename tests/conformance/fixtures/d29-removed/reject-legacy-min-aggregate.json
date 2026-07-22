@@ -1,0 +1,38 @@
+{
+  "name": "d29/reject-legacy-min-aggregate",
+  "snapshot": {
+    "format": "jsonspecs-snapshot",
+    "formatVersion": 2,
+    "specVersion": "1.0.0-rc.5",
+    "exports": [
+      "checks.main"
+    ],
+    "artifacts": {
+      "checks.main": {
+        "type": "pipeline",
+        "steps": [
+          "library.d29.min"
+        ]
+      },
+      "library.d29.min": {
+        "type": "rule",
+        "operator": "greater_than",
+        "field": "x[*].v",
+        "value": 1,
+        "aggregate": {
+          "mode": "MIN"
+        },
+        "issue": {
+          "level": "ERROR",
+          "code": "D29.X2",
+          "message": "failed"
+        }
+      }
+    },
+    "sourceHash": "a4c876eb8e03d35e005aac5445bc995ffa5a471b3a9f3d970fb9e6f58974c8cc"
+  },
+  "operators": [],
+  "expected": {
+    "verdict": "reject"
+  }
+}

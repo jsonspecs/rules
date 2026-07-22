@@ -1,0 +1,81 @@
+{
+  "name": "sem/when-all-not-composition",
+  "snapshot": {
+    "format": "jsonspecs-snapshot",
+    "formatVersion": 2,
+    "specVersion": "1.0.0-rc.5",
+    "exports": [
+      "checks.main"
+    ],
+    "artifacts": {
+      "checks.main": {
+        "type": "pipeline",
+        "steps": [
+          "library.cond.w"
+        ]
+      },
+      "library.cond.w": {
+        "type": "condition",
+        "when": {
+          "all": [
+            "library.se.pa",
+            {
+              "not": "library.se.pb"
+            }
+          ]
+        },
+        "steps": [
+          "library.se.c2"
+        ]
+      },
+      "library.se.c2": {
+        "type": "rule",
+        "operator": "not_empty",
+        "field": "passport",
+        "issue": {
+          "level": "ERROR",
+          "code": "SE2",
+          "message": "failed"
+        }
+      },
+      "library.se.pa": {
+        "type": "rule",
+        "operator": "equals",
+        "field": "type",
+        "value": "FL"
+      },
+      "library.se.pb": {
+        "type": "rule",
+        "operator": "equals",
+        "field": "resident",
+        "value": true
+      }
+    },
+    "sourceHash": "f5b500029ead68ed917c04b1d609abb5ef2774db3d3a0dd62661ccc587799058"
+  },
+  "operators": [],
+  "input": {
+    "pipelineId": "checks.main",
+    "payload": {
+      "type": "FL",
+      "resident": false
+    }
+  },
+  "expected": {
+    "status": "ERROR",
+    "issues": [
+      {
+        "level": "ERROR",
+        "code": "SE2",
+        "message": "failed",
+        "field": "passport",
+        "ruleId": "library.se.c2",
+        "pipelineId": "checks.main"
+      }
+    ],
+    "ruleset": {
+      "specVersion": "1.0.0-rc.5",
+      "sourceHash": "f5b500029ead68ed917c04b1d609abb5ef2774db3d3a0dd62661ccc587799058"
+    }
+  }
+}

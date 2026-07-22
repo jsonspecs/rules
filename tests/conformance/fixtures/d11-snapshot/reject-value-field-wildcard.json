@@ -1,0 +1,35 @@
+{
+  "name": "d11/reject-value-field-wildcard",
+  "snapshot": {
+    "format": "jsonspecs-snapshot",
+    "formatVersion": 2,
+    "specVersion": "1.0.0-rc.5",
+    "exports": [
+      "checks.main"
+    ],
+    "artifacts": {
+      "checks.main": {
+        "type": "pipeline",
+        "steps": [
+          "library.x.p3"
+        ]
+      },
+      "library.x.p3": {
+        "type": "rule",
+        "operator": "field_equals_field",
+        "field": "a",
+        "value_field": "b[*].v",
+        "issue": {
+          "level": "ERROR",
+          "code": "X19",
+          "message": "failed"
+        }
+      }
+    },
+    "sourceHash": "3c51b33674c6ae6f59ca3631ebcd3b578180ec83da171688df18bb365a956156"
+  },
+  "operators": [],
+  "expected": {
+    "verdict": "reject"
+  }
+}

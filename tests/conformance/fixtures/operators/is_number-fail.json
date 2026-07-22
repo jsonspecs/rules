@@ -1,0 +1,55 @@
+{
+  "name": "operators/is_number-fail",
+  "snapshot": {
+    "format": "jsonspecs-snapshot",
+    "formatVersion": 2,
+    "specVersion": "1.0.0-rc.5",
+    "exports": [
+      "checks.main"
+    ],
+    "artifacts": {
+      "builtin.is_number": {
+        "type": "rule",
+        "operator": "is_number",
+        "field": "a",
+        "issue": {
+          "level": "ERROR",
+          "code": "BUILTIN.is_number",
+          "message": "failed"
+        }
+      },
+      "checks.main": {
+        "type": "pipeline",
+        "steps": [
+          "builtin.is_number"
+        ]
+      }
+    },
+    "sourceHash": "31a507464eb242e1356fb364f8ba7fb5300419495d0ec63a18e9715f97f45271"
+  },
+  "operators": [],
+  "input": {
+    "pipelineId": "checks.main",
+    "payload": {
+      "a": "1"
+    }
+  },
+  "expected": {
+    "status": "ERROR",
+    "issues": [
+      {
+        "level": "ERROR",
+        "code": "BUILTIN.is_number",
+        "message": "failed",
+        "field": "a",
+        "ruleId": "builtin.is_number",
+        "pipelineId": "checks.main",
+        "actual": "1"
+      }
+    ],
+    "ruleset": {
+      "specVersion": "1.0.0-rc.5",
+      "sourceHash": "31a507464eb242e1356fb364f8ba7fb5300419495d0ec63a18e9715f97f45271"
+    }
+  }
+}

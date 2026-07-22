@@ -1,0 +1,35 @@
+{
+  "name": "d04/reject-unescaped-hyphen-at-class-edge",
+  "snapshot": {
+    "format": "jsonspecs-snapshot",
+    "formatVersion": 2,
+    "specVersion": "1.0.0-rc.5",
+    "exports": [
+      "checks.main"
+    ],
+    "artifacts": {
+      "checks.main": {
+        "type": "pipeline",
+        "steps": [
+          "library.r.hyphen.bad"
+        ]
+      },
+      "library.r.hyphen.bad": {
+        "type": "rule",
+        "operator": "matches_regex",
+        "field": "a",
+        "value": "^[-a]$",
+        "issue": {
+          "level": "ERROR",
+          "code": "R16",
+          "message": "failed"
+        }
+      }
+    },
+    "sourceHash": "41913f2baf82b43cfee61d77169e322234a6ca3aa9a162e6fea1f250717a07bd"
+  },
+  "operators": [],
+  "expected": {
+    "verdict": "reject"
+  }
+}

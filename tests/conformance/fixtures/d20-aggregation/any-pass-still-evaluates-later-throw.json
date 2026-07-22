@@ -1,0 +1,65 @@
+{
+  "name": "d20/any-pass-still-evaluates-later-throw",
+  "snapshot": {
+    "format": "jsonspecs-snapshot",
+    "formatVersion": 2,
+    "specVersion": "1.0.0-rc.5",
+    "exports": [
+      "checks.main"
+    ],
+    "artifacts": {
+      "checks.main": {
+        "type": "pipeline",
+        "steps": [
+          "library.d20.any-pass-still-evaluates-later-throw"
+        ]
+      },
+      "library.d20.any-pass-still-evaluates-later-throw": {
+        "type": "rule",
+        "operator": "conformance.rule.tri",
+        "field": "items[*].result",
+        "aggregate": {
+          "mode": "ANY",
+          "issueMode": "SUMMARY"
+        },
+        "issue": {
+          "level": "ERROR",
+          "code": "D20.any-pass-still-evaluates-later-throw",
+          "message": "failed"
+        }
+      }
+    },
+    "sourceHash": "1ac1102bf1856babe4ab6c0f2b555deb1c883983b6a117cf98dfeeea0af0e5cf"
+  },
+  "operators": [
+    "conformance.rule.tri"
+  ],
+  "input": {
+    "pipelineId": "checks.main",
+    "payload": {
+      "items": [
+        {
+          "result": "PASS"
+        },
+        {
+          "result": "THROW"
+        }
+      ]
+    }
+  },
+  "expected": {
+    "status": "ABORT",
+    "issues": [],
+    "error": {
+      "code": "OPERATOR_FAULT",
+      "details": {
+        "ruleId": "library.d20.any-pass-still-evaluates-later-throw",
+        "operator": "conformance.rule.tri"
+      }
+    },
+    "ruleset": {
+      "specVersion": "1.0.0-rc.5",
+      "sourceHash": "1ac1102bf1856babe4ab6c0f2b555deb1c883983b6a117cf98dfeeea0af0e5cf"
+    }
+  }
+}

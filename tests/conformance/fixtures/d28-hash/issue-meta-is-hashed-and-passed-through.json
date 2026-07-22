@@ -1,0 +1,58 @@
+{
+  "name": "d28/issue-meta-is-hashed-and-passed-through",
+  "snapshot": {
+    "format": "jsonspecs-snapshot",
+    "formatVersion": 2,
+    "specVersion": "1.0.0-rc.5",
+    "exports": [
+      "checks.main"
+    ],
+    "artifacts": {
+      "checks.main": {
+        "type": "pipeline",
+        "steps": [
+          "library.d28.issue-meta"
+        ]
+      },
+      "library.d28.issue-meta": {
+        "type": "rule",
+        "operator": "not_empty",
+        "field": "a",
+        "issue": {
+          "level": "ERROR",
+          "code": "D28.1",
+          "message": "failed",
+          "meta": {
+            "owner": "risk"
+          }
+        }
+      }
+    },
+    "sourceHash": "ed4b3ebc77508b83c19b4fc5a0b8390b94de325b139fabec86c5a5f9425e0ba7"
+  },
+  "operators": [],
+  "input": {
+    "pipelineId": "checks.main",
+    "payload": {}
+  },
+  "expected": {
+    "status": "ERROR",
+    "issues": [
+      {
+        "level": "ERROR",
+        "code": "D28.1",
+        "message": "failed",
+        "field": "a",
+        "ruleId": "library.d28.issue-meta",
+        "pipelineId": "checks.main",
+        "meta": {
+          "owner": "risk"
+        }
+      }
+    ],
+    "ruleset": {
+      "specVersion": "1.0.0-rc.5",
+      "sourceHash": "ed4b3ebc77508b83c19b4fc5a0b8390b94de325b139fabec86c5a5f9425e0ba7"
+    }
+  }
+}

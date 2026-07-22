@@ -1,0 +1,46 @@
+{
+  "name": "d04/dot-matches-paragraph-separator",
+  "snapshot": {
+    "format": "jsonspecs-snapshot",
+    "formatVersion": 2,
+    "specVersion": "1.0.0-rc.5",
+    "exports": [
+      "checks.main"
+    ],
+    "artifacts": {
+      "checks.main": {
+        "type": "pipeline",
+        "steps": [
+          "library.r.dot-lines"
+        ]
+      },
+      "library.r.dot-lines": {
+        "type": "rule",
+        "operator": "matches_regex",
+        "field": "a",
+        "value": "^.$",
+        "issue": {
+          "level": "ERROR",
+          "code": "R15",
+          "message": "failed"
+        }
+      }
+    },
+    "sourceHash": "fada61209959c01cc5d0d5206843c68938a01c989e717fe172a4ed714517fda8"
+  },
+  "operators": [],
+  "input": {
+    "pipelineId": "checks.main",
+    "payload": {
+      "a": " "
+    }
+  },
+  "expected": {
+    "status": "OK",
+    "issues": [],
+    "ruleset": {
+      "specVersion": "1.0.0-rc.5",
+      "sourceHash": "fada61209959c01cc5d0d5206843c68938a01c989e717fe172a4ed714517fda8"
+    }
+  }
+}

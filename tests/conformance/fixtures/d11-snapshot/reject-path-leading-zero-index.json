@@ -1,0 +1,35 @@
+{
+  "name": "d11/reject-path-leading-zero-index",
+  "snapshot": {
+    "format": "jsonspecs-snapshot",
+    "formatVersion": 2,
+    "specVersion": "1.0.0-rc.5",
+    "exports": [
+      "checks.main"
+    ],
+    "artifacts": {
+      "checks.main": {
+        "type": "pipeline",
+        "steps": [
+          "library.x.p2"
+        ]
+      },
+      "library.x.p2": {
+        "type": "rule",
+        "operator": "greater_than",
+        "field": "a[01].v",
+        "value": 1,
+        "issue": {
+          "level": "ERROR",
+          "code": "X18",
+          "message": "failed"
+        }
+      }
+    },
+    "sourceHash": "0b0fadc7e52f0c90eeb63a98babe2e09aef4ac57963e60bbb20725695db51459"
+  },
+  "operators": [],
+  "expected": {
+    "verdict": "reject"
+  }
+}

@@ -1,0 +1,46 @@
+{
+  "name": "d04/dot-matches-one-code-point",
+  "snapshot": {
+    "format": "jsonspecs-snapshot",
+    "formatVersion": 2,
+    "specVersion": "1.0.0-rc.5",
+    "exports": [
+      "checks.main"
+    ],
+    "artifacts": {
+      "checks.main": {
+        "type": "pipeline",
+        "steps": [
+          "library.r.dot"
+        ]
+      },
+      "library.r.dot": {
+        "type": "rule",
+        "operator": "matches_regex",
+        "field": "a",
+        "value": "^.$",
+        "issue": {
+          "level": "ERROR",
+          "code": "R10",
+          "message": "failed"
+        }
+      }
+    },
+    "sourceHash": "c4331314cc7d1fc1005088f3ac15e80d81351eb220cef9bb8c3b4439ca05a3fb"
+  },
+  "operators": [],
+  "input": {
+    "pipelineId": "checks.main",
+    "payload": {
+      "a": "😀"
+    }
+  },
+  "expected": {
+    "status": "OK",
+    "issues": [],
+    "ruleset": {
+      "specVersion": "1.0.0-rc.5",
+      "sourceHash": "c4331314cc7d1fc1005088f3ac15e80d81351eb220cef9bb8c3b4439ca05a3fb"
+    }
+  }
+}

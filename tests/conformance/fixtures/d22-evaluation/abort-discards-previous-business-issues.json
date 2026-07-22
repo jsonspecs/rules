@@ -1,0 +1,62 @@
+{
+  "name": "d22/abort-discards-previous-business-issues",
+  "snapshot": {
+    "format": "jsonspecs-snapshot",
+    "formatVersion": 2,
+    "specVersion": "1.0.0-rc.5",
+    "exports": [
+      "checks.main"
+    ],
+    "artifacts": {
+      "checks.main": {
+        "type": "pipeline",
+        "steps": [
+          "library.d22.issue-before-abort",
+          "library.d22.throw-after-issue"
+        ]
+      },
+      "library.d22.issue-before-abort": {
+        "type": "rule",
+        "operator": "not_empty",
+        "field": "missing",
+        "issue": {
+          "level": "ERROR",
+          "code": "D22.ABORT.1",
+          "message": "failed"
+        }
+      },
+      "library.d22.throw-after-issue": {
+        "type": "rule",
+        "operator": "conformance.rule.throw",
+        "issue": {
+          "level": "ERROR",
+          "code": "D22.ABORT.2",
+          "message": "failed"
+        }
+      }
+    },
+    "sourceHash": "6147f084388c4795711c0a90be4ed2423f0d1001d89e9e5f7c9bef06e1e258c7"
+  },
+  "operators": [
+    "conformance.rule.throw"
+  ],
+  "input": {
+    "pipelineId": "checks.main",
+    "payload": {}
+  },
+  "expected": {
+    "status": "ABORT",
+    "issues": [],
+    "error": {
+      "code": "OPERATOR_FAULT",
+      "details": {
+        "ruleId": "library.d22.throw-after-issue",
+        "operator": "conformance.rule.throw"
+      }
+    },
+    "ruleset": {
+      "specVersion": "1.0.0-rc.5",
+      "sourceHash": "6147f084388c4795711c0a90be4ed2423f0d1001d89e9e5f7c9bef06e1e258c7"
+    }
+  }
+}

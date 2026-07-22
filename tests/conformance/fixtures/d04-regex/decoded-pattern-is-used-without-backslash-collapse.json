@@ -1,0 +1,57 @@
+{
+  "name": "d04/decoded-pattern-is-used-without-backslash-collapse",
+  "snapshot": {
+    "format": "jsonspecs-snapshot",
+    "formatVersion": 2,
+    "specVersion": "1.0.0-rc.5",
+    "exports": [
+      "checks.main"
+    ],
+    "artifacts": {
+      "checks.main": {
+        "type": "pipeline",
+        "steps": [
+          "library.r.exact"
+        ]
+      },
+      "library.r.exact": {
+        "type": "rule",
+        "operator": "matches_regex",
+        "field": "a",
+        "value": "^\\\\d+$",
+        "issue": {
+          "level": "ERROR",
+          "code": "R7",
+          "message": "failed"
+        }
+      }
+    },
+    "sourceHash": "b1b3559e2446ba31b00124e61f9147fdfe08096234864ab267c4695a4bc1ad5b"
+  },
+  "operators": [],
+  "input": {
+    "pipelineId": "checks.main",
+    "payload": {
+      "a": "123"
+    }
+  },
+  "expected": {
+    "status": "ERROR",
+    "issues": [
+      {
+        "level": "ERROR",
+        "code": "R7",
+        "message": "failed",
+        "field": "a",
+        "ruleId": "library.r.exact",
+        "pipelineId": "checks.main",
+        "expected": "^\\\\d+$",
+        "actual": "123"
+      }
+    ],
+    "ruleset": {
+      "specVersion": "1.0.0-rc.5",
+      "sourceHash": "b1b3559e2446ba31b00124e61f9147fdfe08096234864ab267c4695a4bc1ad5b"
+    }
+  }
+}

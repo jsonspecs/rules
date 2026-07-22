@@ -11,7 +11,7 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        node-version: [20.x, 22.x]
+        node-version: [20.x, 22.x, 24.x]
 
     steps:
       # actions/checkout@v4
@@ -29,8 +29,14 @@ jobs:
       - name: Run tests
         run: npm test
 
+      - name: Run normative RC.5 conformance suite
+        run: npm run test:conformance
+
       - name: Run smoke example
         run: npm run test:smoke
 
       - name: Verify package
         run: npm run test:pack
+
+      - name: Dependency audit
+        run: npm audit --omit=dev

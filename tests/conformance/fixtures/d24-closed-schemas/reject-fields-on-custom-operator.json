@@ -1,0 +1,41 @@
+{
+  "name": "d24/reject-fields-on-custom-operator",
+  "snapshot": {
+    "format": "jsonspecs-snapshot",
+    "formatVersion": 2,
+    "specVersion": "1.0.0-rc.5",
+    "exports": [
+      "checks.main"
+    ],
+    "artifacts": {
+      "checks.main": {
+        "type": "pipeline",
+        "steps": [
+          "library.d24.params.fields"
+        ]
+      },
+      "library.d24.params.fields": {
+        "type": "rule",
+        "operator": "conformance.rule.params",
+        "fields": [
+          "a"
+        ],
+        "params": {
+          "outcome": "PASS"
+        },
+        "issue": {
+          "level": "ERROR",
+          "code": "D24.X2FS",
+          "message": "failed"
+        }
+      }
+    },
+    "sourceHash": "9564e7e298a79b17ae5ceaa2172d1f068c314518a99473c91df9ea69e27f6012"
+  },
+  "operators": [
+    "conformance.rule.params"
+  ],
+  "expected": {
+    "verdict": "reject"
+  }
+}

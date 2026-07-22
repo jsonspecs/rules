@@ -1,0 +1,36 @@
+{
+  "name": "d26/reject-legacy-object-step",
+  "snapshot": {
+    "format": "jsonspecs-snapshot",
+    "formatVersion": 2,
+    "specVersion": "1.0.0-rc.5",
+    "exports": [
+      "checks.main"
+    ],
+    "artifacts": {
+      "checks.main": {
+        "type": "pipeline",
+        "steps": [
+          {
+            "rule": "library.d26.object-step"
+          }
+        ]
+      },
+      "library.d26.object-step": {
+        "type": "rule",
+        "operator": "not_empty",
+        "field": "a",
+        "issue": {
+          "level": "ERROR",
+          "code": "D26.X3",
+          "message": "failed"
+        }
+      }
+    },
+    "sourceHash": "a0db5b0ac20a8be49db5754186a9e19c602817cbaea8c08460587d8418567a22"
+  },
+  "operators": [],
+  "expected": {
+    "verdict": "reject"
+  }
+}

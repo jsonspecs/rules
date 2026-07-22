@@ -1,0 +1,39 @@
+{
+  "name": "d27/reject-wildcard-input-path",
+  "snapshot": {
+    "format": "jsonspecs-snapshot",
+    "formatVersion": 2,
+    "specVersion": "1.0.0-rc.5",
+    "exports": [
+      "checks.main"
+    ],
+    "artifacts": {
+      "checks.main": {
+        "type": "pipeline",
+        "steps": [
+          "library.d27.wildcard"
+        ]
+      },
+      "library.d27.wildcard": {
+        "type": "rule",
+        "operator": "conformance.rule.inputs",
+        "inputs": {
+          "missing": "items[*].value",
+          "nullValue": "presentNull"
+        },
+        "issue": {
+          "level": "ERROR",
+          "code": "D27.X4",
+          "message": "failed"
+        }
+      }
+    },
+    "sourceHash": "768f919dd3ee54b8b9780c46505fbc1e0a410ad2f32e6056b61a94c900010f39"
+  },
+  "operators": [
+    "conformance.rule.inputs"
+  ],
+  "expected": {
+    "verdict": "reject"
+  }
+}

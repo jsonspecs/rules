@@ -1,0 +1,57 @@
+{
+  "name": "d01/greater-than-numeric-strings",
+  "snapshot": {
+    "format": "jsonspecs-snapshot",
+    "formatVersion": 2,
+    "specVersion": "1.0.0-rc.5",
+    "exports": [
+      "checks.main"
+    ],
+    "artifacts": {
+      "checks.main": {
+        "type": "pipeline",
+        "steps": [
+          "library.n.gt"
+        ]
+      },
+      "library.n.gt": {
+        "type": "rule",
+        "operator": "greater_than",
+        "field": "a",
+        "value": "10",
+        "issue": {
+          "level": "ERROR",
+          "code": "N2",
+          "message": "failed"
+        }
+      }
+    },
+    "sourceHash": "1200dc8762bea75f0a311dc007b30bcb70b8946bf199a98ea3d6bc253b5648dd"
+  },
+  "operators": [],
+  "input": {
+    "pipelineId": "checks.main",
+    "payload": {
+      "a": "9.5"
+    }
+  },
+  "expected": {
+    "status": "ERROR",
+    "issues": [
+      {
+        "level": "ERROR",
+        "code": "N2",
+        "message": "failed",
+        "field": "a",
+        "ruleId": "library.n.gt",
+        "pipelineId": "checks.main",
+        "expected": "10",
+        "actual": "9.5"
+      }
+    ],
+    "ruleset": {
+      "specVersion": "1.0.0-rc.5",
+      "sourceHash": "1200dc8762bea75f0a311dc007b30bcb70b8946bf199a98ea3d6bc253b5648dd"
+    }
+  }
+}

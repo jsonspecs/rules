@@ -1,0 +1,68 @@
+{
+  "name": "d20/any-each-reports-fails-only-when-none-pass",
+  "snapshot": {
+    "format": "jsonspecs-snapshot",
+    "formatVersion": 2,
+    "specVersion": "1.0.0-rc.5",
+    "exports": [
+      "checks.main"
+    ],
+    "artifacts": {
+      "checks.main": {
+        "type": "pipeline",
+        "steps": [
+          "library.d20.any.fail"
+        ]
+      },
+      "library.d20.any.fail": {
+        "type": "rule",
+        "operator": "conformance.rule.tri",
+        "field": "items[*].result",
+        "aggregate": {
+          "mode": "ANY",
+          "issueMode": "EACH"
+        },
+        "issue": {
+          "level": "ERROR",
+          "code": "D20.2F",
+          "message": "failed"
+        }
+      }
+    },
+    "sourceHash": "3a854df20624691b148a998026dbd21ddde219335e99b65fb86fc4cbf2d16d55"
+  },
+  "operators": [
+    "conformance.rule.tri"
+  ],
+  "input": {
+    "pipelineId": "checks.main",
+    "payload": {
+      "items": [
+        {
+          "result": "SKIP"
+        },
+        {
+          "result": "FAIL"
+        }
+      ]
+    }
+  },
+  "expected": {
+    "status": "ERROR",
+    "issues": [
+      {
+        "level": "ERROR",
+        "code": "D20.2F",
+        "message": "failed",
+        "field": "items[1].result",
+        "ruleId": "library.d20.any.fail",
+        "pipelineId": "checks.main",
+        "actual": "FAIL"
+      }
+    ],
+    "ruleset": {
+      "specVersion": "1.0.0-rc.5",
+      "sourceHash": "3a854df20624691b148a998026dbd21ddde219335e99b65fb86fc4cbf2d16d55"
+    }
+  }
+}

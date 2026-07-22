@@ -1,0 +1,50 @@
+{
+  "name": "d27/missing-path-omits-key-null-path-preserves-null",
+  "snapshot": {
+    "format": "jsonspecs-snapshot",
+    "formatVersion": 2,
+    "specVersion": "1.0.0-rc.5",
+    "exports": [
+      "checks.main"
+    ],
+    "artifacts": {
+      "checks.main": {
+        "type": "pipeline",
+        "steps": [
+          "library.d27.inputs"
+        ]
+      },
+      "library.d27.inputs": {
+        "type": "rule",
+        "operator": "conformance.rule.inputs",
+        "inputs": {
+          "missing": "absent.path",
+          "nullValue": "presentNull"
+        },
+        "issue": {
+          "level": "ERROR",
+          "code": "D27.1",
+          "message": "failed"
+        }
+      }
+    },
+    "sourceHash": "8a7f265ce48cd0c08ae82dc3fbb1288d27da03584c147720de6cab4872fddb3a"
+  },
+  "operators": [
+    "conformance.rule.inputs"
+  ],
+  "input": {
+    "pipelineId": "checks.main",
+    "payload": {
+      "presentNull": null
+    }
+  },
+  "expected": {
+    "status": "OK",
+    "issues": [],
+    "ruleset": {
+      "specVersion": "1.0.0-rc.5",
+      "sourceHash": "8a7f265ce48cd0c08ae82dc3fbb1288d27da03584c147720de6cab4872fddb3a"
+    }
+  }
+}

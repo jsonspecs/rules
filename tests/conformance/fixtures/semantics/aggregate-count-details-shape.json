@@ -1,0 +1,80 @@
+{
+  "name": "sem/aggregate-count-details-shape",
+  "snapshot": {
+    "format": "jsonspecs-snapshot",
+    "formatVersion": 2,
+    "specVersion": "1.0.0-rc.5",
+    "exports": [
+      "checks.main"
+    ],
+    "artifacts": {
+      "checks.main": {
+        "type": "pipeline",
+        "steps": [
+          "library.se.cnt"
+        ]
+      },
+      "library.se.cnt": {
+        "type": "rule",
+        "operator": "greater_than",
+        "field": "x[*].v",
+        "value": 10,
+        "aggregate": {
+          "mode": "COUNT",
+          "op": ">=",
+          "value": 2
+        },
+        "issue": {
+          "level": "ERROR",
+          "code": "SE14",
+          "message": "failed"
+        }
+      }
+    },
+    "sourceHash": "4a1d06f12651ba0dc86c3f98cbac3f90195fc09d30dc97c2f32310ae0fac303b"
+  },
+  "operators": [],
+  "input": {
+    "pipelineId": "checks.main",
+    "payload": {
+      "x": [
+        {
+          "v": 11
+        },
+        {
+          "v": 2
+        },
+        {
+          "v": 3
+        }
+      ]
+    }
+  },
+  "expected": {
+    "status": "ERROR",
+    "issues": [
+      {
+        "level": "ERROR",
+        "code": "SE14",
+        "message": "failed",
+        "field": "x[*].v",
+        "ruleId": "library.se.cnt",
+        "pipelineId": "checks.main",
+        "details": {
+          "mode": "COUNT",
+          "op": ">=",
+          "value": 2,
+          "matched": 3,
+          "evaluated": 3,
+          "skipped": 0,
+          "passed": 1,
+          "failed": 2
+        }
+      }
+    ],
+    "ruleset": {
+      "specVersion": "1.0.0-rc.5",
+      "sourceHash": "4a1d06f12651ba0dc86c3f98cbac3f90195fc09d30dc97c2f32310ae0fac303b"
+    }
+  }
+}

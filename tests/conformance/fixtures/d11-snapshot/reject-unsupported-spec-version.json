@@ -1,0 +1,34 @@
+{
+  "name": "d11/reject-unsupported-spec-version",
+  "snapshot": {
+    "format": "jsonspecs-snapshot",
+    "formatVersion": 2,
+    "specVersion": "999.0.0",
+    "exports": [
+      "checks.main"
+    ],
+    "artifacts": {
+      "checks.main": {
+        "type": "pipeline",
+        "steps": [
+          "library.x.s"
+        ]
+      },
+      "library.x.s": {
+        "type": "rule",
+        "operator": "not_empty",
+        "field": "a",
+        "issue": {
+          "level": "ERROR",
+          "code": "X5",
+          "message": "failed"
+        }
+      }
+    },
+    "sourceHash": "e1b4e63985ef8feee10390e3f3dde80e96ec5e0d8049d67c894adcfbc5295858"
+  },
+  "operators": [],
+  "expected": {
+    "verdict": "reject"
+  }
+}

@@ -1,0 +1,36 @@
+{
+  "name": "d04/reject-legacy-flags-field",
+  "snapshot": {
+    "format": "jsonspecs-snapshot",
+    "formatVersion": 2,
+    "specVersion": "1.0.0-rc.5",
+    "exports": [
+      "checks.main"
+    ],
+    "artifacts": {
+      "checks.main": {
+        "type": "pipeline",
+        "steps": [
+          "library.r.f"
+        ]
+      },
+      "library.r.f": {
+        "type": "rule",
+        "operator": "matches_regex",
+        "field": "a",
+        "value": "^a$",
+        "flags": "i",
+        "issue": {
+          "level": "ERROR",
+          "code": "R6",
+          "message": "failed"
+        }
+      }
+    },
+    "sourceHash": "46fd056f029cac4de4ce42c0543a4a471cdfe8c6a9c76c6669613161776d9a7c"
+  },
+  "operators": [],
+  "expected": {
+    "verdict": "reject"
+  }
+}

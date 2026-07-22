@@ -1,0 +1,55 @@
+{
+  "name": "d13/not-true-fails-only-on-boolean-true",
+  "snapshot": {
+    "format": "jsonspecs-snapshot",
+    "formatVersion": 2,
+    "specVersion": "1.0.0-rc.5",
+    "exports": [
+      "checks.main"
+    ],
+    "artifacts": {
+      "checks.main": {
+        "type": "pipeline",
+        "steps": [
+          "library.a.nt2"
+        ]
+      },
+      "library.a.nt2": {
+        "type": "rule",
+        "operator": "not_true",
+        "field": "f",
+        "issue": {
+          "level": "ERROR",
+          "code": "A5",
+          "message": "failed"
+        }
+      }
+    },
+    "sourceHash": "033245d58794c191353d2883a05feeab1c4dff36b37e63ea4a4f610699ea1118"
+  },
+  "operators": [],
+  "input": {
+    "pipelineId": "checks.main",
+    "payload": {
+      "f": true
+    }
+  },
+  "expected": {
+    "status": "ERROR",
+    "issues": [
+      {
+        "level": "ERROR",
+        "code": "A5",
+        "message": "failed",
+        "field": "f",
+        "ruleId": "library.a.nt2",
+        "pipelineId": "checks.main",
+        "actual": true
+      }
+    ],
+    "ruleset": {
+      "specVersion": "1.0.0-rc.5",
+      "sourceHash": "033245d58794c191353d2883a05feeab1c4dff36b37e63ea4a4f610699ea1118"
+    }
+  }
+}

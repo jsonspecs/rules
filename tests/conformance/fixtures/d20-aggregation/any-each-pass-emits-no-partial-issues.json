@@ -1,0 +1,61 @@
+{
+  "name": "d20/any-each-pass-emits-no-partial-issues",
+  "snapshot": {
+    "format": "jsonspecs-snapshot",
+    "formatVersion": 2,
+    "specVersion": "1.0.0-rc.5",
+    "exports": [
+      "checks.main"
+    ],
+    "artifacts": {
+      "checks.main": {
+        "type": "pipeline",
+        "steps": [
+          "library.d20.any.pass"
+        ]
+      },
+      "library.d20.any.pass": {
+        "type": "rule",
+        "operator": "conformance.rule.tri",
+        "field": "items[*].result",
+        "aggregate": {
+          "mode": "ANY",
+          "issueMode": "EACH"
+        },
+        "issue": {
+          "level": "ERROR",
+          "code": "D20.2",
+          "message": "failed"
+        }
+      }
+    },
+    "sourceHash": "0cd44a6b2fd18320a40c5275feab95f884e78c5e9969b2b3d4b552efe0ca9018"
+  },
+  "operators": [
+    "conformance.rule.tri"
+  ],
+  "input": {
+    "pipelineId": "checks.main",
+    "payload": {
+      "items": [
+        {
+          "result": "PASS"
+        },
+        {
+          "result": "SKIP"
+        },
+        {
+          "result": "FAIL"
+        }
+      ]
+    }
+  },
+  "expected": {
+    "status": "OK",
+    "issues": [],
+    "ruleset": {
+      "specVersion": "1.0.0-rc.5",
+      "sourceHash": "0cd44a6b2fd18320a40c5275feab95f884e78c5e9969b2b3d4b552efe0ca9018"
+    }
+  }
+}

@@ -1,0 +1,74 @@
+{
+  "name": "sem/aggregate-all-summary-details-shape",
+  "snapshot": {
+    "format": "jsonspecs-snapshot",
+    "formatVersion": 2,
+    "specVersion": "1.0.0-rc.5",
+    "exports": [
+      "checks.main"
+    ],
+    "artifacts": {
+      "checks.main": {
+        "type": "pipeline",
+        "steps": [
+          "library.se.all"
+        ]
+      },
+      "library.se.all": {
+        "type": "rule",
+        "operator": "greater_than",
+        "field": "x[*].v",
+        "value": 10,
+        "aggregate": {
+          "mode": "ALL",
+          "issueMode": "SUMMARY"
+        },
+        "issue": {
+          "level": "ERROR",
+          "code": "SE13",
+          "message": "failed"
+        }
+      }
+    },
+    "sourceHash": "96b76f57a3a9743f37d5452c13104f47b3314151ba44b2d7699f79eefc7c7a96"
+  },
+  "operators": [],
+  "input": {
+    "pipelineId": "checks.main",
+    "payload": {
+      "x": [
+        {
+          "v": 1
+        },
+        {
+          "v": 2
+        }
+      ]
+    }
+  },
+  "expected": {
+    "status": "ERROR",
+    "issues": [
+      {
+        "level": "ERROR",
+        "code": "SE13",
+        "message": "failed",
+        "field": "x[*].v",
+        "ruleId": "library.se.all",
+        "pipelineId": "checks.main",
+        "details": {
+          "mode": "ALL",
+          "matched": 2,
+          "evaluated": 2,
+          "skipped": 0,
+          "passed": 0,
+          "failed": 2
+        }
+      }
+    ],
+    "ruleset": {
+      "specVersion": "1.0.0-rc.5",
+      "sourceHash": "96b76f57a3a9743f37d5452c13104f47b3314151ba44b2d7699f79eefc7c7a96"
+    }
+  }
+}

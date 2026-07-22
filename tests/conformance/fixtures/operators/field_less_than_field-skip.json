@@ -1,0 +1,44 @@
+{
+  "name": "operators/field_less_than_field-skip",
+  "snapshot": {
+    "format": "jsonspecs-snapshot",
+    "formatVersion": 2,
+    "specVersion": "1.0.0-rc.5",
+    "exports": [
+      "checks.main"
+    ],
+    "artifacts": {
+      "builtin.field_less_than_field": {
+        "type": "rule",
+        "operator": "field_less_than_field",
+        "field": "a",
+        "value_field": "b",
+        "issue": {
+          "level": "ERROR",
+          "code": "BUILTIN.field_less_than_field",
+          "message": "failed"
+        }
+      },
+      "checks.main": {
+        "type": "pipeline",
+        "steps": [
+          "builtin.field_less_than_field"
+        ]
+      }
+    },
+    "sourceHash": "c80f2f10207de5a0d8fec99c04a2a06b6ba78ab942fefc212dfa3422586ce2fa"
+  },
+  "operators": [],
+  "input": {
+    "pipelineId": "checks.main",
+    "payload": {}
+  },
+  "expected": {
+    "status": "OK",
+    "issues": [],
+    "ruleset": {
+      "specVersion": "1.0.0-rc.5",
+      "sourceHash": "c80f2f10207de5a0d8fec99c04a2a06b6ba78ab942fefc212dfa3422586ce2fa"
+    }
+  }
+}

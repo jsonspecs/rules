@@ -1,0 +1,41 @@
+{
+  "name": "d28/reject-unsorted-exports",
+  "snapshot": {
+    "format": "jsonspecs-snapshot",
+    "formatVersion": 2,
+    "specVersion": "1.0.0-rc.5",
+    "exports": [
+      "",
+      "𐀀"
+    ],
+    "artifacts": {
+      "shared.rule": {
+        "type": "rule",
+        "operator": "not_empty",
+        "field": "a",
+        "issue": {
+          "level": "ERROR",
+          "code": "D28.2",
+          "message": "failed"
+        }
+      },
+      "𐀀": {
+        "type": "pipeline",
+        "steps": [
+          "shared.rule"
+        ]
+      },
+      "": {
+        "type": "pipeline",
+        "steps": [
+          "shared.rule"
+        ]
+      }
+    },
+    "sourceHash": "f25387c89538129d078c0cde1cadc985a2fe69a1b033c485cd497ee36495e50e"
+  },
+  "operators": [],
+  "expected": {
+    "verdict": "reject"
+  }
+}

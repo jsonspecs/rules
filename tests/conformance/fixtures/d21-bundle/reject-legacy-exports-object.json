@@ -1,0 +1,36 @@
+{
+  "name": "d21/reject-legacy-exports-object",
+  "snapshot": {
+    "format": "jsonspecs-snapshot",
+    "formatVersion": 2,
+    "specVersion": "1.0.0-rc.5",
+    "exports": {
+      "pipelines": [
+        "checks.main"
+      ]
+    },
+    "artifacts": {
+      "checks.main": {
+        "type": "pipeline",
+        "steps": [
+          "library.d21.object"
+        ]
+      },
+      "library.d21.object": {
+        "type": "rule",
+        "operator": "not_empty",
+        "field": "a",
+        "issue": {
+          "level": "ERROR",
+          "code": "D21.X2O",
+          "message": "failed"
+        }
+      }
+    },
+    "sourceHash": "22dac48d1a10582f743d590b01ae515917b316172798c519cd481ea9e47a03f9"
+  },
+  "operators": [],
+  "expected": {
+    "verdict": "reject"
+  }
+}

@@ -1,0 +1,57 @@
+{
+  "name": "operators/less_than-fail",
+  "snapshot": {
+    "format": "jsonspecs-snapshot",
+    "formatVersion": 2,
+    "specVersion": "1.0.0-rc.5",
+    "exports": [
+      "checks.main"
+    ],
+    "artifacts": {
+      "builtin.less_than": {
+        "type": "rule",
+        "operator": "less_than",
+        "field": "a",
+        "value": 1,
+        "issue": {
+          "level": "ERROR",
+          "code": "BUILTIN.less_than",
+          "message": "failed"
+        }
+      },
+      "checks.main": {
+        "type": "pipeline",
+        "steps": [
+          "builtin.less_than"
+        ]
+      }
+    },
+    "sourceHash": "0e03131af9a4d1b018f87c7db7fc514c51b587b0e5241515b8f69da99857a31e"
+  },
+  "operators": [],
+  "input": {
+    "pipelineId": "checks.main",
+    "payload": {
+      "a": 1
+    }
+  },
+  "expected": {
+    "status": "ERROR",
+    "issues": [
+      {
+        "level": "ERROR",
+        "code": "BUILTIN.less_than",
+        "message": "failed",
+        "field": "a",
+        "ruleId": "builtin.less_than",
+        "pipelineId": "checks.main",
+        "expected": 1,
+        "actual": 1
+      }
+    ],
+    "ruleset": {
+      "specVersion": "1.0.0-rc.5",
+      "sourceHash": "0e03131af9a4d1b018f87c7db7fc514c51b587b0e5241515b8f69da99857a31e"
+    }
+  }
+}

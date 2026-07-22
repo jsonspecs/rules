@@ -1,0 +1,35 @@
+{
+  "name": "d04/reject-word-boundary",
+  "snapshot": {
+    "format": "jsonspecs-snapshot",
+    "formatVersion": 2,
+    "specVersion": "1.0.0-rc.5",
+    "exports": [
+      "checks.main"
+    ],
+    "artifacts": {
+      "checks.main": {
+        "type": "pipeline",
+        "steps": [
+          "library.r.c"
+        ]
+      },
+      "library.r.c": {
+        "type": "rule",
+        "operator": "matches_regex",
+        "field": "a",
+        "value": "\\bfoo",
+        "issue": {
+          "level": "ERROR",
+          "code": "R3",
+          "message": "failed"
+        }
+      }
+    },
+    "sourceHash": "6cb9430eb9b31b9049265d08df7f7f55c7e09779a9e6793fdf2b64f2c67656ea"
+  },
+  "operators": [],
+  "expected": {
+    "verdict": "reject"
+  }
+}

@@ -1,13 +1,15 @@
 import api from "./index.js";
 
+/** ESM-обёртка над единственным CommonJS-источником публичного API. */
+
 export const {
   createEngine,
-  Operators,
-  deepGet,
+  builtInOperators,
   CompilationError,
-  RuntimeError,
-  validate,
   compileSnapshot,
+  compileSnapshotText,
+  validate,
+  runPipeline,
   inspect,
   computeSourceHash,
   formatDiagnostics,

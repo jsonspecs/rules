@@ -1,0 +1,57 @@
+{
+  "name": "d03/contains-on-boolean-fails",
+  "snapshot": {
+    "format": "jsonspecs-snapshot",
+    "formatVersion": 2,
+    "specVersion": "1.0.0-rc.5",
+    "exports": [
+      "checks.main"
+    ],
+    "artifacts": {
+      "checks.main": {
+        "type": "pipeline",
+        "steps": [
+          "library.s.ct"
+        ]
+      },
+      "library.s.ct": {
+        "type": "rule",
+        "operator": "contains",
+        "field": "a",
+        "value": "ru",
+        "issue": {
+          "level": "ERROR",
+          "code": "S3",
+          "message": "failed"
+        }
+      }
+    },
+    "sourceHash": "ccd7232fcc99cb340b194e7f17cac4c7d5782b1d199a7c1890cb4215423b9a5d"
+  },
+  "operators": [],
+  "input": {
+    "pipelineId": "checks.main",
+    "payload": {
+      "a": true
+    }
+  },
+  "expected": {
+    "status": "ERROR",
+    "issues": [
+      {
+        "level": "ERROR",
+        "code": "S3",
+        "message": "failed",
+        "field": "a",
+        "ruleId": "library.s.ct",
+        "pipelineId": "checks.main",
+        "expected": "ru",
+        "actual": true
+      }
+    ],
+    "ruleset": {
+      "specVersion": "1.0.0-rc.5",
+      "sourceHash": "ccd7232fcc99cb340b194e7f17cac4c7d5782b1d199a7c1890cb4215423b9a5d"
+    }
+  }
+}

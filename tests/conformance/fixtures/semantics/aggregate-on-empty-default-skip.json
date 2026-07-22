@@ -1,0 +1,48 @@
+{
+  "name": "sem/aggregate-on-empty-default-skip",
+  "snapshot": {
+    "format": "jsonspecs-snapshot",
+    "formatVersion": 2,
+    "specVersion": "1.0.0-rc.5",
+    "exports": [
+      "checks.main"
+    ],
+    "artifacts": {
+      "checks.main": {
+        "type": "pipeline",
+        "steps": [
+          "library.se.oe1"
+        ]
+      },
+      "library.se.oe1": {
+        "type": "rule",
+        "operator": "greater_than",
+        "field": "x[*].v",
+        "value": 10,
+        "aggregate": {
+          "mode": "ALL",
+          "issueMode": "EACH"
+        },
+        "issue": {
+          "level": "ERROR",
+          "code": "SE16",
+          "message": "failed"
+        }
+      }
+    },
+    "sourceHash": "f2c0a6e7c2960e2149d888d09e89023e126f1461515ab504cae2f9ab1363b1f6"
+  },
+  "operators": [],
+  "input": {
+    "pipelineId": "checks.main",
+    "payload": {}
+  },
+  "expected": {
+    "status": "OK",
+    "issues": [],
+    "ruleset": {
+      "specVersion": "1.0.0-rc.5",
+      "sourceHash": "f2c0a6e7c2960e2149d888d09e89023e126f1461515ab504cae2f9ab1363b1f6"
+    }
+  }
+}

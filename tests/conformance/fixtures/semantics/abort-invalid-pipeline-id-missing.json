@@ -1,0 +1,57 @@
+{
+  "name": "sem/abort-invalid-pipeline-id-missing",
+  "snapshot": {
+    "format": "jsonspecs-snapshot",
+    "formatVersion": 2,
+    "specVersion": "1.0.0-rc.5",
+    "exports": [
+      "checks.one",
+      "checks.two"
+    ],
+    "artifacts": {
+      "checks.one": {
+        "type": "pipeline",
+        "steps": [
+          "library.se.ab2"
+        ]
+      },
+      "checks.two": {
+        "type": "pipeline",
+        "steps": [
+          "library.se.ab2"
+        ]
+      },
+      "library.se.ab2": {
+        "type": "rule",
+        "operator": "not_empty",
+        "field": "a",
+        "issue": {
+          "level": "ERROR",
+          "code": "SE20",
+          "message": "failed"
+        }
+      }
+    },
+    "sourceHash": "fa080142862a4a0ad6842f45a544b46a3bb3e8eb384984d549a83a3c3b755b10"
+  },
+  "operators": [],
+  "input": {
+    "payload": {
+      "a": 1
+    }
+  },
+  "expected": {
+    "status": "ABORT",
+    "issues": [],
+    "error": {
+      "code": "INVALID_PIPELINE_ID",
+      "details": {
+        "expected": "non-empty string"
+      }
+    },
+    "ruleset": {
+      "specVersion": "1.0.0-rc.5",
+      "sourceHash": "fa080142862a4a0ad6842f45a544b46a3bb3e8eb384984d549a83a3c3b755b10"
+    }
+  }
+}

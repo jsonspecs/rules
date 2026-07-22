@@ -1,0 +1,42 @@
+{
+  "name": "d11/reject-dictionary-null-entry",
+  "snapshot": {
+    "format": "jsonspecs-snapshot",
+    "formatVersion": 2,
+    "specVersion": "1.0.0-rc.5",
+    "exports": [
+      "checks.main"
+    ],
+    "artifacts": {
+      "checks.main": {
+        "type": "pipeline",
+        "steps": [
+          "library.x.di"
+        ]
+      },
+      "library.dict.bad": {
+        "type": "dictionary",
+        "entries": [
+          "X",
+          null
+        ]
+      },
+      "library.x.di": {
+        "type": "rule",
+        "operator": "in_dictionary",
+        "field": "a",
+        "dictionary": "library.dict.bad",
+        "issue": {
+          "level": "ERROR",
+          "code": "X10",
+          "message": "failed"
+        }
+      }
+    },
+    "sourceHash": "2b4a106af57d3aca779ca86e2482119c7433ac2e00db92f3fd9d8c36617bf7a5"
+  },
+  "operators": [],
+  "expected": {
+    "verdict": "reject"
+  }
+}

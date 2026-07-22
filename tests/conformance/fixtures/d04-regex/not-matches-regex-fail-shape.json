@@ -1,0 +1,57 @@
+{
+  "name": "d04/not-matches-regex-fail-shape",
+  "snapshot": {
+    "format": "jsonspecs-snapshot",
+    "formatVersion": 2,
+    "specVersion": "1.0.0-rc.5",
+    "exports": [
+      "checks.main"
+    ],
+    "artifacts": {
+      "checks.main": {
+        "type": "pipeline",
+        "steps": [
+          "library.r.nm"
+        ]
+      },
+      "library.r.nm": {
+        "type": "rule",
+        "operator": "not_matches_regex",
+        "field": "a",
+        "value": "USA|США",
+        "issue": {
+          "level": "ERROR",
+          "code": "R13",
+          "message": "failed"
+        }
+      }
+    },
+    "sourceHash": "91e5324e0f1eb824a62b48eda53a09b72c1d4d8bb6668218f3a11346b48ee9d3"
+  },
+  "operators": [],
+  "input": {
+    "pipelineId": "checks.main",
+    "payload": {
+      "a": "г. USA"
+    }
+  },
+  "expected": {
+    "status": "ERROR",
+    "issues": [
+      {
+        "level": "ERROR",
+        "code": "R13",
+        "message": "failed",
+        "field": "a",
+        "ruleId": "library.r.nm",
+        "pipelineId": "checks.main",
+        "expected": "USA|США",
+        "actual": "г. USA"
+      }
+    ],
+    "ruleset": {
+      "specVersion": "1.0.0-rc.5",
+      "sourceHash": "91e5324e0f1eb824a62b48eda53a09b72c1d4d8bb6668218f3a11346b48ee9d3"
+    }
+  }
+}

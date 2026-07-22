@@ -1,0 +1,57 @@
+{
+  "name": "d01/equals-number-vs-numeric-string-not-equal",
+  "snapshot": {
+    "format": "jsonspecs-snapshot",
+    "formatVersion": 2,
+    "specVersion": "1.0.0-rc.5",
+    "exports": [
+      "checks.main"
+    ],
+    "artifacts": {
+      "checks.main": {
+        "type": "pipeline",
+        "steps": [
+          "library.n.eq"
+        ]
+      },
+      "library.n.eq": {
+        "type": "rule",
+        "operator": "equals",
+        "field": "a",
+        "value": 1,
+        "issue": {
+          "level": "ERROR",
+          "code": "N1",
+          "message": "failed"
+        }
+      }
+    },
+    "sourceHash": "1f9274dd0eb5a886a8e87f6a83cf3138faaad5213cf6b76a1879f68a86dcd134"
+  },
+  "operators": [],
+  "input": {
+    "pipelineId": "checks.main",
+    "payload": {
+      "a": "1"
+    }
+  },
+  "expected": {
+    "status": "ERROR",
+    "issues": [
+      {
+        "level": "ERROR",
+        "code": "N1",
+        "message": "failed",
+        "field": "a",
+        "ruleId": "library.n.eq",
+        "pipelineId": "checks.main",
+        "expected": 1,
+        "actual": "1"
+      }
+    ],
+    "ruleset": {
+      "specVersion": "1.0.0-rc.5",
+      "sourceHash": "1f9274dd0eb5a886a8e87f6a83cf3138faaad5213cf6b76a1879f68a86dcd134"
+    }
+  }
+}

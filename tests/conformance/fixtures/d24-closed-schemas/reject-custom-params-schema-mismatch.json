@@ -1,0 +1,38 @@
+{
+  "name": "d24/reject-custom-params-schema-mismatch",
+  "snapshot": {
+    "format": "jsonspecs-snapshot",
+    "formatVersion": 2,
+    "specVersion": "1.0.0-rc.5",
+    "exports": [
+      "checks.main"
+    ],
+    "artifacts": {
+      "checks.main": {
+        "type": "pipeline",
+        "steps": [
+          "library.d24.params.bad"
+        ]
+      },
+      "library.d24.params.bad": {
+        "type": "rule",
+        "operator": "conformance.rule.params",
+        "params": {
+          "result": "PASS"
+        },
+        "issue": {
+          "level": "ERROR",
+          "code": "D24.X2",
+          "message": "failed"
+        }
+      }
+    },
+    "sourceHash": "795977fbad7a93c3b2a3dbe4a32daab6eac170a2621bc9d7432a486743590495"
+  },
+  "operators": [
+    "conformance.rule.params"
+  ],
+  "expected": {
+    "verdict": "reject"
+  }
+}
