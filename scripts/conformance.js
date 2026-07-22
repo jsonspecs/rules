@@ -1,7 +1,7 @@
 "use strict";
 
 /**
- * Прогон нормативного приложения jsonspecs/spec 1.0.0-rc.5.
+ * Прогон нормативного приложения jsonspecs/spec 1.0.0-rc.6.
  *
  * Фикстуры привязаны к commit из tests/conformance/spec-commit.txt. Для каждого
  * файла создаётся registry ровно из `operators[]`: так проверяется относительная
@@ -23,6 +23,7 @@ const definitions = {
   "conformance.rule.invalid_result": operator(emptySchema(), () => "EXCEPTION"),
   "conformance.rule.tri": operator(configSchema({ field: pathSchema() }, ["field"]), (input) => {
     if (input.field === "THROW") throw new Error("conformance throw");
+    if (input.field === "INVALID") return "INVALID";
     return ["PASS", "FAIL", "SKIP"].includes(input.field) ? input.field : "FAIL";
   }),
   "conformance.rule.params": operator(configSchema({

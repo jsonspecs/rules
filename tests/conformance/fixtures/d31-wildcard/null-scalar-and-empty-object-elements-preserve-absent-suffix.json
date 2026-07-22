@@ -1,0 +1,78 @@
+{
+  "name": "d31/null-scalar-and-empty-object-elements-preserve-absent-suffix",
+  "snapshot": {
+    "format": "jsonspecs-snapshot",
+    "formatVersion": 2,
+    "specVersion": "1.0.0-rc.6",
+    "exports": [
+      "checks.main"
+    ],
+    "artifacts": {
+      "checks.main": {
+        "type": "pipeline",
+        "steps": [
+          "library.d31.impassable.elements"
+        ]
+      },
+      "library.d31.impassable.elements": {
+        "type": "rule",
+        "operator": "not_empty",
+        "field": "items[*].sku",
+        "aggregate": {
+          "mode": "ALL",
+          "issueMode": "EACH"
+        },
+        "issue": {
+          "level": "ERROR",
+          "code": "D31.IMPASSABLE",
+          "message": "failed"
+        }
+      }
+    },
+    "sourceHash": "5597ea8a48a607ef417ae6101c43fc2056de65d3eed058978da25cf2fccd4a5b"
+  },
+  "operators": [],
+  "input": {
+    "pipelineId": "checks.main",
+    "payload": {
+      "items": [
+        null,
+        42,
+        {}
+      ]
+    }
+  },
+  "expected": {
+    "status": "ERROR",
+    "issues": [
+      {
+        "level": "ERROR",
+        "code": "D31.IMPASSABLE",
+        "message": "failed",
+        "field": "items[0].sku",
+        "ruleId": "library.d31.impassable.elements",
+        "pipelineId": "checks.main"
+      },
+      {
+        "level": "ERROR",
+        "code": "D31.IMPASSABLE",
+        "message": "failed",
+        "field": "items[1].sku",
+        "ruleId": "library.d31.impassable.elements",
+        "pipelineId": "checks.main"
+      },
+      {
+        "level": "ERROR",
+        "code": "D31.IMPASSABLE",
+        "message": "failed",
+        "field": "items[2].sku",
+        "ruleId": "library.d31.impassable.elements",
+        "pipelineId": "checks.main"
+      }
+    ],
+    "ruleset": {
+      "specVersion": "1.0.0-rc.6",
+      "sourceHash": "5597ea8a48a607ef417ae6101c43fc2056de65d3eed058978da25cf2fccd4a5b"
+    }
+  }
+}

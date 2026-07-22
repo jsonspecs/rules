@@ -1,6 +1,6 @@
 {
   "name": "@jsonspecs/rules",
-  "version": "3.0.0",
+  "version": "4.0.0",
   "description": "Declarative JSON rules engine for validation pipelines",
   "type": "commonjs",
   "main": "index.js",
@@ -30,6 +30,8 @@
     "TESTING.md",
     "COMPATIBILITY.md",
     "MIGRATION_V3.md",
+    "MIGRATION_RC6.md",
+    "MIGRATION_RC6_RU.md",
     "LICENSE",
     "CHANGELOG.md"
   ],

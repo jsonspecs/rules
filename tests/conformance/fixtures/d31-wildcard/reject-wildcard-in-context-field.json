@@ -1,0 +1,38 @@
+{
+  "name": "d31/reject-wildcard-in-context-field",
+  "snapshot": {
+    "format": "jsonspecs-snapshot",
+    "formatVersion": 2,
+    "specVersion": "1.0.0-rc.6",
+    "exports": [
+      "checks.main"
+    ],
+    "artifacts": {
+      "checks.main": {
+        "type": "pipeline",
+        "steps": [
+          "library.d31.context"
+        ]
+      },
+      "library.d31.context": {
+        "type": "rule",
+        "operator": "not_empty",
+        "field": "$context.items[*].sku",
+        "aggregate": {
+          "mode": "ALL",
+          "issueMode": "EACH"
+        },
+        "issue": {
+          "level": "ERROR",
+          "code": "D31.CONTEXT",
+          "message": "failed"
+        }
+      }
+    },
+    "sourceHash": "96faf68685c7eb6de8f8a3b5e4ce2bc8f8f3f38e0507a755bdb4cb0d69f96933"
+  },
+  "operators": [],
+  "expected": {
+    "verdict": "reject"
+  }
+}

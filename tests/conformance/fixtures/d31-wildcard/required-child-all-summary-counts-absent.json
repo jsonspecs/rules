@@ -1,0 +1,71 @@
+{
+  "name": "d31/required-child-all-summary-counts-absent",
+  "snapshot": {
+    "format": "jsonspecs-snapshot",
+    "formatVersion": 2,
+    "specVersion": "1.0.0-rc.6",
+    "exports": [
+      "checks.main"
+    ],
+    "artifacts": {
+      "checks.main": {
+        "type": "pipeline",
+        "steps": [
+          "library.d31.required.summary"
+        ]
+      },
+      "library.d31.required.summary": {
+        "type": "rule",
+        "operator": "not_empty",
+        "field": "items[*].sku",
+        "aggregate": {
+          "mode": "ALL",
+          "issueMode": "SUMMARY"
+        },
+        "issue": {
+          "level": "ERROR",
+          "code": "D31.SUMMARY",
+          "message": "failed"
+        }
+      }
+    },
+    "sourceHash": "69a10381f55600737a1c7b40ec9f149cb1674c9582d01eb349ae8c139382f0cc"
+  },
+  "operators": [],
+  "input": {
+    "pipelineId": "checks.main",
+    "payload": {
+      "items": [
+        {
+          "sku": "A"
+        },
+        {}
+      ]
+    }
+  },
+  "expected": {
+    "status": "ERROR",
+    "issues": [
+      {
+        "level": "ERROR",
+        "code": "D31.SUMMARY",
+        "message": "failed",
+        "field": "items[*].sku",
+        "ruleId": "library.d31.required.summary",
+        "pipelineId": "checks.main",
+        "details": {
+          "mode": "ALL",
+          "matched": 2,
+          "evaluated": 2,
+          "skipped": 0,
+          "passed": 1,
+          "failed": 1
+        }
+      }
+    ],
+    "ruleset": {
+      "specVersion": "1.0.0-rc.6",
+      "sourceHash": "69a10381f55600737a1c7b40ec9f149cb1674c9582d01eb349ae8c139382f0cc"
+    }
+  }
+}

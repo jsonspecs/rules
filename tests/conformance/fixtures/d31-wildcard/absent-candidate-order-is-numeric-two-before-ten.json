@@ -1,0 +1,96 @@
+{
+  "name": "d31/absent-candidate-order-is-numeric-two-before-ten",
+  "snapshot": {
+    "format": "jsonspecs-snapshot",
+    "formatVersion": 2,
+    "specVersion": "1.0.0-rc.6",
+    "exports": [
+      "checks.main"
+    ],
+    "artifacts": {
+      "checks.main": {
+        "type": "pipeline",
+        "steps": [
+          "library.d31.numeric.order"
+        ]
+      },
+      "library.d31.numeric.order": {
+        "type": "rule",
+        "operator": "not_empty",
+        "field": "items[*].sku",
+        "aggregate": {
+          "mode": "ALL",
+          "issueMode": "EACH"
+        },
+        "issue": {
+          "level": "ERROR",
+          "code": "D31.ORDER",
+          "message": "failed"
+        }
+      }
+    },
+    "sourceHash": "0df1f8a4d9921103c8fcf32873b26ecbce1e1ba05bc0c35ee1176d86476d50b5"
+  },
+  "operators": [],
+  "input": {
+    "pipelineId": "checks.main",
+    "payload": {
+      "items": [
+        {
+          "sku": "A"
+        },
+        {
+          "sku": "A"
+        },
+        {},
+        {
+          "sku": "A"
+        },
+        {
+          "sku": "A"
+        },
+        {
+          "sku": "A"
+        },
+        {
+          "sku": "A"
+        },
+        {
+          "sku": "A"
+        },
+        {
+          "sku": "A"
+        },
+        {
+          "sku": "A"
+        },
+        {}
+      ]
+    }
+  },
+  "expected": {
+    "status": "ERROR",
+    "issues": [
+      {
+        "level": "ERROR",
+        "code": "D31.ORDER",
+        "message": "failed",
+        "field": "items[2].sku",
+        "ruleId": "library.d31.numeric.order",
+        "pipelineId": "checks.main"
+      },
+      {
+        "level": "ERROR",
+        "code": "D31.ORDER",
+        "message": "failed",
+        "field": "items[10].sku",
+        "ruleId": "library.d31.numeric.order",
+        "pipelineId": "checks.main"
+      }
+    ],
+    "ruleset": {
+      "specVersion": "1.0.0-rc.6",
+      "sourceHash": "0df1f8a4d9921103c8fcf32873b26ecbce1e1ba05bc0c35ee1176d86476d50b5"
+    }
+  }
+}

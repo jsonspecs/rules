@@ -4,7 +4,7 @@ This document describes the Node.js implementation in `@jsonspecs/rules`. It is
 not a copy of the behavioral contract and does not redefine it.
 
 Normative behavior is defined by
-[`jsonspecs/spec` 1.0.0-rc.5](https://github.com/jsonspecs/spec/blob/853ecaaeaf0e775c2bb69cf3d46dae076e689f54/SPEC.md).
+[`jsonspecs/spec` 1.0.0-rc.6](https://github.com/jsonspecs/spec/blob/d75024047437ce0119a28c6ceda818eb79c4f302/SPEC.md).
 The exact source commit used by the test suite is stored in
 `tests/conformance/spec-commit.txt`.
 
@@ -22,8 +22,9 @@ Ajv. Contracts must enumerate the accepted configuration, `inputs`, and immediat
 3. validate artifact shapes and operator contracts;
 4. parse portable regular expressions and enforce their compilation budgets;
 5. build dictionary membership indexes;
-6. validate exact references, the combined control-flow graph, and closure;
-7. reject unresolved operator names only after independent defects are excluded.
+6. pre-parse wildcard paths into immutable key/index/wildcard tokens;
+7. validate exact references, the combined control-flow graph, and closure;
+8. reject unresolved operator names only after independent defects are excluded.
 
 The prepared result exposes only its format and ruleset identity. Executable state,
 operator functions, indexes, and artifacts remain in a private `WeakMap`.
@@ -40,10 +41,16 @@ identity, so even a `Proxy` that throws itself cannot trigger another trap throu
 `instanceof` or error-property inspection. Untrusted payload failures and context
 failures retain their respective error codes.
 
-Payload and context are flattened into private path projections. Pipeline execution,
-condition traversal, and nested pipeline calls use explicit stacks rather than the
-JavaScript call stack. Operators receive a frozen invocation containing resolved
-values, never the complete payload or resolver.
+Exact payload and context operands use private flat path projections. Wildcard fields
+use a separate structural resolver over the frozen nested payload: it enumerates real
+array indexes in numeric odometer order and retains an absent candidate when only the
+exact suffix after the final wildcard is impassable. An impassable branch before a
+later wildcard produces no synthetic indexes.
+
+Pipeline execution, condition traversal, and nested pipeline calls use explicit stacks
+rather than the JavaScript call stack. Operators receive a frozen invocation containing
+resolved values, never the complete payload or resolver. An absent structural candidate
+reuses the same core-level absence behavior as an exact field.
 
 ## Regular expressions and dictionaries
 

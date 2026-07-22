@@ -1,0 +1,64 @@
+{
+  "name": "d31/out-of-range-exact-index-after-final-wildcard-is-absent",
+  "snapshot": {
+    "format": "jsonspecs-snapshot",
+    "formatVersion": 2,
+    "specVersion": "1.0.0-rc.6",
+    "exports": [
+      "checks.main"
+    ],
+    "artifacts": {
+      "checks.main": {
+        "type": "pipeline",
+        "steps": [
+          "library.d31.index-after"
+        ]
+      },
+      "library.d31.index-after": {
+        "type": "rule",
+        "operator": "not_empty",
+        "field": "a[*].b[1].sku",
+        "aggregate": {
+          "mode": "ALL",
+          "issueMode": "EACH"
+        },
+        "issue": {
+          "level": "ERROR",
+          "code": "D31.INDEX.AFTER",
+          "message": "failed"
+        }
+      }
+    },
+    "sourceHash": "817b71678008d4d6418196fdb8e67f8295f508fe0583a10efeb87bb755fd8557"
+  },
+  "operators": [],
+  "input": {
+    "pipelineId": "checks.main",
+    "payload": {
+      "a": [
+        {
+          "b": [
+            {}
+          ]
+        }
+      ]
+    }
+  },
+  "expected": {
+    "status": "ERROR",
+    "issues": [
+      {
+        "level": "ERROR",
+        "code": "D31.INDEX.AFTER",
+        "message": "failed",
+        "field": "a[0].b[1].sku",
+        "ruleId": "library.d31.index-after",
+        "pipelineId": "checks.main"
+      }
+    ],
+    "ruleset": {
+      "specVersion": "1.0.0-rc.6",
+      "sourceHash": "817b71678008d4d6418196fdb8e67f8295f508fe0583a10efeb87bb755fd8557"
+    }
+  }
+}

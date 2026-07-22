@@ -1,0 +1,72 @@
+{
+  "name": "d31/any-all-fail-reports-absent-and-null-in-order",
+  "snapshot": {
+    "format": "jsonspecs-snapshot",
+    "formatVersion": 2,
+    "specVersion": "1.0.0-rc.6",
+    "exports": [
+      "checks.main"
+    ],
+    "artifacts": {
+      "checks.main": {
+        "type": "pipeline",
+        "steps": [
+          "library.d31.any.fail"
+        ]
+      },
+      "library.d31.any.fail": {
+        "type": "rule",
+        "operator": "not_empty",
+        "field": "items[*].sku",
+        "aggregate": {
+          "mode": "ANY",
+          "issueMode": "EACH"
+        },
+        "issue": {
+          "level": "ERROR",
+          "code": "D31.ANY.FAIL",
+          "message": "failed"
+        }
+      }
+    },
+    "sourceHash": "7c57fa95e8d0447f0fda410cf3833c916dead202a2262f7d93d1dde6f48009eb"
+  },
+  "operators": [],
+  "input": {
+    "pipelineId": "checks.main",
+    "payload": {
+      "items": [
+        {},
+        {
+          "sku": null
+        }
+      ]
+    }
+  },
+  "expected": {
+    "status": "ERROR",
+    "issues": [
+      {
+        "level": "ERROR",
+        "code": "D31.ANY.FAIL",
+        "message": "failed",
+        "field": "items[0].sku",
+        "ruleId": "library.d31.any.fail",
+        "pipelineId": "checks.main"
+      },
+      {
+        "level": "ERROR",
+        "code": "D31.ANY.FAIL",
+        "message": "failed",
+        "field": "items[1].sku",
+        "ruleId": "library.d31.any.fail",
+        "pipelineId": "checks.main",
+        "actual": null
+      }
+    ],
+    "ruleset": {
+      "specVersion": "1.0.0-rc.6",
+      "sourceHash": "7c57fa95e8d0447f0fda410cf3833c916dead202a2262f7d93d1dde6f48009eb"
+    }
+  }
+}

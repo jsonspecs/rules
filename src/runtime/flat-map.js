@@ -1,12 +1,14 @@
 "use strict";
 
 /**
- * Внутренняя flat-проекция nested JSON и разрешение путей.
+ * Внутренняя flat-проекция nested JSON и разрешение точных путей.
  *
  * Непустой контейнер не является значением собственного пути; листья — скаляры
- * и пустые контейнеры. Wildcard сопоставляется с готовыми плоскими ключами, а
- * найденные индексы сортируются численно как кортежи (odometer order).
+ * и пустые контейнеры. Структурное раскрытие wildcard RC.6 вынесено в отдельный
+ * модуль и использует исходный безопасный вложенный payload.
  */
+
+const { expandWildcard } = require("./wildcard");
 
 function flatten(root) {
   const out = new Map();
@@ -38,28 +40,8 @@ function resolver(payload, context) {
     const map = contextPath ? contextMap : payloadMap;
     return map.has(key) ? { present: true, value: map.get(key) } : { present: false };
   }
-  function wildcard(pattern) {
-    const contextPath = pattern.startsWith("$context.");
-    const key = contextPath ? pattern.slice("$context.".length) : pattern;
-    const map = contextPath ? contextMap : payloadMap;
-    const parts = key.split("[*]").map(escapeRegex);
-    const matcher = new RegExp(`^${parts.join("\\[([0-9]+)\\]")}$`, "u");
-    const matches = [];
-    for (const [concrete, value] of map) {
-      const match = matcher.exec(concrete);
-      if (match) matches.push({ path: contextPath ? `$context.${concrete}` : concrete, value, indexes: match.slice(1).map(Number) });
-    }
-    matches.sort((a, b) => tupleCompare(a.indexes, b.indexes));
-    return matches;
-  }
+  function wildcard(plan) { return expandWildcard(payload, plan); }
   return { get, wildcard };
 }
 
-function tupleCompare(a, b) {
-  for (let i = 0; i < Math.min(a.length, b.length); i++) if (a[i] !== b[i]) return a[i] - b[i];
-  return a.length - b.length;
-}
-
-function escapeRegex(value) { return value.replace(/[.*+?^${}()|[\]\\]/g, "\\$&"); }
-
-module.exports = { flatten, resolver, tupleCompare };
+module.exports = { flatten, resolver };

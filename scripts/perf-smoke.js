@@ -17,7 +17,7 @@ function runCase(name, budgetMs, fn) {
 }
 
 function snapshot(artifacts, exports) {
-  const value = { format: "jsonspecs-snapshot", formatVersion: 2, specVersion: "1.0.0-rc.5", exports, artifacts };
+  const value = { format: "jsonspecs-snapshot", formatVersion: 2, specVersion: "1.0.0-rc.6", exports, artifacts };
   value.sourceHash = computeSourceHash(value);
   return value;
 }

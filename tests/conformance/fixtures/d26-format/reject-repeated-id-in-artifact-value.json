@@ -3,7 +3,7 @@
   "snapshot": {
     "format": "jsonspecs-snapshot",
     "formatVersion": 2,
-    "specVersion": "1.0.0-rc.5",
+    "specVersion": "1.0.0-rc.6",
     "exports": [
       "checks.main"
     ],
@@ -26,7 +26,7 @@
         "id": "library.d26.id"
       }
     },
-    "sourceHash": "cc416702aa287da64ffacac9d7da195c3f8669e72b9c789893cae5e6a688c981"
+    "sourceHash": "f9a3c7d86a1ab1bf7d794f9d750b2fca6e71f1959dc42a9df8548f045c0ee7e2"
   },
   "operators": [],
   "expected": {

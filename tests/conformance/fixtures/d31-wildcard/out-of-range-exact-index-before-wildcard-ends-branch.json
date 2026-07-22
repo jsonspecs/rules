@@ -1,0 +1,77 @@
+{
+  "name": "d31/out-of-range-exact-index-before-wildcard-ends-branch",
+  "snapshot": {
+    "format": "jsonspecs-snapshot",
+    "formatVersion": 2,
+    "specVersion": "1.0.0-rc.6",
+    "exports": [
+      "checks.main"
+    ],
+    "artifacts": {
+      "checks.main": {
+        "type": "pipeline",
+        "steps": [
+          "library.d31.index-before"
+        ]
+      },
+      "library.d31.index-before": {
+        "type": "rule",
+        "operator": "not_empty",
+        "field": "a[*].b[1].c[*].sku",
+        "aggregate": {
+          "mode": "ALL",
+          "issueMode": "EACH",
+          "onEmpty": "FAIL"
+        },
+        "issue": {
+          "level": "ERROR",
+          "code": "D31.INDEX.BEFORE",
+          "message": "failed"
+        }
+      }
+    },
+    "sourceHash": "36f956a92452c02d1463d4a77708c7498718e9296d97905bd273fa1cdede8183"
+  },
+  "operators": [],
+  "input": {
+    "pipelineId": "checks.main",
+    "payload": {
+      "a": [
+        {
+          "b": [
+            {
+              "c": [
+                {}
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  },
+  "expected": {
+    "status": "ERROR",
+    "issues": [
+      {
+        "level": "ERROR",
+        "code": "D31.INDEX.BEFORE",
+        "message": "failed",
+        "field": "a[*].b[1].c[*].sku",
+        "ruleId": "library.d31.index-before",
+        "pipelineId": "checks.main",
+        "details": {
+          "mode": "ALL",
+          "matched": 0,
+          "evaluated": 0,
+          "skipped": 0,
+          "passed": 0,
+          "failed": 0
+        }
+      }
+    ],
+    "ruleset": {
+      "specVersion": "1.0.0-rc.6",
+      "sourceHash": "36f956a92452c02d1463d4a77708c7498718e9296d97905bd273fa1cdede8183"
+    }
+  }
+}

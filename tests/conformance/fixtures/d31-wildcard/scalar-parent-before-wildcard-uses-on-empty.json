@@ -1,0 +1,67 @@
+{
+  "name": "d31/scalar-parent-before-wildcard-uses-on-empty",
+  "snapshot": {
+    "format": "jsonspecs-snapshot",
+    "formatVersion": 2,
+    "specVersion": "1.0.0-rc.6",
+    "exports": [
+      "checks.main"
+    ],
+    "artifacts": {
+      "checks.main": {
+        "type": "pipeline",
+        "steps": [
+          "library.d31.empty.scalar-parent-before-wildcard"
+        ]
+      },
+      "library.d31.empty.scalar-parent-before-wildcard": {
+        "type": "rule",
+        "operator": "not_empty",
+        "field": "items[*].sku",
+        "aggregate": {
+          "mode": "ALL",
+          "issueMode": "EACH",
+          "onEmpty": "FAIL"
+        },
+        "issue": {
+          "level": "ERROR",
+          "code": "D31.EMPTY.scalar-parent-before-wildcard",
+          "message": "failed"
+        }
+      }
+    },
+    "sourceHash": "ec3fa8c945432126591fbe3ac37bc12e1eb3b3483ad5ce50f078cd51c14f0dea"
+  },
+  "operators": [],
+  "input": {
+    "pipelineId": "checks.main",
+    "payload": {
+      "items": 7
+    }
+  },
+  "expected": {
+    "status": "ERROR",
+    "issues": [
+      {
+        "level": "ERROR",
+        "code": "D31.EMPTY.scalar-parent-before-wildcard",
+        "message": "failed",
+        "field": "items[*].sku",
+        "ruleId": "library.d31.empty.scalar-parent-before-wildcard",
+        "pipelineId": "checks.main",
+        "details": {
+          "mode": "ALL",
+          "matched": 0,
+          "evaluated": 0,
+          "skipped": 0,
+          "passed": 0,
+          "failed": 0
+        }
+      }
+    ],
+    "ruleset": {
+      "specVersion": "1.0.0-rc.6",
+      "sourceHash": "ec3fa8c945432126591fbe3ac37bc12e1eb3b3483ad5ce50f078cd51c14f0dea"
+    }
+  }
+}

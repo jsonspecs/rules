@@ -13,7 +13,7 @@
 
 Паттерны и справочники: `matches_regex`, `not_matches_regex`, `in_dictionary`,
 `not_in_dictionary`. Точные схемы и семантика заданы в
-[спецификации поведения](https://github.com/jsonspecs/spec/blob/853ecaaeaf0e775c2bb69cf3d46dae076e689f54/SPEC_RU.md).
+[спецификации поведения](https://github.com/jsonspecs/spec/blob/d75024047437ce0119a28c6ceda818eb79c4f302/SPEC_RU.md).
 
 ## Внешний оператор
 
@@ -33,7 +33,7 @@
 `SKIP`. Она не читает время, региональные настройки (locale), сеть или глобальное
 состояние и не меняет входные значения. Межъязыковой пакет публикует эквивалентные
 схемы и общий набор эталонных примеров по
-[спецификации поведения](https://github.com/jsonspecs/spec/blob/853ecaaeaf0e775c2bb69cf3d46dae076e689f54/SPEC_RU.md).
+[спецификации поведения](https://github.com/jsonspecs/spec/blob/d75024047437ce0119a28c6ceda818eb79c4f302/SPEC_RU.md).
 
 `builtInOperators` экспортирует глубоко замороженные определения для просмотра.
 Потребитель не может изменить ни схему, ни её вложенные элементы.

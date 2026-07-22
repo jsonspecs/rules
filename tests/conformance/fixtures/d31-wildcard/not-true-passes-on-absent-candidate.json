@@ -1,0 +1,52 @@
+{
+  "name": "d31/not-true-passes-on-absent-candidate",
+  "snapshot": {
+    "format": "jsonspecs-snapshot",
+    "formatVersion": 2,
+    "specVersion": "1.0.0-rc.6",
+    "exports": [
+      "checks.main"
+    ],
+    "artifacts": {
+      "checks.main": {
+        "type": "pipeline",
+        "steps": [
+          "library.d31.not-true.absent"
+        ]
+      },
+      "library.d31.not-true.absent": {
+        "type": "rule",
+        "operator": "not_true",
+        "field": "items[*].blocked",
+        "aggregate": {
+          "mode": "ALL",
+          "issueMode": "EACH",
+          "onEmpty": "FAIL"
+        },
+        "issue": {
+          "level": "ERROR",
+          "code": "D31.NOT_TRUE.ABSENT",
+          "message": "failed"
+        }
+      }
+    },
+    "sourceHash": "ed315ba2f3cd352507ad8f1aa8a2e809b23fa5581fb7d6f10d9a152457eee98c"
+  },
+  "operators": [],
+  "input": {
+    "pipelineId": "checks.main",
+    "payload": {
+      "items": [
+        {}
+      ]
+    }
+  },
+  "expected": {
+    "status": "OK",
+    "issues": [],
+    "ruleset": {
+      "specVersion": "1.0.0-rc.6",
+      "sourceHash": "ed315ba2f3cd352507ad8f1aa8a2e809b23fa5581fb7d6f10d9a152457eee98c"
+    }
+  }
+}

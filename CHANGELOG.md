@@ -4,6 +4,24 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+## [4.0.0] - 2026-07-22
+
+- Implement `jsonspecs/spec` 1.0.0-rc.6 and accept only RC.6 snapshots.
+- Replace flat-leaf wildcard matching with structural candidate expansion over real
+  nested payload arrays.
+- Preserve absent concrete paths after the final wildcard so presence rules can report
+  fields such as `items[1].sku` without an `actual` value.
+- Keep absence before a later wildcard branchless, terminal non-empty containers
+  unavailable to operators, and exact `$context` paths separate from wildcard fields.
+- Pre-parse wildcard paths into immutable tokens during compilation and execute their
+  numeric odometer traversal in a dedicated runtime module.
+- Preserve exhaustive ALL/ANY/COUNT evaluation, all-`SKIP` behavior, `onEmpty`, and
+  aggregate counters over the RC.6 structural population.
+- Reject RC.5 snapshots with `UNSUPPORTED_SPEC_VERSION` and provide an RC.6 migration
+  guide without a compatibility profile.
+- Vendor and pass all 308 normative conformance fixtures from spec commit
+  `d75024047437ce0119a28c6ceda818eb79c4f302`.
+
 ## [3.0.0] - 2026-07-22
 
 - Implement `jsonspecs/spec` 1.0.0-rc.5 and snapshot formatVersion 2.

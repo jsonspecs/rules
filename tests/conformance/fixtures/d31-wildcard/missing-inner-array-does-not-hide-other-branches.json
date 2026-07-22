@@ -1,0 +1,68 @@
+{
+  "name": "d31/missing-inner-array-does-not-hide-other-branches",
+  "snapshot": {
+    "format": "jsonspecs-snapshot",
+    "formatVersion": 2,
+    "specVersion": "1.0.0-rc.6",
+    "exports": [
+      "checks.main"
+    ],
+    "artifacts": {
+      "checks.main": {
+        "type": "pipeline",
+        "steps": [
+          "library.d31.nested.mixed"
+        ]
+      },
+      "library.d31.nested.mixed": {
+        "type": "rule",
+        "operator": "not_empty",
+        "field": "a[*].b[*].sku",
+        "aggregate": {
+          "mode": "ALL",
+          "issueMode": "EACH"
+        },
+        "issue": {
+          "level": "ERROR",
+          "code": "D31.NESTED.MIXED",
+          "message": "failed"
+        }
+      }
+    },
+    "sourceHash": "880c1cba8968b4ea757d2cb20c3c7890f4e8c08c7fd5be5f48fea57887601d42"
+  },
+  "operators": [],
+  "input": {
+    "pipelineId": "checks.main",
+    "payload": {
+      "a": [
+        {},
+        {
+          "b": [
+            {
+              "sku": "A"
+            },
+            {}
+          ]
+        }
+      ]
+    }
+  },
+  "expected": {
+    "status": "ERROR",
+    "issues": [
+      {
+        "level": "ERROR",
+        "code": "D31.NESTED.MIXED",
+        "message": "failed",
+        "field": "a[1].b[1].sku",
+        "ruleId": "library.d31.nested.mixed",
+        "pipelineId": "checks.main"
+      }
+    ],
+    "ruleset": {
+      "specVersion": "1.0.0-rc.6",
+      "sourceHash": "880c1cba8968b4ea757d2cb20c3c7890f4e8c08c7fd5be5f48fea57887601d42"
+    }
+  }
+}

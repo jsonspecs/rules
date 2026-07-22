@@ -33,7 +33,7 @@ try {
   run("npm", ["install", "--ignore-scripts", tarball], consumer);
   fs.writeFileSync(path.join(consumer, "smoke.cjs"), `
     const api = require("@jsonspecs/rules");
-    const snapshot = {format:"jsonspecs-snapshot",formatVersion:2,specVersion:"1.0.0-rc.5",exports:["p"],artifacts:{p:{type:"pipeline",steps:["r"]},r:{type:"rule",operator:"not_empty",field:"x",issue:{level:"ERROR",code:"X",message:"required"}}}};
+    const snapshot = {format:"jsonspecs-snapshot",formatVersion:2,specVersion:"1.0.0-rc.6",exports:["p"],artifacts:{p:{type:"pipeline",steps:["r"]},r:{type:"rule",operator:"not_empty",field:"x",issue:{level:"ERROR",code:"X",message:"required"}}}};
     snapshot.sourceHash=api.computeSourceHash(snapshot);
     const prepared=api.compileSnapshot(snapshot);
     const result=api.runPipeline(prepared,{pipelineId:"p",payload:{x:""}});

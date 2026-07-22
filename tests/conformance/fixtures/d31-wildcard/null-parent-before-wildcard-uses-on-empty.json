@@ -1,0 +1,67 @@
+{
+  "name": "d31/null-parent-before-wildcard-uses-on-empty",
+  "snapshot": {
+    "format": "jsonspecs-snapshot",
+    "formatVersion": 2,
+    "specVersion": "1.0.0-rc.6",
+    "exports": [
+      "checks.main"
+    ],
+    "artifacts": {
+      "checks.main": {
+        "type": "pipeline",
+        "steps": [
+          "library.d31.empty.null-parent-before-wildcard"
+        ]
+      },
+      "library.d31.empty.null-parent-before-wildcard": {
+        "type": "rule",
+        "operator": "not_empty",
+        "field": "items[*].sku",
+        "aggregate": {
+          "mode": "ALL",
+          "issueMode": "EACH",
+          "onEmpty": "FAIL"
+        },
+        "issue": {
+          "level": "ERROR",
+          "code": "D31.EMPTY.null-parent-before-wildcard",
+          "message": "failed"
+        }
+      }
+    },
+    "sourceHash": "8a7c6829fbe21612890ec0c6e520452432ee9aa3859d147cfb25a92caa1cfa47"
+  },
+  "operators": [],
+  "input": {
+    "pipelineId": "checks.main",
+    "payload": {
+      "items": null
+    }
+  },
+  "expected": {
+    "status": "ERROR",
+    "issues": [
+      {
+        "level": "ERROR",
+        "code": "D31.EMPTY.null-parent-before-wildcard",
+        "message": "failed",
+        "field": "items[*].sku",
+        "ruleId": "library.d31.empty.null-parent-before-wildcard",
+        "pipelineId": "checks.main",
+        "details": {
+          "mode": "ALL",
+          "matched": 0,
+          "evaluated": 0,
+          "skipped": 0,
+          "passed": 0,
+          "failed": 0
+        }
+      }
+    ],
+    "ruleset": {
+      "specVersion": "1.0.0-rc.6",
+      "sourceHash": "8a7c6829fbe21612890ec0c6e520452432ee9aa3859d147cfb25a92caa1cfa47"
+    }
+  }
+}

@@ -1,0 +1,67 @@
+{
+  "name": "d31/empty-parent-array-uses-on-empty",
+  "snapshot": {
+    "format": "jsonspecs-snapshot",
+    "formatVersion": 2,
+    "specVersion": "1.0.0-rc.6",
+    "exports": [
+      "checks.main"
+    ],
+    "artifacts": {
+      "checks.main": {
+        "type": "pipeline",
+        "steps": [
+          "library.d31.empty.empty-parent-array"
+        ]
+      },
+      "library.d31.empty.empty-parent-array": {
+        "type": "rule",
+        "operator": "not_empty",
+        "field": "items[*].sku",
+        "aggregate": {
+          "mode": "ALL",
+          "issueMode": "EACH",
+          "onEmpty": "FAIL"
+        },
+        "issue": {
+          "level": "ERROR",
+          "code": "D31.EMPTY.empty-parent-array",
+          "message": "failed"
+        }
+      }
+    },
+    "sourceHash": "ac7ea4c7c7153a1563cb54676df7d2417ef03d4ec3aedde4affcb66006d4c1c1"
+  },
+  "operators": [],
+  "input": {
+    "pipelineId": "checks.main",
+    "payload": {
+      "items": []
+    }
+  },
+  "expected": {
+    "status": "ERROR",
+    "issues": [
+      {
+        "level": "ERROR",
+        "code": "D31.EMPTY.empty-parent-array",
+        "message": "failed",
+        "field": "items[*].sku",
+        "ruleId": "library.d31.empty.empty-parent-array",
+        "pipelineId": "checks.main",
+        "details": {
+          "mode": "ALL",
+          "matched": 0,
+          "evaluated": 0,
+          "skipped": 0,
+          "passed": 0,
+          "failed": 0
+        }
+      }
+    ],
+    "ruleset": {
+      "specVersion": "1.0.0-rc.6",
+      "sourceHash": "ac7ea4c7c7153a1563cb54676df7d2417ef03d4ec3aedde4affcb66006d4c1c1"
+    }
+  }
+}

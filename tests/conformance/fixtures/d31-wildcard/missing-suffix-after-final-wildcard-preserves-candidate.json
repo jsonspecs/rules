@@ -1,0 +1,60 @@
+{
+  "name": "d31/missing-suffix-after-final-wildcard-preserves-candidate",
+  "snapshot": {
+    "format": "jsonspecs-snapshot",
+    "formatVersion": 2,
+    "specVersion": "1.0.0-rc.6",
+    "exports": [
+      "checks.main"
+    ],
+    "artifacts": {
+      "checks.main": {
+        "type": "pipeline",
+        "steps": [
+          "library.d31.suffix"
+        ]
+      },
+      "library.d31.suffix": {
+        "type": "rule",
+        "operator": "not_empty",
+        "field": "items[*].details.sku",
+        "aggregate": {
+          "mode": "ALL",
+          "issueMode": "EACH"
+        },
+        "issue": {
+          "level": "ERROR",
+          "code": "D31.SUFFIX",
+          "message": "failed"
+        }
+      }
+    },
+    "sourceHash": "59cb9731694b3aeb7b83ebb82562b982d5c37289554c4c8f694c7168f7c6d5ab"
+  },
+  "operators": [],
+  "input": {
+    "pipelineId": "checks.main",
+    "payload": {
+      "items": [
+        {}
+      ]
+    }
+  },
+  "expected": {
+    "status": "ERROR",
+    "issues": [
+      {
+        "level": "ERROR",
+        "code": "D31.SUFFIX",
+        "message": "failed",
+        "field": "items[0].details.sku",
+        "ruleId": "library.d31.suffix",
+        "pipelineId": "checks.main"
+      }
+    ],
+    "ruleset": {
+      "specVersion": "1.0.0-rc.6",
+      "sourceHash": "59cb9731694b3aeb7b83ebb82562b982d5c37289554c4c8f694c7168f7c6d5ab"
+    }
+  }
+}

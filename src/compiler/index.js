@@ -1,7 +1,7 @@
 "use strict";
 
 /**
- * Оркестратор компиляции RC.5.
+ * Оркестратор компиляции RC.6.
  *
  * Порядок фаз отражает нормативный приоритет: конверт и хеш -> локальные схемы
  * -> ссылки/DAG/замыкание -> наличие внешних операторов. Последняя фаза важна:
@@ -11,6 +11,7 @@
 const { prepareSnapshot } = require("./snapshot");
 const { validateArtifacts } = require("./artifacts");
 const { validateReferences } = require("./references");
+const { compileWildcardPaths } = require("./paths");
 const { createPrepared } = require("../prepared");
 const { reject, CompilationError, isCompilationError, safeErrorString } = require("../errors");
 const { parseIJson } = require("../json/i-json");
@@ -28,6 +29,7 @@ function compileSnapshot(input, environment) {
     artifacts: snapshot.artifacts,
     exports: new Set(snapshot.exports),
     operators: environment.operators,
+    wildcardPaths: compileWildcardPaths(snapshot.artifacts),
   });
   return createPrepared(state, {
     kind: "prepared-jsonspecs",

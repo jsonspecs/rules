@@ -1,0 +1,82 @@
+{
+  "name": "d31/count-mixes-pass-fail-and-two-kinds-of-skip",
+  "snapshot": {
+    "format": "jsonspecs-snapshot",
+    "formatVersion": 2,
+    "specVersion": "1.0.0-rc.6",
+    "exports": [
+      "checks.main"
+    ],
+    "artifacts": {
+      "checks.main": {
+        "type": "pipeline",
+        "steps": [
+          "library.d31.count.mixed"
+        ]
+      },
+      "library.d31.count.mixed": {
+        "type": "rule",
+        "operator": "conformance.rule.tri",
+        "field": "items[*].result",
+        "aggregate": {
+          "mode": "COUNT",
+          "op": ">=",
+          "value": 2
+        },
+        "issue": {
+          "level": "ERROR",
+          "code": "D31.COUNT",
+          "message": "failed"
+        }
+      }
+    },
+    "sourceHash": "c453dbc092d82d4fd03d2db42ff1cb7c7368f46832af01f60d06cb2c1a26bf65"
+  },
+  "operators": [
+    "conformance.rule.tri"
+  ],
+  "input": {
+    "pipelineId": "checks.main",
+    "payload": {
+      "items": [
+        {
+          "result": "PASS"
+        },
+        {},
+        {
+          "result": "FAIL"
+        },
+        {
+          "result": "SKIP"
+        }
+      ]
+    }
+  },
+  "expected": {
+    "status": "ERROR",
+    "issues": [
+      {
+        "level": "ERROR",
+        "code": "D31.COUNT",
+        "message": "failed",
+        "field": "items[*].result",
+        "ruleId": "library.d31.count.mixed",
+        "pipelineId": "checks.main",
+        "details": {
+          "mode": "COUNT",
+          "op": ">=",
+          "value": 2,
+          "matched": 4,
+          "evaluated": 2,
+          "skipped": 2,
+          "passed": 1,
+          "failed": 1
+        }
+      }
+    ],
+    "ruleset": {
+      "specVersion": "1.0.0-rc.6",
+      "sourceHash": "c453dbc092d82d4fd03d2db42ff1cb7c7368f46832af01f60d06cb2c1a26bf65"
+    }
+  }
+}

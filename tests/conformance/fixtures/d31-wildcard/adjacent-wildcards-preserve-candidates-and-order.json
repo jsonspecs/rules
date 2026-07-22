@@ -1,0 +1,79 @@
+{
+  "name": "d31/adjacent-wildcards-preserve-candidates-and-order",
+  "snapshot": {
+    "format": "jsonspecs-snapshot",
+    "formatVersion": 2,
+    "specVersion": "1.0.0-rc.6",
+    "exports": [
+      "checks.main"
+    ],
+    "artifacts": {
+      "checks.main": {
+        "type": "pipeline",
+        "steps": [
+          "library.d31.adjacent"
+        ]
+      },
+      "library.d31.adjacent": {
+        "type": "rule",
+        "operator": "not_empty",
+        "field": "matrix[*][*].sku",
+        "aggregate": {
+          "mode": "ALL",
+          "issueMode": "EACH"
+        },
+        "issue": {
+          "level": "ERROR",
+          "code": "D31.ADJACENT",
+          "message": "failed"
+        }
+      }
+    },
+    "sourceHash": "4f33dacad8ae4bef44c4197d6a1071be12a6fea7b37612dde976f1473b82268f"
+  },
+  "operators": [],
+  "input": {
+    "pipelineId": "checks.main",
+    "payload": {
+      "matrix": [
+        [
+          {
+            "sku": "A"
+          },
+          {}
+        ],
+        [
+          null,
+          {
+            "sku": "B"
+          }
+        ]
+      ]
+    }
+  },
+  "expected": {
+    "status": "ERROR",
+    "issues": [
+      {
+        "level": "ERROR",
+        "code": "D31.ADJACENT",
+        "message": "failed",
+        "field": "matrix[0][1].sku",
+        "ruleId": "library.d31.adjacent",
+        "pipelineId": "checks.main"
+      },
+      {
+        "level": "ERROR",
+        "code": "D31.ADJACENT",
+        "message": "failed",
+        "field": "matrix[1][0].sku",
+        "ruleId": "library.d31.adjacent",
+        "pipelineId": "checks.main"
+      }
+    ],
+    "ruleset": {
+      "specVersion": "1.0.0-rc.6",
+      "sourceHash": "4f33dacad8ae4bef44c4197d6a1071be12a6fea7b37612dde976f1473b82268f"
+    }
+  }
+}

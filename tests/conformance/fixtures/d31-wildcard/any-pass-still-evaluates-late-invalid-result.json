@@ -1,0 +1,65 @@
+{
+  "name": "d31/any-pass-still-evaluates-late-invalid-result",
+  "snapshot": {
+    "format": "jsonspecs-snapshot",
+    "formatVersion": 2,
+    "specVersion": "1.0.0-rc.6",
+    "exports": [
+      "checks.main"
+    ],
+    "artifacts": {
+      "checks.main": {
+        "type": "pipeline",
+        "steps": [
+          "library.d31.late-invalid"
+        ]
+      },
+      "library.d31.late-invalid": {
+        "type": "rule",
+        "operator": "conformance.rule.tri",
+        "field": "items[*].result",
+        "aggregate": {
+          "mode": "ANY",
+          "issueMode": "SUMMARY"
+        },
+        "issue": {
+          "level": "ERROR",
+          "code": "D31.LATE.INVALID",
+          "message": "failed"
+        }
+      }
+    },
+    "sourceHash": "c7bb2d7a9fada9c0b24b4ed30ba95c06a4cdf8745460a791ac5a92283b0946f7"
+  },
+  "operators": [
+    "conformance.rule.tri"
+  ],
+  "input": {
+    "pipelineId": "checks.main",
+    "payload": {
+      "items": [
+        {
+          "result": "PASS"
+        },
+        {
+          "result": "INVALID"
+        }
+      ]
+    }
+  },
+  "expected": {
+    "status": "ABORT",
+    "issues": [],
+    "error": {
+      "code": "OPERATOR_CONTRACT_VIOLATION",
+      "details": {
+        "ruleId": "library.d31.late-invalid",
+        "operator": "conformance.rule.tri"
+      }
+    },
+    "ruleset": {
+      "specVersion": "1.0.0-rc.6",
+      "sourceHash": "c7bb2d7a9fada9c0b24b4ed30ba95c06a4cdf8745460a791ac5a92283b0946f7"
+    }
+  }
+}

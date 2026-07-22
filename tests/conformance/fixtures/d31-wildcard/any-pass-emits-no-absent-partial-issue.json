@@ -1,0 +1,54 @@
+{
+  "name": "d31/any-pass-emits-no-absent-partial-issue",
+  "snapshot": {
+    "format": "jsonspecs-snapshot",
+    "formatVersion": 2,
+    "specVersion": "1.0.0-rc.6",
+    "exports": [
+      "checks.main"
+    ],
+    "artifacts": {
+      "checks.main": {
+        "type": "pipeline",
+        "steps": [
+          "library.d31.any.mixed"
+        ]
+      },
+      "library.d31.any.mixed": {
+        "type": "rule",
+        "operator": "not_empty",
+        "field": "items[*].sku",
+        "aggregate": {
+          "mode": "ANY",
+          "issueMode": "EACH"
+        },
+        "issue": {
+          "level": "ERROR",
+          "code": "D31.ANY.PASS",
+          "message": "failed"
+        }
+      }
+    },
+    "sourceHash": "0daf5826fe198a1e48e749ac351f7769b22f35f0d50765e9a6be9fd40a2d895c"
+  },
+  "operators": [],
+  "input": {
+    "pipelineId": "checks.main",
+    "payload": {
+      "items": [
+        {
+          "sku": "A"
+        },
+        {}
+      ]
+    }
+  },
+  "expected": {
+    "status": "OK",
+    "issues": [],
+    "ruleset": {
+      "specVersion": "1.0.0-rc.6",
+      "sourceHash": "0daf5826fe198a1e48e749ac351f7769b22f35f0d50765e9a6be9fd40a2d895c"
+    }
+  }
+}

@@ -1,0 +1,64 @@
+{
+  "name": "d31/required-child-all-each-reports-absent",
+  "snapshot": {
+    "format": "jsonspecs-snapshot",
+    "formatVersion": 2,
+    "specVersion": "1.0.0-rc.6",
+    "exports": [
+      "checks.main"
+    ],
+    "artifacts": {
+      "checks.main": {
+        "type": "pipeline",
+        "steps": [
+          "library.d31.required.each"
+        ]
+      },
+      "library.d31.required.each": {
+        "type": "rule",
+        "operator": "not_empty",
+        "field": "items[*].sku",
+        "aggregate": {
+          "mode": "ALL",
+          "onEmpty": "SKIP",
+          "issueMode": "EACH"
+        },
+        "issue": {
+          "level": "ERROR",
+          "code": "D31.REQUIRED",
+          "message": "failed"
+        }
+      }
+    },
+    "sourceHash": "10431351b69ce47da5cff7d20932fbb723a213630d6644f1548da78219b9fd83"
+  },
+  "operators": [],
+  "input": {
+    "pipelineId": "checks.main",
+    "payload": {
+      "items": [
+        {
+          "sku": "A"
+        },
+        {}
+      ]
+    }
+  },
+  "expected": {
+    "status": "ERROR",
+    "issues": [
+      {
+        "level": "ERROR",
+        "code": "D31.REQUIRED",
+        "message": "failed",
+        "field": "items[1].sku",
+        "ruleId": "library.d31.required.each",
+        "pipelineId": "checks.main"
+      }
+    ],
+    "ruleset": {
+      "specVersion": "1.0.0-rc.6",
+      "sourceHash": "10431351b69ce47da5cff7d20932fbb723a213630d6644f1548da78219b9fd83"
+    }
+  }
+}

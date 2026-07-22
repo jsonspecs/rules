@@ -1,0 +1,69 @@
+{
+  "name": "d31/missing-segment-between-wildcards-creates-no-inner-branch",
+  "snapshot": {
+    "format": "jsonspecs-snapshot",
+    "formatVersion": 2,
+    "specVersion": "1.0.0-rc.6",
+    "exports": [
+      "checks.main"
+    ],
+    "artifacts": {
+      "checks.main": {
+        "type": "pipeline",
+        "steps": [
+          "library.d31.nested.empty"
+        ]
+      },
+      "library.d31.nested.empty": {
+        "type": "rule",
+        "operator": "not_empty",
+        "field": "a[*].b[*].sku",
+        "aggregate": {
+          "mode": "ALL",
+          "issueMode": "EACH",
+          "onEmpty": "FAIL"
+        },
+        "issue": {
+          "level": "ERROR",
+          "code": "D31.NESTED.EMPTY",
+          "message": "failed"
+        }
+      }
+    },
+    "sourceHash": "d099e5e6b8858025483b59f9d124c1ea96d52235dbba1c2f2204a6544274a2f7"
+  },
+  "operators": [],
+  "input": {
+    "pipelineId": "checks.main",
+    "payload": {
+      "a": [
+        {}
+      ]
+    }
+  },
+  "expected": {
+    "status": "ERROR",
+    "issues": [
+      {
+        "level": "ERROR",
+        "code": "D31.NESTED.EMPTY",
+        "message": "failed",
+        "field": "a[*].b[*].sku",
+        "ruleId": "library.d31.nested.empty",
+        "pipelineId": "checks.main",
+        "details": {
+          "mode": "ALL",
+          "matched": 0,
+          "evaluated": 0,
+          "skipped": 0,
+          "passed": 0,
+          "failed": 0
+        }
+      }
+    ],
+    "ruleset": {
+      "specVersion": "1.0.0-rc.6",
+      "sourceHash": "d099e5e6b8858025483b59f9d124c1ea96d52235dbba1c2f2204a6544274a2f7"
+    }
+  }
+}

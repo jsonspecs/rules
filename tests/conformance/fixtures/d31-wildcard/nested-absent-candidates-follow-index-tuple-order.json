@@ -1,0 +1,89 @@
+{
+  "name": "d31/nested-absent-candidates-follow-index-tuple-order",
+  "snapshot": {
+    "format": "jsonspecs-snapshot",
+    "formatVersion": 2,
+    "specVersion": "1.0.0-rc.6",
+    "exports": [
+      "checks.main"
+    ],
+    "artifacts": {
+      "checks.main": {
+        "type": "pipeline",
+        "steps": [
+          "library.d31.odometer"
+        ]
+      },
+      "library.d31.odometer": {
+        "type": "rule",
+        "operator": "not_empty",
+        "field": "a[*].b[*].sku",
+        "aggregate": {
+          "mode": "ALL",
+          "issueMode": "EACH"
+        },
+        "issue": {
+          "level": "ERROR",
+          "code": "D31.ODOMETER",
+          "message": "failed"
+        }
+      }
+    },
+    "sourceHash": "99f7c4263856ad52b0e57899bd46ac0b62a5815ee76207fcf37a84e705eb91d5"
+  },
+  "operators": [],
+  "input": {
+    "pipelineId": "checks.main",
+    "payload": {
+      "a": [
+        {
+          "b": [
+            {},
+            {
+              "sku": "A"
+            }
+          ]
+        },
+        {
+          "b": [
+            {},
+            {}
+          ]
+        }
+      ]
+    }
+  },
+  "expected": {
+    "status": "ERROR",
+    "issues": [
+      {
+        "level": "ERROR",
+        "code": "D31.ODOMETER",
+        "message": "failed",
+        "field": "a[0].b[0].sku",
+        "ruleId": "library.d31.odometer",
+        "pipelineId": "checks.main"
+      },
+      {
+        "level": "ERROR",
+        "code": "D31.ODOMETER",
+        "message": "failed",
+        "field": "a[1].b[0].sku",
+        "ruleId": "library.d31.odometer",
+        "pipelineId": "checks.main"
+      },
+      {
+        "level": "ERROR",
+        "code": "D31.ODOMETER",
+        "message": "failed",
+        "field": "a[1].b[1].sku",
+        "ruleId": "library.d31.odometer",
+        "pipelineId": "checks.main"
+      }
+    ],
+    "ruleset": {
+      "specVersion": "1.0.0-rc.6",
+      "sourceHash": "99f7c4263856ad52b0e57899bd46ac0b62a5815ee76207fcf37a84e705eb91d5"
+    }
+  }
+}

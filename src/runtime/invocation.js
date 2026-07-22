@@ -18,10 +18,9 @@ function invokeRule(ruleId, rule, concreteField, state, resolve) {
   const invocation = Object.create(null);
 
   if (rule.field !== undefined) {
-    const resolved = concreteField
-      ? { present: true, value: concreteField.value }
-      : resolve.get(rule.field);
-    if (!resolved.present && !definition.observesAbsence) return { outcome: "SKIP", invocation, field: rule.field };
+    const resolved = concreteField || resolve.get(rule.field);
+    const field = concreteField?.path || rule.field;
+    if (!resolved.present && !definition.observesAbsence) return { outcome: "SKIP", invocation, field };
     if (resolved.present) invocation.field = resolved.value;
   }
   if (rule.fields !== undefined) invocation.fields = rule.fields.map((path) => {

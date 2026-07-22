@@ -8,7 +8,7 @@ const { compileSnapshot, compileSnapshotText, computeSourceHash, runPipeline, Co
 
 function snapshot(rule = { type: "rule", operator: "not_empty", field: "x", issue: { level: "ERROR", code: "X", message: "x" } }) {
   const value = {
-    format: "jsonspecs-snapshot", formatVersion: 2, specVersion: "1.0.0-rc.5", exports: ["p"],
+    format: "jsonspecs-snapshot", formatVersion: 2, specVersion: "1.0.0-rc.6", exports: ["p"],
     artifacts: { p: { type: "pipeline", steps: ["r"] }, r: rule },
   };
   value.sourceHash = computeSourceHash(value);
@@ -148,7 +148,7 @@ test("deep valid control-flow graph compiles and executes without call-stack ove
     issue: { level: "ERROR", code: "X", message: "x" },
   };
   const value = {
-    format: "jsonspecs-snapshot", formatVersion: 2, specVersion: "1.0.0-rc.5",
+    format: "jsonspecs-snapshot", formatVersion: 2, specVersion: "1.0.0-rc.6",
     exports: ["p0"], artifacts,
   };
   value.sourceHash = computeSourceHash(value);

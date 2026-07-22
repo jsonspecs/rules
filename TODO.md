@@ -1,7 +1,7 @@
-# Backlog after 3.0.0
+# Backlog after 4.0.0
 
-These items are deliberately outside the RC.5 normative result and do not block
-3.0.0:
+These items are deliberately outside the RC.6 normative result and do not block
+4.0.0:
 
 1. Add an optional non-normative trace stream without adding fields to the result.
 2. Publish a separate fv1 -> fv2 migration command in `@jsonspecs/cli`.

@@ -1,0 +1,65 @@
+{
+  "name": "d31/missing-prefix-before-first-wildcard-uses-on-empty",
+  "snapshot": {
+    "format": "jsonspecs-snapshot",
+    "formatVersion": 2,
+    "specVersion": "1.0.0-rc.6",
+    "exports": [
+      "checks.main"
+    ],
+    "artifacts": {
+      "checks.main": {
+        "type": "pipeline",
+        "steps": [
+          "library.d31.empty.missing-prefix-before-first-wildcard"
+        ]
+      },
+      "library.d31.empty.missing-prefix-before-first-wildcard": {
+        "type": "rule",
+        "operator": "not_empty",
+        "field": "items[*].sku",
+        "aggregate": {
+          "mode": "ALL",
+          "issueMode": "EACH",
+          "onEmpty": "FAIL"
+        },
+        "issue": {
+          "level": "ERROR",
+          "code": "D31.EMPTY.missing-prefix-before-first-wildcard",
+          "message": "failed"
+        }
+      }
+    },
+    "sourceHash": "222bb0daa0a1800bc07efe61b5d9cb491cc6956e8ad0e2bc9bf6ddf9ba569d3c"
+  },
+  "operators": [],
+  "input": {
+    "pipelineId": "checks.main",
+    "payload": {}
+  },
+  "expected": {
+    "status": "ERROR",
+    "issues": [
+      {
+        "level": "ERROR",
+        "code": "D31.EMPTY.missing-prefix-before-first-wildcard",
+        "message": "failed",
+        "field": "items[*].sku",
+        "ruleId": "library.d31.empty.missing-prefix-before-first-wildcard",
+        "pipelineId": "checks.main",
+        "details": {
+          "mode": "ALL",
+          "matched": 0,
+          "evaluated": 0,
+          "skipped": 0,
+          "passed": 0,
+          "failed": 0
+        }
+      }
+    ],
+    "ruleset": {
+      "specVersion": "1.0.0-rc.6",
+      "sourceHash": "222bb0daa0a1800bc07efe61b5d9cb491cc6956e8ad0e2bc9bf6ddf9ba569d3c"
+    }
+  }
+}

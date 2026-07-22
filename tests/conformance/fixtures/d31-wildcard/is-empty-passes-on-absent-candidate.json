@@ -1,0 +1,52 @@
+{
+  "name": "d31/is-empty-passes-on-absent-candidate",
+  "snapshot": {
+    "format": "jsonspecs-snapshot",
+    "formatVersion": 2,
+    "specVersion": "1.0.0-rc.6",
+    "exports": [
+      "checks.main"
+    ],
+    "artifacts": {
+      "checks.main": {
+        "type": "pipeline",
+        "steps": [
+          "library.d31.is-empty.absent"
+        ]
+      },
+      "library.d31.is-empty.absent": {
+        "type": "rule",
+        "operator": "is_empty",
+        "field": "items[*].sku",
+        "aggregate": {
+          "mode": "ALL",
+          "issueMode": "EACH",
+          "onEmpty": "FAIL"
+        },
+        "issue": {
+          "level": "ERROR",
+          "code": "D31.IS_EMPTY.ABSENT",
+          "message": "failed"
+        }
+      }
+    },
+    "sourceHash": "55c4bec455b441a3370b58e85965760fd25dcc0e50034299303aef78aa09b6c1"
+  },
+  "operators": [],
+  "input": {
+    "pipelineId": "checks.main",
+    "payload": {
+      "items": [
+        {}
+      ]
+    }
+  },
+  "expected": {
+    "status": "OK",
+    "issues": [],
+    "ruleset": {
+      "specVersion": "1.0.0-rc.6",
+      "sourceHash": "55c4bec455b441a3370b58e85965760fd25dcc0e50034299303aef78aa09b6c1"
+    }
+  }
+}

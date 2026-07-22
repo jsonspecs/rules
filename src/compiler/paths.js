@@ -3,8 +3,9 @@
 /**
  * Проверка грамматики путей из SPEC §2.7.
  *
- * Путь остаётся строкой до runtime, но компилятор заранее запрещает пустые
- * сегменты, ведущие нули индексов и wildcard там, где его семантика не задана.
+ * Точные пути остаются строками, а wildcard-путь компилятор заранее разбирает
+ * в неизменяемые токены. Runtime не повторяет разбор и получает только уже
+ * проверенный план структурного обхода RC.6.
  */
 
 const PATH = /^(?:\$context\.)?[^.\[\]]+(?:\[(?:0|[1-9][0-9]*|\*)\])*(?:\.[^.\[\]]+(?:\[(?:0|[1-9][0-9]*|\*)\])*)*$/u;
@@ -18,4 +19,39 @@ function isPath(value, { wildcard = true, contextWildcard = false } = {}) {
 
 function hasWildcard(path) { return typeof path === "string" && path.includes("[*]"); }
 
-module.exports = { isPath, hasWildcard };
+function parsePath(value, options) {
+  if (!isPath(value, options)) return null;
+  const context = value.startsWith("$context.");
+  const source = context ? value.slice("$context.".length) : value;
+  const tokens = [];
+  let position = 0;
+
+  while (position < source.length) {
+    let end = position;
+    while (end < source.length && source[end] !== "." && source[end] !== "[") end++;
+    tokens.push(Object.freeze({ type: "key", value: source.slice(position, end) }));
+    position = end;
+
+    while (source[position] === "[") {
+      const close = source.indexOf("]", position + 1);
+      const raw = source.slice(position + 1, close);
+      tokens.push(Object.freeze(raw === "*"
+        ? { type: "wildcard" }
+        : { type: "index", value: Number(raw) }));
+      position = close + 1;
+    }
+    if (source[position] === ".") position++;
+  }
+
+  return Object.freeze({ context, tokens: Object.freeze(tokens) });
+}
+
+function compileWildcardPaths(artifacts) {
+  const plans = Object.create(null);
+  for (const [id, artifact] of Object.entries(artifacts)) {
+    if (artifact.type === "rule" && hasWildcard(artifact.field)) plans[id] = parsePath(artifact.field);
+  }
+  return Object.freeze(plans);
+}
+
+module.exports = { isPath, hasWildcard, parsePath, compileWildcardPaths };

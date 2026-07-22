@@ -18,7 +18,7 @@ function execute(state, resolve, rootPipelineId) {
   function rule(ruleId) {
     const artifact = state.artifacts[ruleId];
     if (artifact.aggregate) {
-      const matches = resolve.wildcard(artifact.field);
+      const matches = resolve.wildcard(state.wildcardPaths[ruleId]);
       return evaluateAggregate(artifact, matches, (match) => invokeRule(ruleId, artifact, match, state, resolve));
     }
     return invokeRule(ruleId, artifact, null, state, resolve);

@@ -1,0 +1,73 @@
+{
+  "name": "d31/numeric-object-key-is-not-an-exact-array-index",
+  "snapshot": {
+    "format": "jsonspecs-snapshot",
+    "formatVersion": 2,
+    "specVersion": "1.0.0-rc.6",
+    "exports": [
+      "checks.main"
+    ],
+    "artifacts": {
+      "checks.main": {
+        "type": "pipeline",
+        "steps": [
+          "library.d31.object-index"
+        ]
+      },
+      "library.d31.object-index": {
+        "type": "rule",
+        "operator": "not_empty",
+        "field": "a[0].b[*].sku",
+        "aggregate": {
+          "mode": "ALL",
+          "issueMode": "EACH",
+          "onEmpty": "FAIL"
+        },
+        "issue": {
+          "level": "ERROR",
+          "code": "D31.OBJECT.INDEX",
+          "message": "failed"
+        }
+      }
+    },
+    "sourceHash": "7eb010316022a7c988af624913b9f71b791985af9be573ec03c2446b872dc5ed"
+  },
+  "operators": [],
+  "input": {
+    "pipelineId": "checks.main",
+    "payload": {
+      "a": {
+        "0": {
+          "b": [
+            {}
+          ]
+        }
+      }
+    }
+  },
+  "expected": {
+    "status": "ERROR",
+    "issues": [
+      {
+        "level": "ERROR",
+        "code": "D31.OBJECT.INDEX",
+        "message": "failed",
+        "field": "a[0].b[*].sku",
+        "ruleId": "library.d31.object-index",
+        "pipelineId": "checks.main",
+        "details": {
+          "mode": "ALL",
+          "matched": 0,
+          "evaluated": 0,
+          "skipped": 0,
+          "passed": 0,
+          "failed": 0
+        }
+      }
+    ],
+    "ruleset": {
+      "specVersion": "1.0.0-rc.6",
+      "sourceHash": "7eb010316022a7c988af624913b9f71b791985af9be573ec03c2446b872dc5ed"
+    }
+  }
+}

@@ -1,0 +1,75 @@
+{
+  "name": "d31/value-operator-absent-candidate-counts-as-skip",
+  "snapshot": {
+    "format": "jsonspecs-snapshot",
+    "formatVersion": 2,
+    "specVersion": "1.0.0-rc.6",
+    "exports": [
+      "checks.main"
+    ],
+    "artifacts": {
+      "checks.main": {
+        "type": "pipeline",
+        "steps": [
+          "library.d31.value.mixed"
+        ]
+      },
+      "library.d31.value.mixed": {
+        "type": "rule",
+        "operator": "greater_than",
+        "field": "items[*].qty",
+        "value": 0,
+        "aggregate": {
+          "mode": "COUNT",
+          "op": ">=",
+          "value": 2
+        },
+        "issue": {
+          "level": "ERROR",
+          "code": "D31.VALUE.MIXED",
+          "message": "failed"
+        }
+      }
+    },
+    "sourceHash": "9be7da71400395a0063f18baeec2a5d1355f399d8ba203de6cbd9516e54e9d2d"
+  },
+  "operators": [],
+  "input": {
+    "pipelineId": "checks.main",
+    "payload": {
+      "items": [
+        {
+          "qty": 1
+        },
+        {}
+      ]
+    }
+  },
+  "expected": {
+    "status": "ERROR",
+    "issues": [
+      {
+        "level": "ERROR",
+        "code": "D31.VALUE.MIXED",
+        "message": "failed",
+        "field": "items[*].qty",
+        "ruleId": "library.d31.value.mixed",
+        "pipelineId": "checks.main",
+        "details": {
+          "mode": "COUNT",
+          "op": ">=",
+          "value": 2,
+          "matched": 2,
+          "evaluated": 1,
+          "skipped": 1,
+          "passed": 1,
+          "failed": 0
+        }
+      }
+    ],
+    "ruleset": {
+      "specVersion": "1.0.0-rc.6",
+      "sourceHash": "9be7da71400395a0063f18baeec2a5d1355f399d8ba203de6cbd9516e54e9d2d"
+    }
+  }
+}

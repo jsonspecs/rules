@@ -1,0 +1,54 @@
+{
+  "name": "d31/value-operator-all-absent-is-all-skip-not-on-empty",
+  "snapshot": {
+    "format": "jsonspecs-snapshot",
+    "formatVersion": 2,
+    "specVersion": "1.0.0-rc.6",
+    "exports": [
+      "checks.main"
+    ],
+    "artifacts": {
+      "checks.main": {
+        "type": "pipeline",
+        "steps": [
+          "library.d31.value.all-absent"
+        ]
+      },
+      "library.d31.value.all-absent": {
+        "type": "rule",
+        "operator": "greater_than",
+        "field": "items[*].qty",
+        "value": 0,
+        "aggregate": {
+          "mode": "ALL",
+          "issueMode": "SUMMARY",
+          "onEmpty": "FAIL"
+        },
+        "issue": {
+          "level": "ERROR",
+          "code": "D31.VALUE.SKIP",
+          "message": "failed"
+        }
+      }
+    },
+    "sourceHash": "c2a1479be1fcbe5bd3961da96866857cb25b3cb5a37d991cc36f9c278fd2c9bf"
+  },
+  "operators": [],
+  "input": {
+    "pipelineId": "checks.main",
+    "payload": {
+      "items": [
+        {},
+        {}
+      ]
+    }
+  },
+  "expected": {
+    "status": "OK",
+    "issues": [],
+    "ruleset": {
+      "specVersion": "1.0.0-rc.6",
+      "sourceHash": "c2a1479be1fcbe5bd3961da96866857cb25b3cb5a37d991cc36f9c278fd2c9bf"
+    }
+  }
+}

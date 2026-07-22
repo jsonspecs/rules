@@ -55,7 +55,7 @@ Directories map to decisions (`DECISIONS.md`) and semantic areas:
 `d06-hash`, `d08-representation`, `d09-guards`, `d10-operators`, `d11-snapshot`,
 `d13-absence`, `d19-unified-rules`, `d20-aggregation`, `d21-bundle`,
 `d22-evaluation`, `d23-binary64`, `d24-closed-schemas`, `d26-format`, `d27-inputs`,
-`d28-hash`, `d29-removed`, `operators`, `semantics`. `operators` provides the complete
+`d28-hash`, `d29-removed`, `d31-wildcard`, `operators`, `semantics`. `operators` provides the complete
 built-in outcome matrix: PASS, FAIL with issue shape, and SKIP wherever the operator's
 absence semantics admits SKIP.
 
@@ -63,8 +63,9 @@ The reserved test-only operators `conformance.rule.throw`,
 `conformance.rule.invalid_result`, `conformance.rule.tri`,
 `conformance.rule.params`, and `conformance.rule.inputs` are registered by the
 fixture runner only. `tri` maps input strings `PASS`, `SKIP`, and `FAIL` to the
-same-named outcomes, and `THROW` to a host exception, so mixed populations and exhaustive
-aggregate evaluation can be tested portably. `params`
+same-named outcomes, `THROW` to a host exception, and `INVALID` to an out-of-contract
+result, so mixed populations, exhaustive aggregate evaluation, and late contract
+violations can be tested portably. `params`
 pins the closed `{outcome}` parameter schema. `inputs` pins core path resolution and
 the absent-key versus present-`null` distinction. They are not production operators.
 

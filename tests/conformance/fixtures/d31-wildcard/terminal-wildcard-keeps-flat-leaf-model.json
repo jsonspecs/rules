@@ -1,0 +1,77 @@
+{
+  "name": "d31/terminal-wildcard-keeps-flat-leaf-model",
+  "snapshot": {
+    "format": "jsonspecs-snapshot",
+    "formatVersion": 2,
+    "specVersion": "1.0.0-rc.6",
+    "exports": [
+      "checks.main"
+    ],
+    "artifacts": {
+      "checks.main": {
+        "type": "pipeline",
+        "steps": [
+          "library.d31.terminal"
+        ]
+      },
+      "library.d31.terminal": {
+        "type": "rule",
+        "operator": "not_empty",
+        "field": "items[*]",
+        "aggregate": {
+          "mode": "ALL",
+          "issueMode": "SUMMARY"
+        },
+        "issue": {
+          "level": "ERROR",
+          "code": "D31.TERMINAL",
+          "message": "failed"
+        }
+      }
+    },
+    "sourceHash": "eb51cec00876e515ea9de1d396d72262dcb06e3ec7f659f9968106ec9b7d7f34"
+  },
+  "operators": [],
+  "input": {
+    "pipelineId": "checks.main",
+    "payload": {
+      "items": [
+        null,
+        42,
+        {},
+        [],
+        {
+          "sku": "A"
+        },
+        [
+          1
+        ]
+      ]
+    }
+  },
+  "expected": {
+    "status": "ERROR",
+    "issues": [
+      {
+        "level": "ERROR",
+        "code": "D31.TERMINAL",
+        "message": "failed",
+        "field": "items[*]",
+        "ruleId": "library.d31.terminal",
+        "pipelineId": "checks.main",
+        "details": {
+          "mode": "ALL",
+          "matched": 6,
+          "evaluated": 6,
+          "skipped": 0,
+          "passed": 3,
+          "failed": 3
+        }
+      }
+    ],
+    "ruleset": {
+      "specVersion": "1.0.0-rc.6",
+      "sourceHash": "eb51cec00876e515ea9de1d396d72262dcb06e3ec7f659f9968106ec9b7d7f34"
+    }
+  }
+}

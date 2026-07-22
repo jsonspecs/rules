@@ -6,7 +6,7 @@
  * JavaScript уже использует требуемое JCS-представление finite binary64 в
  * JSON.stringify. Существенная деталь здесь — сортировка ключей обычным
  * сравнением строк JS: это беззнаковые UTF-16 code units, а не code points и не
- * localeCompare. Поэтому U+10000 сортируется раньше U+E000, как требует RC.5.
+ * localeCompare. Поэтому U+10000 сортируется раньше U+E000, как требует RC.6.
  */
 
 const { createHash } = require("node:crypto");

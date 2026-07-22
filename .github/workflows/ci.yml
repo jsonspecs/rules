@@ -42,7 +42,7 @@ jobs:
       - name: Run tests
         run: npm test
 
-      - name: Run normative RC.5 conformance suite
+      - name: Run normative RC.6 conformance suite
         run: npm run test:conformance
 
       - name: Run smoke example
